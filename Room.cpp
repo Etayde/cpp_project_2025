@@ -592,7 +592,7 @@ ExplosionResult Room::explodeBomb(int centerX, int centerY, int radius, Player* 
 
 //////////////////////////////////////////       handleBombDrop       //////////////////////////////////////////
 
-bool Room::handleBombDrop(Player& player) {
+void Room::handleBombDrop(Player& player) {
     if (!player.hasBomb()) {
         player.dropItem(this);
         return;
@@ -641,7 +641,7 @@ bool Room::updateBomb(Player* p1, Player* p2) {
         if (result.keyDestroyed || result.player1Hit || result.player2Hit) {
             return true;
         }
-        
-        return false;
     }
+
+    return false;
 }

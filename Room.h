@@ -168,7 +168,7 @@ public:
     std::vector<Door*> getDoors();
     std::vector<Switch*> getSwitches();
     bool updateBomb(Player* p1, Player* p2);
-    bool handleBombDrop(Player& player);
+    void handleBombDrop(Player& player);
     
     // Collision & movement
     bool isBlocked(int x, int y);
