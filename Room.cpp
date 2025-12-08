@@ -162,19 +162,17 @@ void Room::loadObjects() {
         for (int x = 0; x < MAX_X; x++) {
             char ch = baseLayout->getCharAt(x, y);
 
-            // DEBUG: Check if we find backslash characters
-            if (ch == '\\' || ch == '/') {
-                gotoxy(0, 1);
-                std::cout << "Found char '" << ch << "' (ASCII " << (int)ch << ") at " << x << "," << y << "    " << std::flush;
-            }
-
             GameObject* obj = createObjectFromChar(ch, x, y);
 
             if (obj != nullptr) {
-                // DEBUG: Print switch creation
+                // DEBUG: Print switch creation - KEEP THIS VISIBLE!
                 if (obj->getType() == ObjectType::SWITCH_OFF || obj->getType() == ObjectType::SWITCH_ON) {
-                    gotoxy(0, 2);
-                    std::cout << "Creating switch at " << obj->getX() << "," << obj->getY() << "   " << std::flush;
+                    // Don't overwrite - put message elsewhere that won't be cleared
+                    FILE* f = fopen("debug.txt", "a");
+                    if (f) {
+                        fprintf(f, "Created switch at %d,%d\n", obj->getX(), obj->getY());
+                        fclose(f);
+                    }
                 }
 
                 // Track keys and switches
