@@ -106,8 +106,19 @@ void Game::handleInput() {
 
     while (check_kbhit()) {
         int pressed = get_char_nonblocking();
-        
+
         if (pressed == -1) break;
+
+        // Detect and ignore special key sequences (arrow keys, function keys, etc.)
+        // On Windows, special keys send 0 or 224 followed by a key code
+        if (pressed == 0 || pressed == 224) {
+            // Consume the next byte (the actual key code) and ignore it
+            if (check_kbhit()) {
+                get_char_nonblocking();
+            }
+            continue;  // Skip processing this key
+        }
+
         if (pressed == 27) {  // ESC = pause
             currentState = GameState::paused;
             return;
@@ -312,6 +323,10 @@ void Game::changeRoom(int newRoomId, bool goingForward) {
     player1.pos.diff_x = 0; player1.pos.diff_y = 0;
     player2.pos.diff_x = 0; player2.pos.diff_y = 0;
     player1.atDoor = false; player2.atDoor = false;
+
+    // Reset prevChar to prevent old room's door character from appearing
+    player1.prevChar = ' ';
+    player2.prevChar = ' ';
 
     clrscr();
     if(getCurrentRoom()) { getCurrentRoom()->draw(); }
