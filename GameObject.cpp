@@ -43,8 +43,7 @@ GameObject* createObjectFromChar(char ch, int x, int y) {
         case '0': case '1': case '2': case '3': case '4':
         case '5': case '6': case '7': case '8': case '9':
             return new Door(pos, ch - '0');
-        case 'W':
-            return new Wall(pos);
+        // 'W' removed - walls are part of static layout, not game objects
         case '=':
             return new BreakableWall(pos);
         case '*':

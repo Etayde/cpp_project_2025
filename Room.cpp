@@ -161,20 +161,9 @@ void Room::loadObjects() {
     for (int y = 0; y < MAX_Y_INGAME; y++) {
         for (int x = 0; x < MAX_X; x++) {
             char ch = baseLayout->getCharAt(x, y);
-
             GameObject* obj = createObjectFromChar(ch, x, y);
 
             if (obj != nullptr) {
-                // DEBUG: Print switch creation - KEEP THIS VISIBLE!
-                if (obj->getType() == ObjectType::SWITCH_OFF || obj->getType() == ObjectType::SWITCH_ON) {
-                    // Don't overwrite - put message elsewhere that won't be cleared
-                    FILE* f = fopen("debug.txt", "a");
-                    if (f) {
-                        fprintf(f, "Created switch at %d,%d\n", obj->getX(), obj->getY());
-                        fclose(f);
-                    }
-                }
-
                 // Track keys and switches
                 if (obj->getType() == ObjectType::KEY) totalKeysInRoom++;
                 else if (obj->getType() == ObjectType::SWITCH_OFF) totalSwitches++;
@@ -273,20 +262,6 @@ void Room::resetMods() {
 
 // Get object at position using polymorphism
 GameObject* Room::getObjectAt(int x, int y) {
-    // DEBUG: Log the search
-    FILE* f = fopen("debug.txt", "a");
-    if (f) {
-        fprintf(f, "getObjectAt(%d,%d): objectCount=%d\n", x, y, objectCount);
-        for (int i = 0; i < objectCount; i++) {
-            if (objects[i] != nullptr) {
-                fprintf(f, "  obj[%d]: pos=(%d,%d) active=%d type=%d\n",
-                    i, objects[i]->getX(), objects[i]->getY(),
-                    objects[i]->isActive(), (int)objects[i]->getType());
-            }
-        }
-        fclose(f);
-    }
-
     for (int i = 0; i < objectCount; i++) {
         if (objects[i] != nullptr && objects[i]->isActive() &&
             objects[i]->getX() == x && objects[i]->getY() == y) {
