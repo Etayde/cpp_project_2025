@@ -273,7 +273,7 @@ void Game::initializeRooms() {
     rooms[0].spawnPointFromNext = Point(75, 17, 0, 0, ' ');
     rooms[0].nextRoomId = 1;
     rooms[0].prevRoomId = -1;
-    rooms[0].setDoorRequirements(1, 1, 0);  // Door 1: 1 key per player
+    rooms[0].setDoorRequirements(1, 0, 2);  // Door 1: 0 keys, 2 switches required
 
     // Room 1: Bomb puzzle with dark zone
     rooms[1] = Room(1);

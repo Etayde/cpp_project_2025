@@ -161,8 +161,8 @@ const char* room0Data[MAX_Y] = {
     //0123456789012345678901234567890123456789012345678901234567890123456789012345678
     "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 0
     "W                                                               W             W", // 1
-    "W                                                               W       WWW   W", // 2
-    "W                                                               W   WWWWWWW   W", // 3
+    "W                                                               WWWW    W   WWW", // 2
+    "W                                                               W      WW     W", // 3
     "W                                                               W   WWWWWWW   W", // 4
     "W                                                               W      W      W", // 5
     "W                                                               WWWW \\ W      W", // 6
