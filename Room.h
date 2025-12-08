@@ -79,17 +79,17 @@ struct ExplosionResult {
 //////////////////////////////////////////     DoorRequirements       //////////////////////////////////////////
 
 // Requirements to open a specific door
-// requiredKeys = keys needed PER PLAYER
+// requiredKeys = total keys needed (combined from both players)
 // requiredSwitches = switches that must be ON
 struct DoorRequirements {
     int doorId;
     int requiredKeys;
     int requiredSwitches;
     bool isUnlocked;
-    
-    DoorRequirements() 
+
+    DoorRequirements()
         : doorId(-1), requiredKeys(1), requiredSwitches(0), isUnlocked(false) {}
-    DoorRequirements(int id, int keys, int switches = 0) 
+    DoorRequirements(int id, int keys, int switches = 0)
         : doorId(id), requiredKeys(keys), requiredSwitches(switches), isUnlocked(false) {}
 };
 

@@ -428,13 +428,16 @@ int Room::countActiveSwitches() const {
 // Check if door requirements are met
 bool Room::canOpenDoor(int doorId, int player1Keys, int player2Keys) const {
     if (doorId < 0 || doorId >= MAX_DOORS) return false;
-    
+
     const DoorRequirements& req = doorReqs[doorId];
-    
+
     if (req.isUnlocked) return true;
     if (req.requiredSwitches > 0 && activeSwitches < req.requiredSwitches) return false;
-    if (req.requiredKeys > 0 && (player1Keys < req.requiredKeys || player2Keys < req.requiredKeys)) return false;
-    
+
+    // Check total keys from both players
+    int totalKeys = player1Keys + player2Keys;
+    if (req.requiredKeys > 0 && totalKeys < req.requiredKeys) return false;
+
     return true;
 }
 

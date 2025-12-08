@@ -209,9 +209,16 @@ void Game::checkRoomTransitions() {
             
                 if (!room->isDoorUnlocked(doorId)) {
                     int keysNeeded = room->doorReqs[doorId].requiredKeys;
-                    for (int i = 0; i < keysNeeded; i++) {
+
+                    // Consume keys from both players until requirement is met
+                    int keysConsumed = 0;
+                    while (keysConsumed < keysNeeded && player1.getKeyCount() > 0) {
                         player1.useKey();
+                        keysConsumed++;
+                    }
+                    while (keysConsumed < keysNeeded && player2.getKeyCount() > 0) {
                         player2.useKey();
+                        keysConsumed++;
                     }
                 }
                 room->unlockDoor(doorId);
@@ -293,7 +300,7 @@ void Game::initializeRooms() {
     rooms[1].spawnPointFromNext = Point(75, 17, 0, 0, ' ');
     rooms[1].nextRoomId = 2;
     rooms[1].prevRoomId = 0;
-    rooms[1].setDoorRequirements(2, 1, 0);  // Door 2: 1 key per player
+    rooms[1].setDoorRequirements(2, 1, 0);  // Door 2: 1 key total
     rooms[1].addDarkZone(21, 5, 46, 14);    // Dark zone inside inner room
 
     // Room 2: Final room (victory)
