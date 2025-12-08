@@ -109,7 +109,7 @@ bool Player::move(Room* room) {
     char charAtPos = room->getCharAt(nextX, nextY);
     if (charAtPos == '\\' || charAtPos == '/') {
         gotoxy(0, 0);
-        std::cout << "Switch at " << nextX << "," << nextY << " obj=" << (obj ? "YES" : "NO") << "   " << std::flush;
+        std::cout << "Switch at " << nextX << "," << nextY << " char='" << charAtPos << "' (ASCII " << (int)charAtPos << ") obj=" << (obj ? "YES" : "NO") << "     " << std::flush;
     }
 
     if (obj != nullptr && obj->isActive()) {
