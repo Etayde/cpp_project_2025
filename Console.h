@@ -3,9 +3,6 @@
  * Works on Windows, Linux, and macOS
  */
 #pragma once
-#ifndef _CONSOLE_H_
-#define _CONSOLE_H_
-
 #include <iostream>
 
 // Auto-detect platform
@@ -227,4 +224,3 @@ inline void reset_color() {
     set_color(Color::White);
 }
 
-#endif // _CONSOLE_H_

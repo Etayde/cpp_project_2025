@@ -1,16 +1,85 @@
+
 #include "Player.h"
 #include "Room.h"
 
+//////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
+
+Player::Player() 
+    : inventory(nullptr), playerId(0), sprite(' '), prevChar(' '),
+      atDoor(false), doorId(-1), alive(true), keyCount(0) 
+{
+    pos = Point(1, 1, 0, 0, ' ');
+}
+
+Player::Player(int id, int startX, int startY, char playerSprite)
+    : inventory(nullptr), playerId(id), sprite(playerSprite), prevChar(' '),
+      atDoor(false), doorId(-1), alive(true), keyCount(0)
+{
+    pos = Point(startX, startY, 0, 0, playerSprite);
+}
+
+//////////////////////////////////////////      Player Destructor      //////////////////////////////////////////
+
+Player::~Player() {
+    clearInventory();
+}
+
+//////////////////////////////////////////   Player Copy Constructor   //////////////////////////////////////////
+
+Player::Player(const Player& other)
+    : pos(other.pos), inventory(nullptr), playerId(other.playerId),
+      sprite(other.sprite), prevChar(other.prevChar), atDoor(other.atDoor),
+      doorId(other.doorId), alive(other.alive), keyCount(other.keyCount)
+{
+    copyInventoryFrom(other);
+}
+
+//////////////////////////////////////////  Player Assignment Operator //////////////////////////////////////////
+
+Player& Player::operator=(const Player& other) {
+    if (this != &other) {
+        clearInventory();
+        
+        pos = other.pos;
+        playerId = other.playerId;
+        sprite = other.sprite;
+        prevChar = other.prevChar;
+        atDoor = other.atDoor;
+        doorId = other.doorId;
+        alive = other.alive;
+        keyCount = other.keyCount;
+        
+        copyInventoryFrom(other);
+    }
+    return *this;
+}
+
+//////////////////////////////////////////       Private Helpers       //////////////////////////////////////////
+
+void Player::clearInventory() {
+    delete inventory;
+    inventory = nullptr;
+}
+
+// Deep copy using polymorphic clone()
+void Player::copyInventoryFrom(const Player& other) {
+    if (other.inventory != nullptr) {
+        inventory = other.inventory->clone();
+    }
+}
+
+//////////////////////////////////////////           move             //////////////////////////////////////////
+
+// Move player in current direction, handle collisions and interactions
 bool Player::move(Room* room) {
     if (room == nullptr) return false;
     
-    // If not moving, just redraw at current position
+    // Not moving - just redraw
     if (pos.diff_x == 0 && pos.diff_y == 0) {
         draw();
         return false;
     }
     
-    // Calculate next position
     int nextX = pos.x + pos.diff_x;
     int nextY = pos.y + pos.diff_y;
     
@@ -22,7 +91,7 @@ bool Player::move(Room* room) {
         return false;
     }
     
-    // Check for wall collision
+    // Check wall collision
     char nextChar = room->getCharAt(nextX, nextY);
     if (nextChar == 'W' || nextChar == '=') {
         pos.diff_x = 0;
@@ -31,129 +100,109 @@ bool Player::move(Room* room) {
         return false;
     }
     
-    // Check for object collision/interaction
-    Object* obj = room->getObjectAt(nextX, nextY);
-    if (obj != nullptr) {
-        // Handle different object types
-        switch (obj->type) {
-            case ObjectType::WALL:
-            case ObjectType::BREAKABLE_WALL:
-            case ObjectType::OBSTACLE:
-                // Blocked, stop moving
-                pos.diff_x = 0;
-                pos.diff_y = 0;
-                draw();
-                return false;
-                
-            case ObjectType::SWITCH_OFF:
-            case ObjectType::SWITCH_ON:
-                // Toggle switch and stop
-                obj->toggleSwitch();
-                room->setCharAt(obj->pos.x, obj->pos.y, obj->sprite);
-                gotoxy(obj->pos.x, obj->pos.y);
-                std::cout << obj->sprite;
-                std::cout.flush();
+    // Check object collision/interaction
+    GameObject* obj = room->getObjectAt(nextX, nextY);
+    
+    if (obj != nullptr && obj->isActive()) {
+        ObjectType objType = obj->getType();
+        
+        // Blocking objects
+        if (obj->isBlocking()) {
+            pos.diff_x = 0;
+            pos.diff_y = 0;
+            draw();
+            return false;
+        }
+        
+        // Switches - toggle and stop
+        if (objType == ObjectType::SWITCH_OFF || objType == ObjectType::SWITCH_ON) {
+            Switch* sw = (Switch*)(obj);
+            if (sw != nullptr) {
+                sw->toggle();
+                room->setCharAt(obj->getX(), obj->getY(), sw->getSprite());
+                gotoxy(obj->getX(), obj->getY());
+                std::cout << sw->getSprite() << std::flush;
                 room->updatePuzzleState();
-                pos.diff_x = 0;
-                pos.diff_y = 0;
-                draw();
-                return false;
-                
-            case ObjectType::KEY:
-                // Pick up key if inventory is empty
-                if (!hasItem()) {
-                    pickupItem(obj);
-                    room->setCharAt(nextX, nextY, ' ');
-                    nextChar = ' ';  // Update nextChar so prevChar will be space
-                }
-                break;
+            }
+            pos.diff_x = 0;
+            pos.diff_y = 0;
+            draw();
+            return false;
+        }
+        
+        // Pickable objects - pick up if inventory empty
+        if (obj->isPickable() && !hasItem()) {
+            if (objType == ObjectType::KEY) keyCount++;
             
-            case ObjectType::BOMB:
-                // Pick up bomb if inventory is empty
-                if (!hasItem()) {
-                    pickupItem(obj);
-                    room->setCharAt(nextX, nextY, ' ');
-                    nextChar = ' ';  // Update nextChar so prevChar will be space
-                }
-                break;
+            inventory = obj->clone();
+            obj->setActive(false);
+            room->setCharAt(nextX, nextY, ' ');
+            nextChar = ' ';
             
-            case ObjectType::TORCH:
-                // Pick up torch if inventory is empty
-                if (!hasItem()) {
-                    pickupItem(obj);
-                    room->setCharAt(nextX, nextY, ' ');
-                    nextChar = ' ';  // Update nextChar so prevChar will be space
-                }
-                break;
-                
-            case ObjectType::DOOR:
-                // Mark that player is at door (game logic handles transition)
-                atDoor = true;
-                doorId = obj->sprite - '0';
-                // Don't stop - let player stand on door
-                break;
-                
-            case ObjectType::SPRING:
-                // Boost speed (move extra space)
-                break;
-                
-            default:
-                break;
+            updateInventoryDisplay();
+        }
+        
+        // Doors - mark player at door
+        if (objType == ObjectType::DOOR) {
+            atDoor = true;
+            Door* door = dynamic_cast<Door*>(obj);
+            doorId = (door != nullptr) ? door->getDoorId() : (obj->getSprite() - '0');
         }
     } else {
-        // Not at a door anymore
         atDoor = false;
         doorId = -1;
     }
     
-    // Erase from current position (restore what was there)
+    // Erase from current position
     gotoxy(pos.x, pos.y);
-    std::cout << prevChar;
-    std::cout.flush();
+    std::cout << prevChar << std::flush;
     
-    // Store the character at the new position before we overwrite it
-    if (obj != nullptr && obj->type == ObjectType::DOOR) {
-        prevChar = obj->sprite;  // Remember door character
+    // Store character at new position
+    if (obj != nullptr && obj->getType() == ObjectType::DOOR) {
+        prevChar = obj->getSprite();
     } else {
         prevChar = (nextChar == ' ' || nextChar == sprite) ? ' ' : nextChar;
     }
     
-    // Update position
+    // Update position and draw
     pos.x = nextX;
     pos.y = nextY;
-    
-    // Draw at new position
     draw();
     
     return true;
 }
 
-bool Player::pickupItem(Object* item) {
+//////////////////////////////////////////        pickupItem           //////////////////////////////////////////
+
+// Pick up an item (ownership transferred via clone)
+bool Player::pickupItem(GameObject* item) {
     if (item == nullptr || hasItem()) return false;
     if (!item->isPickable()) return false;
     
-    // Copy item to inventory
-    inventory = *item;
+    if (item->getType() == ObjectType::KEY) keyCount++;
     
-    // Clear the original item
-    item->type = ObjectType::AIR;
-    item->sprite = ' ';
-    item->pos = Point(-1, -1);
+    inventory = item->clone();
+    item->setActive(false);
     
-    // Update inventory display
     updateInventoryDisplay();
-    
     return true;
 }
 
+//////////////////////////////////////////         dropItem            //////////////////////////////////////////
+
+// Drop current item, returns position or (-1,-1) if failed
 Point Player::dropItem(Room* room) {
     Point dropPos(-1, -1);
+    
     if (!hasItem() || room == nullptr) return dropPos;
     
-    // Find an empty spot around the player
-    int checkOffsets[][2] = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
-    int dropX = -1;
-    int dropY = -1;
+    // Find empty spot around player
+    const int checkOffsets[][2] = {
+        {0, 1}, {0, -1}, {1, 0}, {-1, 0},
+        {1, 1}, {1, -1}, {-1, 1}, {-1, -1}
+    };
+    
+    int dropX = -1, dropY = -1;
     bool found = false;
     
     for (int i = 0; i < 8 && !found; i++) {
@@ -162,9 +211,9 @@ Point Player::dropItem(Room* room) {
         
         if (testX >= 1 && testX < MAX_X - 1 && testY >= 1 && testY < MAX_Y_INGAME - 1) {
             char c = room->getCharAt(testX, testY);
-            Object* existing = room->getObjectAt(testX, testY);
-            // Allow drop on empty space (not wall, not breakable wall, not obstacle, not door)
-            if ((c == ' ' || c == '.' ) && existing == nullptr) {
+            GameObject* existing = room->getObjectAt(testX, testY);
+            
+            if ((c == ' ' || c == '.') && existing == nullptr) {
                 dropX = testX;
                 dropY = testY;
                 found = true;
@@ -172,66 +221,57 @@ Point Player::dropItem(Room* room) {
         }
     }
     
-    if (!found) return dropPos;  // No valid drop position
+    if (!found) return dropPos;
     
-    // Create new object at drop position
-    Object droppedItem = inventory;
-    droppedItem.pos = Point(dropX, dropY, 0, 0, inventory.sprite);
+    // Create dropped item
+    GameObject* droppedItem = inventory->clone();
+    droppedItem->setPosition(dropX, dropY);
+    droppedItem->setActive(true);
     
-    // Add to room
     if (room->addObject(droppedItem)) {
         dropPos.x = dropX;
         dropPos.y = dropY;
         
-        // Clear inventory
-        inventory = Object();
+        if (inventory->getType() == ObjectType::KEY) keyCount--;
+        
+        clearInventory();
         updateInventoryDisplay();
         
-        // Draw dropped item
         gotoxy(dropX, dropY);
-        std::cout << droppedItem.sprite;
-        std::cout.flush();
+        std::cout << droppedItem->getSprite() << std::flush;
+    } else {
+        delete droppedItem;
     }
     
     return dropPos;
 }
 
-void Player::updateInventoryDisplay() {
-    // Position for inventory display
-    int invX = (playerId == 1) ? 18 : 58;
-    int invY = 23;
-    
-    gotoxy(invX, invY);
-    if (hasItem()) {
-        std::cout << "[" << inventory.sprite << "]  ";
-    } else {
-        std::cout << "[   ]";
-    }
-    std::cout.flush();
-}
+//////////////////////////////////////////       performAction         //////////////////////////////////////////
 
 void Player::performAction(Action action) {
     switch (action) {
-        case Action::MOVE_UP:
-            pos.setDirection(Direction::UP);
-            break;
-        case Action::MOVE_DOWN:
-            pos.setDirection(Direction::DOWN);
-            break;
-        case Action::MOVE_LEFT:
-            pos.setDirection(Direction::LEFT);
-            break;
-        case Action::MOVE_RIGHT:
-            pos.setDirection(Direction::RIGHT);
-            break;
-        case Action::STAY:
-            pos.setDirection(Direction::STAY);
-            break;
-        case Action::DROP_ITEM:
-            // Will be handled by game loop
-            break;
-        default:
-            pos.setDirection(Direction::STAY);
-            break;
+        case Action::MOVE_UP:    pos.setDirection(Direction::UP);    break;
+        case Action::MOVE_DOWN:  pos.setDirection(Direction::DOWN);  break;
+        case Action::MOVE_LEFT:  pos.setDirection(Direction::LEFT);  break;
+        case Action::MOVE_RIGHT: pos.setDirection(Direction::RIGHT); break;
+        case Action::STAY:       pos.setDirection(Direction::STAY);  break;
+        case Action::DROP_ITEM:  break;  // Handled by game loop
+        default:                 pos.setDirection(Direction::STAY);  break;
     }
+}
+
+//////////////////////////////////////////   updateInventoryDisplay    //////////////////////////////////////////
+
+// Show keys count and current item in UI area
+void Player::updateInventoryDisplay() {
+    int invX = (playerId == 1) ? InventoryUI::PLAYER1_X : InventoryUI::PLAYER2_X;
+    int invY = InventoryUI::Y_POS;
+    
+    gotoxy(invX, invY);
+    std::cout << "Keys:" << keyCount << " [";
+    
+    if (hasItem()) std::cout << inventory->getSprite();
+    else std::cout << " ";
+    
+    std::cout << "]   " << std::flush;
 }
