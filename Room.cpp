@@ -634,10 +634,13 @@ bool Room::updateBomb(Player* p1, Player* p2) {
             bomb.x, bomb.y, BombConfig::RADIUS,
             p1, p2
         );
-        
+
+        // Reset bomb after explosion
+        bomb.reset();
+
         p1->draw();
         p2->draw();
-        
+
         if (result.keyDestroyed || result.player1Hit || result.player2Hit) {
             return true;
         }
