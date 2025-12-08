@@ -285,6 +285,7 @@ void Player::updateInventoryDisplay() {
     std::cout << "]   " << std::flush;
 }
 
+//////////////////////////////////////////           useKey           //////////////////////////////////////////
 
 // Use one key (returns true if successful)
 bool Player::useKey() {

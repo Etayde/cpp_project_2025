@@ -155,15 +155,21 @@ void Room::loadObjects() {
     keysCollected = 0;
     activeSwitches = 0;
     totalSwitches = 0;
-    
+
     if (baseLayout == nullptr) return;
-    
+
     for (int y = 0; y < MAX_Y_INGAME; y++) {
         for (int x = 0; x < MAX_X; x++) {
             char ch = baseLayout->getCharAt(x, y);
             GameObject* obj = createObjectFromChar(ch, x, y);
-            
+
             if (obj != nullptr) {
+                // DEBUG: Print switch creation
+                if (obj->getType() == ObjectType::SWITCH_OFF || obj->getType() == ObjectType::SWITCH_ON) {
+                    gotoxy(0, 1);
+                    std::cout << "Creating switch at " << obj->getX() << "," << obj->getY() << "   " << std::flush;
+                }
+
                 // Track keys and switches
                 if (obj->getType() == ObjectType::KEY) totalKeysInRoom++;
                 else if (obj->getType() == ObjectType::SWITCH_OFF) totalSwitches++;
@@ -171,7 +177,7 @@ void Room::loadObjects() {
                     totalSwitches++;
                     activeSwitches++;
                 }
-                
+
                 if (!addObject(obj)) delete obj;
             }
         }
