@@ -105,6 +105,13 @@ bool Player::move(Room* room) {
     // Check object collision/interaction
     GameObject* obj = room->getObjectAt(nextX, nextY);
 
+    // DEBUG: Check if there's a switch character at this position
+    char charAtPos = room->getCharAt(nextX, nextY);
+    if (charAtPos == '\\' || charAtPos == '/') {
+        gotoxy(0, 0);
+        std::cout << "Switch at " << nextX << "," << nextY << " obj=" << (obj ? "YES" : "NO") << "   " << std::flush;
+    }
+
     if (obj != nullptr && obj->isActive()) {
         ObjectType objType = obj->getType();
 
