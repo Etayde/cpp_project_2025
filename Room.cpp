@@ -273,6 +273,20 @@ void Room::resetMods() {
 
 // Get object at position using polymorphism
 GameObject* Room::getObjectAt(int x, int y) {
+    // DEBUG: Log the search
+    FILE* f = fopen("debug.txt", "a");
+    if (f) {
+        fprintf(f, "getObjectAt(%d,%d): objectCount=%d\n", x, y, objectCount);
+        for (int i = 0; i < objectCount; i++) {
+            if (objects[i] != nullptr) {
+                fprintf(f, "  obj[%d]: pos=(%d,%d) active=%d type=%d\n",
+                    i, objects[i]->getX(), objects[i]->getY(),
+                    objects[i]->isActive(), (int)objects[i]->getType());
+            }
+        }
+        fclose(f);
+    }
+
     for (int i = 0; i < objectCount; i++) {
         if (objects[i] != nullptr && objects[i]->isActive() &&
             objects[i]->getX() == x && objects[i]->getY() == y) {
