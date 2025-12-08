@@ -21,10 +21,6 @@ public:
     Game();
     ~Game();
 
-    State management
-    void setState(GameState newState) { currentState = newState; }
-    GameState getState() const { return currentState; }
-
     // Main game loop
     void run();
 
@@ -44,16 +40,11 @@ public:
     void gameLoop();
     void handleInput();
     void update();
-    void render();
     
     // Room management
     void changeRoom(int newRoomId, bool goingForward);
     Room* getCurrentRoom();
-    int checkRoomTransitions();
-
-private:
-    bool checkDoorRequirements(int doorId);
-    void consumeKeysForDoor(int doorId);
+    void checkRoomTransitions();
     void redrawCurrentRoom();
 };
 

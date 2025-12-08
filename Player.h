@@ -87,18 +87,8 @@ public:
     void setDirection(Direction dir) { pos.setDirection(dir); }
     void kill() { alive = false; }
     void addKey() { keyCount++; }
-    
-    // Use one key (returns true if successful)
-    bool useKey() {
-        if (keyCount > 0) {
-            keyCount--;
-            updateInventoryDisplay();
-            return true;
-        }
-        return false;
-    }
+    bool useKey();
 
-    // Rendering
     void draw() {
         gotoxy(pos.x, pos.y);
         std::cout << sprite << std::flush;

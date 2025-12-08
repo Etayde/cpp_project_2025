@@ -1,6 +1,8 @@
 
 #include "Player.h"
 #include "Room.h"
+#include "Switch.h"
+#include "Door.h"
 
 //////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
 
@@ -274,4 +276,15 @@ void Player::updateInventoryDisplay() {
     else std::cout << " ";
     
     std::cout << "]   " << std::flush;
+}
+
+
+// Use one key (returns true if successful)
+bool Player::useKey() {
+    if (keyCount > 0) {
+        keyCount--;
+        updateInventoryDisplay();
+        return true;
+    }
+    return false;
 }

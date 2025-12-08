@@ -2,6 +2,8 @@
 #include "Game.h"
 #include "Layouts.h"
 
+
+
 //////////////////////////////////////////     Game Constructor       //////////////////////////////////////////
 
 Game::Game() 
@@ -77,16 +79,140 @@ void Game::startNewGame() {
 
     player1 = Player(1, 5, 7, PlayerSprites::PLAYER1);
     player2 = Player(2, 5, 9, PlayerSprites::PLAYER2);
-    
-    player1.prevChar = ' ';
-    player2.prevChar = ' ';
-    player1.alive = true;
-    player2.alive = true;
 
     currentRoomId = 0;
     rooms[0].active = true;
 }
 
+//////////////////////////////////////////         gameLoop           //////////////////////////////////////////
+
+void Game::gameLoop() {
+    if(getCurrentRoom()) { getCurrentRoom()->draw(); }
+    player1.draw();
+    player2.draw();
+    player1.updateInventoryDisplay();
+    player2.updateInventoryDisplay();
+
+    while (currentState == GameState::inGame) {
+        handleInput();
+        update();
+        sleep_ms(100);  // ~10 FPS
+    }
+}
+
+//////////////////////////////////////////        handleInput         //////////////////////////////////////////
+
+void Game::handleInput() {
+
+    while (check_kbhit()) {
+        int pressed = get_char_nonblocking();
+        
+        if (pressed == -1) break;
+        if (pressed == 27) {  // ESC = pause
+            currentState = GameState::paused;
+            return;
+        }
+
+        for (int i = 0; i < NUM_KEY_BINDINGS; i++) {
+            if (keyBindings[i].key == pressed) {
+                Player& player = (keyBindings[i].playerID == 1) ? player1 : player2;
+
+                if (keyBindings[i].action == Action::DROP_ITEM) {
+                    if (getCurrentRoom()) getCurrentRoom()->handleBombDrop(player);
+                } else {
+                    player.performAction(keyBindings[i].action);
+                }
+                break;
+            }
+        }
+    }
+}
+
+//////////////////////////////////////////          update            //////////////////////////////////////////
+
+void Game::update() {
+    Room* room = getCurrentRoom();
+    if (room == nullptr) return;
+
+    // Handle player movement
+    player1.move(room);
+    player2.move(room);
+
+    // Update bomb
+    bool causedGameOver = room->updateBomb(&player1, &player2);
+    if (causedGameOver) {
+        currentState = GameState::gameOver;
+        return;
+    }
+    
+    // Update visibility
+    room->updateVisibility(&player1, &player2);
+    room->drawDarkness();
+    player1.draw();
+    player2.draw();
+
+    // Check room transitions
+    checkRoomTransitions();
+
+    // Victory check
+    if (currentRoomId == TOTAL_ROOMS - 1 && currentState != GameState::victory) 
+        { currentState = GameState::victory; }
+}
+
+//////////////////////////////////////////       getCurrentRoom       //////////////////////////////////////////
+
+Room* Game::getCurrentRoom() {
+    if (currentRoomId >= 0 && currentRoomId < TOTAL_ROOMS) return &rooms[currentRoomId];
+    return nullptr;
+}
+
+//////////////////////////////////////////     redrawCurrentRoom      //////////////////////////////////////////
+
+void Game::redrawCurrentRoom() {
+    clrscr();
+    if (getCurrentRoom()) { getCurrentRoom()->draw(); }
+    player1.draw();
+    player2.draw();
+    player1.updateInventoryDisplay();
+    player2.updateInventoryDisplay();
+}
+
+/////////////////////////////////////////      checkRoomTransitions       //////////////////////////////////////
+
+// Checks if players have reached a door and can pass through, and handles room transition if so
+void Game::checkRoomTransitions() {
+
+    Room* room = getCurrentRoom();
+    if (room == nullptr) return;
+
+    // Check if both players are at the same door
+    if (!player1.isAtDoor() || !player2.isAtDoor()) return;
+    if (player1.getDoorId() != player2.getDoorId()) return;
+    
+    int doorId = player1.getDoorId();
+    
+    // Forward door check
+    if (doorId == room->nextRoomId) {
+        if (room->isDoorUnlocked(doorId) ||
+            room->canOpenDoor(doorId, player1.getKeyCount(), player2.getKeyCount())) {
+            
+                if (!room->isDoorUnlocked(doorId)) {
+                    int keysNeeded = room->doorReqs[doorId].requiredKeys;
+                    for (int i = 0; i < keysNeeded; i++) {
+                        player1.useKey();
+                        player2.useKey();
+                    }
+                }
+                room->unlockDoor(doorId);
+                
+                // Forward door
+                if (doorId == room->nextRoomId)      { changeRoom(doorId, true); }
+            }  
+        // Backward door
+        else if (doorId == room->prevRoomId) { changeRoom(doorId, false); }
+    }
+
+}
 
 //////////////////////////////////////////       Menu Handlers        //////////////////////////////////////////
 
@@ -168,161 +294,12 @@ void Game::initializeRooms() {
     rooms[2].prevRoomId = 1;
 }
 
-//////////////////////////////////////////         gameLoop           //////////////////////////////////////////
-
-void Game::gameLoop() {
-    redrawCurrentRoom();
-
-    while (currentState == GameState::inGame) {
-        handleInput();
-        update();
-        sleep_ms(100);  // ~10 FPS
-    }
-}
-
-//////////////////////////////////////////        handleInput         //////////////////////////////////////////
-
-void Game::handleInput() {
-    player1DropRequested = false;
-    player2DropRequested = false;
-
-    while (check_kbhit()) {
-        int pressed = get_char_nonblocking();
-        if (pressed == -1) break;
-
-        if (pressed == 27) {  // ESC = pause
-            currentState = GameState::paused;
-            return;
-        }
-
-        for (int i = 0; i < NUM_KEY_BINDINGS; i++) {
-            if (keyBindings[i].key == pressed) {
-                if (keyBindings[i].playerID == 1) {
-                    if (keyBindings[i].action == Action::DROP_ITEM) player1DropRequested = true;
-                    else player1.performAction(keyBindings[i].action);
-                } else {
-                    if (keyBindings[i].action == Action::DROP_ITEM) player2DropRequested = true;
-                    else player2.performAction(keyBindings[i].action);
-                }
-                break;
-            }
-        }
-    }
-}
-
-//////////////////////////////////////////          update            //////////////////////////////////////////
-
-void Game::update() {
-    Room* room = getCurrentRoom();
-    if (room == nullptr) return;
-
-    // Handle drops
-    if (player1DropRequested) handleBombDrop(player1);
-    if (player2DropRequested) handleBombDrop(player2);
-
-    // Update bomb
-    updateBomb();
-    if (currentState != GameState::inGame) return;
-
-    // Move players
-    player1.move(room);
-    player2.move(room);
-    
-    // Update visibility
-    room->updateVisibility(&player1, &player2);
-    room->drawDarkness();
-    player1.draw();
-    player2.draw();
-
-    // Check door transitions
-    int doorResult = checkPlayersAtDoor();
-    
-    if (doorResult > 0) {
-        int nextRoom = room->nextRoomId;
-        
-        if (nextRoom >= 0 && nextRoom < TOTAL_ROOMS) {
-            room->unlockDoor(player1.getDoorId());
-            rooms[nextRoom].unlockDoor(room->roomId);
-            consumeKeysForDoor(player1.getDoorId());
-            changeRoom(nextRoom, true);
-        } else if (nextRoom == -1 && currentRoomId == TOTAL_ROOMS - 1) {
-            currentState = GameState::victory;
-        }
-    } else if (doorResult < 0) {
-        int prevRoom = room->prevRoomId;
-        if (prevRoom >= 0 && prevRoom < TOTAL_ROOMS) changeRoom(prevRoom, false);
-    }
-
-    // Victory check
-    if (currentRoomId == TOTAL_ROOMS - 1) currentState = GameState::victory;
-}
-
-//////////////////////////////////////////       getCurrentRoom       //////////////////////////////////////////
-
-Room* Game::getCurrentRoom() {
-    if (currentRoomId >= 0 && currentRoomId < TOTAL_ROOMS) return &rooms[currentRoomId];
-    return nullptr;
-}
-
-//////////////////////////////////////////    checkPlayersAtDoor      //////////////////////////////////////////
-
-// Returns: >0 for forward, <0 for backward, 0 if not at door
-int Game::checkRoomTransitions() {
-    if (!player1.isAtDoor() || !player2.isAtDoor()) return 0;
-    if (player1.getDoorId() != player2.getDoorId()) return 0;
-    
-    Room* room = getCurrentRoom();
-    if (room == nullptr) return 0;
-    
-    int doorId = player1.getDoorId();
-    
-    // Forward door
-    if (doorId == room->nextRoomId) {
-        if (room->isDoorUnlocked(doorId)) return 1;
-        if (checkDoorRequirements(doorId)) return 1;
-        return 0;
-    }
-    
-    // Backward door
-    if (doorId == room->prevRoomId) return -1;
-    
-    return 0;
-}
-
-//////////////////////////////////////////   checkDoorRequirements    //////////////////////////////////////////
-
-bool Game::checkDoorRequirements(int doorId) {
-    Room* room = getCurrentRoom();
-    if (room == nullptr) return false;
-    return room->canOpenDoor(doorId, player1.getKeyCount(), player2.getKeyCount());
-}
-
-//////////////////////////////////////////    consumeKeysForDoor      //////////////////////////////////////////
-
-void Game::consumeKeysForDoor(int doorId) {
-    Room* room = getCurrentRoom();
-    if (room == nullptr) return;
-    if (room->isDoorUnlocked(doorId)) return;
-    
-    if (doorId < 0 || doorId >= Room::MAX_DOORS) return;
-    
-    int keysNeeded = room->doorReqs[doorId].requiredKeys;
-    
-    for (int i = 0; i < keysNeeded; i++) {
-        player1.useKey();
-        player2.useKey();
-    }
-    
-    player1.updateInventoryDisplay();
-    player2.updateInventoryDisplay();
-}
-
 //////////////////////////////////////////        changeRoom          //////////////////////////////////////////
 
 void Game::changeRoom(int newRoomId, bool goingForward) {
+    
     if (newRoomId < 0 || newRoomId >= TOTAL_ROOMS) return;
-
-    if (currentRoomId >= 0) rooms[currentRoomId].active = false;
+    if (currentRoomId >= 0) { rooms[currentRoomId].active = false; }
 
     currentRoomId = newRoomId;
     rooms[newRoomId].active = true;
@@ -330,26 +307,16 @@ void Game::changeRoom(int newRoomId, bool goingForward) {
     Point spawn = goingForward ? rooms[newRoomId].spawnPoint : rooms[newRoomId].spawnPointFromNext;
     
     player1.setPosition(spawn.x, spawn.y);
-    player2.setPosition(spawn.x, spawn.y + 2);
+    player2.setPosition(spawn.x, spawn.y + 1);  // Slight offset for 2nd player
     
     player1.pos.diff_x = 0; player1.pos.diff_y = 0;
     player2.pos.diff_x = 0; player2.pos.diff_y = 0;
-    player1.prevChar = ' '; player2.prevChar = ' ';
     player1.atDoor = false; player2.atDoor = false;
 
-    redrawCurrentRoom();
-}
+    clrscr();
+    if(getCurrentRoom()) { getCurrentRoom()->draw(); }
+    player1.updateInventoryDisplay();
+    player2.updateInventoryDisplay();
 
-//////////////////////////////////////////     redrawCurrentRoom      //////////////////////////////////////////
-
-void Game::redrawCurrentRoom() {
-    Room* room = getCurrentRoom();
-    if (room != nullptr) {
-        room->draw();
-        player1.draw();
-        player2.draw();
-        player1.updateInventoryDisplay();
-        player2.updateInventoryDisplay();
-    }
 }
 
