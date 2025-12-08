@@ -4,8 +4,8 @@ CXX = g++
 CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 
 # Source files
-SOURCES = main.cpp Game.cpp Player.cpp Room.cpp Screen.cpp Point.cpp Utils.cpp
-HEADERS = Console.h Constants.h Game.h Layouts.h Object.h Player.h Point.h Room.h Screen.h Utils.h
+SOURCES = main.cpp Game.cpp Player.cpp Room.cpp Screen.cpp Point.cpp Utils.cpp GameObject.cpp
+HEADERS = Console.h Constants.h Game.h Layouts.h GameObject.h Player.h Point.h Room.h Screen.h Utils.h
 
 # Object files
 OBJECTS = $(SOURCES:.cpp=.o)
