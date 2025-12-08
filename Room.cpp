@@ -161,12 +161,19 @@ void Room::loadObjects() {
     for (int y = 0; y < MAX_Y_INGAME; y++) {
         for (int x = 0; x < MAX_X; x++) {
             char ch = baseLayout->getCharAt(x, y);
+
+            // DEBUG: Check if we find backslash characters
+            if (ch == '\\' || ch == '/') {
+                gotoxy(0, 1);
+                std::cout << "Found char '" << ch << "' (ASCII " << (int)ch << ") at " << x << "," << y << "    " << std::flush;
+            }
+
             GameObject* obj = createObjectFromChar(ch, x, y);
 
             if (obj != nullptr) {
                 // DEBUG: Print switch creation
                 if (obj->getType() == ObjectType::SWITCH_OFF || obj->getType() == ObjectType::SWITCH_ON) {
-                    gotoxy(0, 1);
+                    gotoxy(0, 2);
                     std::cout << "Creating switch at " << obj->getX() << "," << obj->getY() << "   " << std::flush;
                 }
 
