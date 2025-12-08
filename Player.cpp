@@ -104,19 +104,11 @@ bool Player::move(Room* room) {
     
     // Check object collision/interaction
     GameObject* obj = room->getObjectAt(nextX, nextY);
-    
+
     if (obj != nullptr && obj->isActive()) {
         ObjectType objType = obj->getType();
-        
-        // Blocking objects
-        if (obj->isBlocking()) {
-            pos.diff_x = 0;
-            pos.diff_y = 0;
-            draw();
-            return false;
-        }
-        
-        // Switches - toggle and stop
+
+        // Switches - toggle and stop (handle BEFORE blocking check)
         if (objType == ObjectType::SWITCH_OFF || objType == ObjectType::SWITCH_ON) {
             Switch* sw = (Switch*)(obj);
             if (sw != nullptr) {
@@ -126,6 +118,14 @@ bool Player::move(Room* room) {
                 std::cout << sw->getSprite() << std::flush;
                 room->updatePuzzleState();
             }
+            pos.diff_x = 0;
+            pos.diff_y = 0;
+            draw();
+            return false;
+        }
+
+        // Blocking objects
+        if (obj->isBlocking()) {
             pos.diff_x = 0;
             pos.diff_y = 0;
             draw();
