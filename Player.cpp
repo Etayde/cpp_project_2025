@@ -95,7 +95,7 @@ bool Player::move(Room *room)
     int nextY = pos.y + pos.diff_y;
 
     // Check bounds
-    if (nextX < 0 || nextX >= MAX_X || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
+    if (nextX < 0 || nextX >= MAX_X-1 || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
     {
         pos.diff_x = 0;
         pos.diff_y = 0;
