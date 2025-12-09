@@ -17,3 +17,4 @@ public:
     bool isPickable() const override { return true; }
     bool isInteractable() const override { return false; }
     bool onExplosion() override { return true; }
+};
