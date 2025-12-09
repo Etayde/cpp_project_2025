@@ -1,5 +1,6 @@
 
 #pragma once
+
 //////////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 #include "Screen.h"
 #include "GameObject.h"
@@ -11,11 +12,12 @@ class Player;
 //////////////////////////////////////////        Modification        //////////////////////////////////////////
 
 // Tracks a single character change to room layout
-struct Modification {
+struct Modification
+{
     int x;
     int y;
     char newChar;
-    
+
     Modification() : x(-1), y(-1), newChar(' ') {}
     Modification(int _x, int _y, char _c) : x(_x), y(_y), newChar(_c) {}
 };
@@ -23,15 +25,17 @@ struct Modification {
 //////////////////////////////////////////         DarkZone           //////////////////////////////////////////
 
 // Defines a rectangular dark area
-struct DarkZone {
-    int x1, y1;     // Top-left corner
-    int x2, y2;     // Bottom-right corner
-    
+struct DarkZone
+{
+    int x1, y1; // Top-left corner
+    int x2, y2; // Bottom-right corner
+
     DarkZone() : x1(-1), y1(-1), x2(-1), y2(-1) {}
-    DarkZone(int _x1, int _y1, int _x2, int _y2) 
+    DarkZone(int _x1, int _y1, int _x2, int _y2)
         : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
-    
-    bool contains(int x, int y) const {
+
+    bool contains(int x, int y) const
+    {
         return x >= x1 && x <= x2 && y >= y1 && y <= y2;
     }
 };
@@ -39,7 +43,8 @@ struct DarkZone {
 //////////////////////////////////////////         RoomBomb           //////////////////////////////////////////
 
 // Tracks an active bomb in the room
-struct RoomBomb {
+struct RoomBomb
+{
     int x;
     int y;
     int fuseTimer;
@@ -47,18 +52,22 @@ struct RoomBomb {
 
     RoomBomb() : x(-1), y(-1), fuseTimer(0), active(false) {}
 
-    void reset() {
+    void reset()
+    {
         x = -1;
         y = -1;
         fuseTimer = 0;
         active = false;
     }
 
-    void decrementFuse() {
-        if (fuseTimer > 0) fuseTimer--;
+    void decrementFuse()
+    {
+        if (fuseTimer > 0)
+            fuseTimer--;
     }
 
-    bool isReadyToExplode() const {
+    bool isReadyToExplode() const
+    {
         return active && fuseTimer <= 0;
     }
 };
@@ -66,13 +75,14 @@ struct RoomBomb {
 //////////////////////////////////////////      ExplosionResult       //////////////////////////////////////////
 
 // Results of a bomb explosion
-struct ExplosionResult {
+struct ExplosionResult
+{
     bool keyDestroyed;
     bool player1Hit;
     bool player2Hit;
     int objectsDestroyed;
-    
-    ExplosionResult() 
+
+    ExplosionResult()
         : keyDestroyed(false), player1Hit(false), player2Hit(false), objectsDestroyed(0) {}
 };
 
@@ -81,7 +91,8 @@ struct ExplosionResult {
 // Requirements to open a specific door
 // requiredKeys = total keys needed (combined from both players)
 // requiredSwitches = switches that must be ON
-struct DoorRequirements {
+struct DoorRequirements
+{
     int doorId;
     int requiredKeys;
     int requiredSwitches;
@@ -93,45 +104,45 @@ struct DoorRequirements {
         : doorId(id), requiredKeys(keys), requiredSwitches(switches), isUnlocked(false) {}
 };
 
-
 //////////////////////////////////////////           Room             //////////////////////////////////////////
 
 // Represents a single game room/level
-class Room {
+class Room
+{
 public:
     // Room identity
     int roomId;
     bool active;
     bool completed;
-    
+
     // Layout
-    const Screen* baseLayout;
+    const Screen *baseLayout;
     Modification mods[RoomLimits::MAX_MODS];
     int modCount;
-    
+
     // Objects (polymorphic pointers)
-    GameObject* objects[RoomLimits::MAX_OBJECTS];
+    GameObject *objects[RoomLimits::MAX_OBJECTS];
     int objectCount;
-    
+
     // Key counter system
     int totalKeysInRoom;
     int keysCollected;
     int activeSwitches;
     int totalSwitches;
-    
+
     // Door requirements
     static const int MAX_DOORS = 10;
     DoorRequirements doorReqs[MAX_DOORS];
-    
+
     // Room navigation
     int nextRoomId;
     int prevRoomId;
     Point spawnPoint;
     Point spawnPointFromNext;
-    
+
     // Bomb system
     RoomBomb bomb;
-    
+
     // Dark zones
     DarkZone darkZones[RoomLimits::MAX_DARK_ZONES];
     int darkZoneCount;
@@ -142,38 +153,38 @@ public:
     Room();
     explicit Room(int id);
     ~Room();
-    Room(const Room& other);
-    Room& operator=(const Room& other);
+    Room(const Room &other);
+    Room &operator=(const Room &other);
 
     // Initialization
-    void initFromLayout(const Screen* layout);
+    void initFromLayout(const Screen *layout);
     void loadObjects();
     void setDoorRequirements(int doorId, int keys, int switches = 0);
-    
+
     // Drawing
     void draw();
     void drawDarkness();
-    
+
     // Character access
     char getCharAt(int x, int y) const;
     void setCharAt(int x, int y, char c);
     void resetMods();
-    
+
     // Object management (polymorphic)
-    GameObject* getObjectAt(int x, int y);
-    const GameObject* getObjectAt(int x, int y) const;
-    bool addObject(GameObject* obj);
+    GameObject *getObjectAt(int x, int y);
+    const GameObject *getObjectAt(int x, int y) const;
+    bool addObject(GameObject *obj);
     void removeObject(int index);
     void removeObjectAt(int x, int y);
-    std::vector<Door*> getDoors();
-    std::vector<Switch*> getSwitches();
-    bool updateBomb(Player* p1, Player* p2);
-    void handleBombDrop(Player& player);
-    
+    std::vector<Door *> getDoors();
+    std::vector<Switch *> getSwitches();
+    bool updateBomb(Player *p1, Player *p2);
+    void handleBombDrop(Player &player);
+
     // Collision & movement
     bool isBlocked(int x, int y);
     bool hasLineOfSight(int x1, int y1, int x2, int y2);
-    
+
     // Puzzle & door system
     void updatePuzzleState();
     int countActiveSwitches() const;
@@ -181,22 +192,21 @@ public:
     int getDoorIdAt(int x, int y) const;
     void unlockDoor(int doorId);
     bool isDoorUnlocked(int doorId) const;
-    
+
     // Dark zones
     void addDarkZone(int x1, int y1, int x2, int y2);
     void clearDarkZones();
     bool isInDarkZone(int x, int y) const;
-    void updateVisibility(Player* p1, Player* p2);
+    void updateVisibility(Player *p1, Player *p2);
     void lightRadius(int centerX, int centerY, int radius);
     bool isVisible(int x, int y) const;
-    
+
     // Bomb system
-    ExplosionResult explodeBomb(int centerX, int centerY, int radius, 
-                                 Player* p1, Player* p2);
+    ExplosionResult explodeBomb(int centerX, int centerY, int radius,
+                                Player *p1, Player *p2);
 
 private:
-    void copyObjectsFrom(const Room& other);
+    void copyObjectsFrom(const Room &other);
     void deleteAllObjects();
     void initVisibility();
 };
-

@@ -2,7 +2,8 @@
 #include "Game.h"
 #include <iostream>
 
-int main() {
+int main()
+{
     // Initialize console for raw input
     init_console();
     hideCursor();
@@ -18,6 +19,6 @@ int main() {
     cleanup_console();
 
     std::cout << "Thanks for playing!" << std::endl;
-    
+
     return 0;
 }

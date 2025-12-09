@@ -2,21 +2,24 @@
 #pragma once
 //////////////////////////////////////////      SCREEN DIMENSIONS      //////////////////////////////////////////
 
-enum ScreenSize { 
-    MAX_X = 80,         // Screen width
-    MAX_Y = 25,         // Total screen height
-    MAX_Y_INGAME = 21   // Playable area (bottom 4 rows for UI)
+enum ScreenSize
+{
+    MAX_X = 80,       // Screen width
+    MAX_Y = 25,       // Total screen height
+    MAX_Y_INGAME = 21 // Playable area (bottom 4 rows for UI)
 };
 
 //////////////////////////////////////////      ROOM CONFIGURATION     //////////////////////////////////////////
 
-enum RoomCount { 
+enum RoomCount
+{
     TOTAL_ROOMS = 3
 };
 
 //////////////////////////////////////////         GAME STATES         //////////////////////////////////////////
 
-enum class GameState {
+enum class GameState
+{
     mainMenu,
     instructions,
     quit,
@@ -28,7 +31,8 @@ enum class GameState {
 
 //////////////////////////////////////////          DIRECTIONS         //////////////////////////////////////////
 
-enum class Direction {
+enum class Direction
+{
     UP,
     DOWN,
     LEFT,
@@ -38,7 +42,8 @@ enum class Direction {
 
 //////////////////////////////////////////        PLAYER ACTIONS       //////////////////////////////////////////
 
-enum class Action {
+enum class Action
+{
     MOVE_UP,
     MOVE_DOWN,
     MOVE_LEFT,
@@ -51,7 +56,8 @@ enum class Action {
 //////////////////////////////////////////        OBJECT TYPES         //////////////////////////////////////////
 
 // Char values match sprites for easy mapping
-enum class ObjectType {
+enum class ObjectType
+{
     AIR = ' ',
     WALL = 'W',
     BREAKABLE_WALL = '=',
@@ -63,26 +69,30 @@ enum class ObjectType {
     SWITCH_OFF = '\\',
     SWITCH_ON = '/',
     RIDDLE = '?',
-    DOOR = 'D'
+    DOOR = 'D',
+    SWITCH_WALL = 'Z'
 };
 
 //////////////////////////////////////////       BOMB CONSTANTS        //////////////////////////////////////////
 
-namespace BombConfig {
-    constexpr int FUSE_TIME = 50;       // ~5 seconds at 10 FPS
+namespace BombConfig
+{
+    constexpr int FUSE_TIME = 50; // ~5 seconds at 10 FPS
     constexpr int RADIUS = 5;
     constexpr int BLINK_RATE = 10;
 }
 
 //////////////////////////////////////////       LIGHT CONSTANTS       //////////////////////////////////////////
 
-namespace LightConfig {
+namespace LightConfig
+{
     constexpr int TORCH_RADIUS = 2;
 }
 
 //////////////////////////////////////////        ROOM LIMITS          //////////////////////////////////////////
 
-namespace RoomLimits {
+namespace RoomLimits
+{
     constexpr int MAX_OBJECTS = 100;
     constexpr int MAX_MODS = 100;
     constexpr int MAX_DARK_ZONES = 10;
@@ -90,23 +100,25 @@ namespace RoomLimits {
 
 //////////////////////////////////////////       DOOR DEFAULTS         //////////////////////////////////////////
 
-namespace DoorConfig {
+namespace DoorConfig
+{
     constexpr int DEFAULT_REQUIRED_KEYS = 1;
     constexpr int DEFAULT_REQUIRED_SWITCHES = 0;
 }
 
 //////////////////////////////////////////      PLAYER SPRITES         //////////////////////////////////////////
 
-namespace PlayerSprites {
+namespace PlayerSprites
+{
     constexpr char PLAYER1 = '$';
     constexpr char PLAYER2 = '&';
 }
 
 //////////////////////////////////////////       INVENTORY UI          //////////////////////////////////////////
 
-namespace InventoryUI {
+namespace InventoryUI
+{
     constexpr int PLAYER1_X = 18;
     constexpr int PLAYER2_X = 58;
     constexpr int Y_POS = 23;
 }
-

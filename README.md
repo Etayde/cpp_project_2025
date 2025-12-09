@@ -48,7 +48,7 @@ game.exe    # Windows
 - **W** - Wall: Blocks movement and explosion
 - **\\** - Switch (OFF): Walk into it to toggle ON
 - **/** - Switch (ON): Activated switch
-- **\*** - Obstacle: Blocks movement until condition is met (switches or explosion)
+- **Z** - Switch Wall: Blocks movement until condition is met (switches or explosion)
 - **K** - Key: Pick up by walking into it (REQUIRED for doors)
 - **0-9** - Doors: BOTH players need keys and must stand on the door together
 - **@** - Bomb: Pick up and drop to explode (5 second fuse, radius 5)
@@ -71,7 +71,7 @@ game.exe    # Windows
 
 ### Room 0 (Starting Room)
 - Find and activate 2 switches (\\)
-- Obstacles (*) blocking the key will be removed
+- Switch Walls (Z) blocking the key will be removed
 - Each player picks up a key (K)
 - Both players go to door 0 together
 

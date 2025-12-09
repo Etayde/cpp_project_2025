@@ -1,6 +1,7 @@
 
 #pragma once
 //////////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
+
 #include "Constants.h"
 #include "Screen.h"
 #include "Player.h"
@@ -9,7 +10,8 @@
 //////////////////////////////////////////           Game             //////////////////////////////////////////
 
 // Main game controller - manages state, rooms, and gameplay
-class Game {
+class Game
+{
 public:
     GameState currentState;
     Room rooms[TOTAL_ROOMS];
@@ -40,12 +42,10 @@ public:
     void gameLoop();
     void handleInput();
     void update();
-    
+
     // Room management
     void changeRoom(int newRoomId, bool goingForward);
-    Room* getCurrentRoom();
+    Room *getCurrentRoom();
     void checkRoomTransitions();
     void redrawCurrentRoom();
 };
-
-
