@@ -238,8 +238,6 @@ inline Screen *getLayoutById(int id)
         return &room0Layout;
     case 1:
         return &room1Layout;
-    case 2:
-        return &room2Layout;
     default:
         return &room0Layout;
     }

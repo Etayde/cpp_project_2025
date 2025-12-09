@@ -13,7 +13,7 @@ enum ScreenSize
 
 enum RoomCount
 {
-    TOTAL_ROOMS = 3
+    TOTAL_ROOMS = 2
 };
 
 //////////////////////////////////////////         GAME STATES         //////////////////////////////////////////
