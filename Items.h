@@ -29,7 +29,7 @@ private:
     int lightRadius;
 
 public:
-    static const int DEFAULT_LIGHT_RADIUS = 4;
+    static const int DEFAULT_LIGHT_RADIUS = 5;
 
     Torch() : PickableObject(), lightRadius(DEFAULT_LIGHT_RADIUS)
     {

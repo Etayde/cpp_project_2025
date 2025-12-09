@@ -26,6 +26,7 @@ public:
 //////////////////////////////////////////          Riddle            //////////////////////////////////////////
 
 // Puzzle marker placeholder
+// Not used yet - reserved for future puzzle implementation
 class Riddle : public InteractableObject
 {
 public:

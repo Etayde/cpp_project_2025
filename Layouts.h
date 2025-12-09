@@ -202,14 +202,14 @@ const char *room1Data[MAX_Y] = {
      "W                  W                           W             WWWWWWWWWWWWWW   W", // 9
      "W                  WWWWWWW  WWWWWWWWWWWWWWWWWWWW                              W", // 10
      "W                  W                           =                              W", // 11
-     "W        !         W                           =                              W", // 12
+     "W                  W                           =                              W", // 12
      "W                  W                           =                              W", // 13
-     "W                  W                           =                              W", // 14
+     "W                  W\\                          =                              W", // 14
      "W                  WWWWWWWWWWWWWWWWWWWWWWWWWWWWW                              W", // 15
-     "W                                                                    W        W", // 16
-     "W                                                                    W        2", // 17
-     "W                  @                                                 W        W", // 18
-     "W                                                                    W        W", // 19
+     "W                                                                    W********W", // 16
+     "W                  !                                                 W        W", // 17
+     "W                                                                    W        2", // 18
+     "W                  @                                                 W        W", // 19
      "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 20
      "W                          ------ INVENTORY ------                            W", // 21
      "W       PLAYER 1 ($):                 |       PLAYER 2 (&):                   W", // 22

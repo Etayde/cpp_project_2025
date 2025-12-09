@@ -59,7 +59,7 @@ public:
     bool onExplosion() override { return true; }
 };
 
-//////////////////////////////////////////         Switch Wall           //////////////////////////////////////////
+//////////////////////////////////////////         SwitchWall            //////////////////////////////////////////
 
 // Blocks movement until switches activate or bomb destroys it
 // At the moment this is not functional in the game

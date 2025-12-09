@@ -264,23 +264,19 @@ void Game::checkRoomTransitions()
             }
             room->unlockDoor(doorId);
 
-            // Forward door
-            if (doorId == room->nextRoomId)
+            // Check if completing this room triggers victory
+            if (currentRoomId == finalRoomId)
             {
-                // Check if completing this room triggers victory
-                if (currentRoomId == finalRoomId)
-                {
-                    currentState = GameState::victory;
-                    return;
-                }
-                changeRoom(doorId, true);
+                currentState = GameState::victory;
+                return;
             }
+            changeRoom(doorId, true);
         }
-        // Backward door
-        else if (doorId == room->prevRoomId)
-        {
-            changeRoom(doorId, false);
-        }
+    }
+    // Backward door check
+    else if (doorId == room->prevRoomId)
+    {
+        changeRoom(doorId, false);
     }
 }
 
@@ -378,7 +374,7 @@ void Game::initializeRooms()
     rooms[1].nextRoomId = 2;
     rooms[1].prevRoomId = 0;
     rooms[1].setDoorRequirements(2, 2, 0); // Door 2: 1 key, 0 switches
-    rooms[1].addDarkZone(21, 5, 46, 14);
+    rooms[1].addDarkZone(20, 5, 46, 14);
     rooms[1].addDarkZone(62, 5, 77, 8);
 
     // Room 2: Final room (victory)
