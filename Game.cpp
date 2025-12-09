@@ -98,12 +98,13 @@ void Game::startNewGame()
 
 void Game::gameLoop()
 {
-    if (getCurrentRoom())
+    Room *room = getCurrentRoom();
+    if (room)
     {
-        getCurrentRoom()->draw();
+        room->draw();
     }
-    player1.draw();
-    player2.draw();
+    player1.draw(room);
+    player2.draw(room);
     player1.updateInventoryDisplay();
     player2.updateInventoryDisplay();
 
@@ -189,8 +190,8 @@ void Game::update()
     // Update visibility
     room->updateVisibility(&player1, &player2);
     room->drawDarkness();
-    player1.draw();
-    player2.draw();
+    player1.draw(room);
+    player2.draw(room);
 
     // Check room transitions
     checkRoomTransitions();
@@ -210,12 +211,13 @@ Room *Game::getCurrentRoom()
 void Game::redrawCurrentRoom()
 {
     clrscr();
-    if (getCurrentRoom())
+    Room *room = getCurrentRoom();
+    if (room)
     {
-        getCurrentRoom()->draw();
+        room->draw();
     }
-    player1.draw();
-    player2.draw();
+    player1.draw(room);
+    player2.draw(room);
     player1.updateInventoryDisplay();
     player2.updateInventoryDisplay();
 }

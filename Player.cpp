@@ -87,7 +87,7 @@ bool Player::move(Room *room)
     // Not moving - just redraw
     if (pos.diff_x == 0 && pos.diff_y == 0)
     {
-        draw();
+        draw(room);
         return false;
     }
 
@@ -95,11 +95,11 @@ bool Player::move(Room *room)
     int nextY = pos.y + pos.diff_y;
 
     // Check bounds
-    if (nextX < 0 || nextX >= MAX_X-1 || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
+    if (nextX < 0 || nextX >= MAX_X || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
     {
         pos.diff_x = 0;
         pos.diff_y = 0;
-        draw();
+        draw(room);
         return false;
     }
 
@@ -109,7 +109,7 @@ bool Player::move(Room *room)
     {
         pos.diff_x = 0;
         pos.diff_y = 0;
-        draw();
+        draw(room);
         return false;
     }
 
@@ -134,7 +134,7 @@ bool Player::move(Room *room)
             }
             pos.diff_x = 0;
             pos.diff_y = 0;
-            draw();
+            draw(room);
             return false;
         }
 
@@ -143,7 +143,7 @@ bool Player::move(Room *room)
         {
             pos.diff_x = 0;
             pos.diff_y = 0;
-            draw();
+            draw(room);
             return false;
         }
 
@@ -192,9 +192,26 @@ bool Player::move(Room *room)
     // Update position and draw
     pos.x = nextX;
     pos.y = nextY;
-    draw();
+    draw(room);
 
     return true;
+}
+
+//////////////////////////////////////////           draw               //////////////////////////////////////////
+
+// Draw player (hide if in dark zone without visibility)
+void Player::draw(Room *room)
+{
+    gotoxy(pos.x, pos.y);
+    // Don't draw player if in dark zone without visibility
+    if (room != nullptr && room->isInDarkZone(pos.x, pos.y) && !room->isVisible(pos.x, pos.y))
+    {
+        std::cout << ' ' << std::flush;
+    }
+    else
+    {
+        std::cout << sprite << std::flush;
+    }
 }
 
 //////////////////////////////////////////        pickupItem           //////////////////////////////////////////

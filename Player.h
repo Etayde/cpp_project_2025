@@ -95,11 +95,7 @@ public:
     void addKey() { keyCount++; }
     bool useKey();
 
-    void draw()
-    {
-        gotoxy(pos.x, pos.y);
-        std::cout << sprite << std::flush;
-    }
+    void draw(Room *room = nullptr);
 
     void erase()
     {
