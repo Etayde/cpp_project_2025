@@ -16,6 +16,7 @@ public:
     GameState currentState;
     Room rooms[TOTAL_ROOMS];
     int currentRoomId;
+    int finalRoomId; // Room ID after which the game ends in victory
     Player player1;
     Player player2;
 

@@ -194,12 +194,6 @@ void Game::update()
 
     // Check room transitions
     checkRoomTransitions();
-
-    // Victory check
-    if (currentRoomId == TOTAL_ROOMS - 1 && currentState != GameState::victory)
-    {
-        currentState = GameState::victory;
-    }
 }
 
 //////////////////////////////////////////       getCurrentRoom       //////////////////////////////////////////
@@ -273,6 +267,12 @@ void Game::checkRoomTransitions()
             // Forward door
             if (doorId == room->nextRoomId)
             {
+                // Check if completing this room triggers victory
+                if (currentRoomId == finalRoomId)
+                {
+                    currentState = GameState::victory;
+                    return;
+                }
                 changeRoom(doorId, true);
             }
         }
@@ -358,6 +358,9 @@ void Game::showGameOver()
 // Initialize all rooms with layouts and requirements
 void Game::initializeRooms()
 {
+    // Set which room triggers victory when completed (change this to add more rooms)
+    finalRoomId = 1; // Game ends after completing room 1
+
     // Room 0: Switch puzzle
     rooms[0] = Room(0);
     rooms[0].initFromLayout(&room0Layout);
