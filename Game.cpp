@@ -1,3 +1,4 @@
+//////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 
 #include "Game.h"
 #include "Layouts.h"
@@ -129,19 +130,18 @@ void Game::handleInput()
             break;
 
         // Detect and ignore special key sequences (arrow keys, function keys, etc.)
-        // On Windows, special keys send 0 or 224 followed by a key code
+        // On Windows, special keys send 0 or 224 followed by a key code (apperently :) )
         if (pressed == 0 || pressed == 224)
         {
-            // Consume the next byte (the actual key code) and ignore it
             if (check_kbhit())
             {
                 get_char_nonblocking();
             }
-            continue; // Skip processing this key
+            continue;
         }
 
         if (pressed == 27)
-        { // ESC = pause
+        { // ESC
             currentState = GameState::paused;
             return;
         }
@@ -251,7 +251,6 @@ void Game::checkRoomTransitions()
             {
                 int keysNeeded = room->doorReqs[doorId].requiredKeys;
 
-                // Consume keys from both players until requirement is met
                 int keysConsumed = 0;
                 while (keysConsumed < keysNeeded && player1.getKeyCount() > 0)
                 {
@@ -320,7 +319,7 @@ void Game::handleInstructionsInput()
     {
         char choice = get_single_char();
         if (choice == 27)
-            currentState = GameState::mainMenu; // ESC
+            currentState = GameState::mainMenu;
     }
 }
 
@@ -335,7 +334,7 @@ void Game::handlePauseInput()
     {
         char choice = get_single_char();
         if (choice == 27)
-            currentState = GameState::inGame; // ESC = resume
+            currentState = GameState::inGame;
         else if (choice == 'h' || choice == 'H')
             currentState = GameState::mainMenu;
     }
@@ -356,10 +355,10 @@ void Game::showGameOver()
 // Initialize all rooms with layouts and requirements
 void Game::initializeRooms()
 {
-    // Set which room triggers victory when completed (change this to add more rooms)
-    finalRoomId = 1; // Game ends after completing room 1
+    // Set which room triggers victory when completed
+    finalRoomId = 1; // Game ends after completing room 1 - can be changed as needed
 
-    // Room 0: Switch puzzle
+    // Room 0
     rooms[0] = Room(0);
     rooms[0].initFromLayout(&room0Layout);
     rooms[0].spawnPoint = Point(3, 5, 0, 0, ' ');
@@ -368,19 +367,17 @@ void Game::initializeRooms()
     rooms[0].prevRoomId = -1;
     rooms[0].setDoorRequirements(1, 0, 2); // Door 1: 0 keys, 2 switches
 
-    // Room 1: Bomb puzzle with dark zones (final room)
+    // Room 1
     rooms[1] = Room(1);
     rooms[1].initFromLayout(&room1Layout);
     rooms[1].spawnPoint = Point(3, 5, 0, 0, ' ');
     rooms[1].spawnPointFromNext = Point(75, 17, 0, 0, ' ');
     rooms[1].nextRoomId = 2; // Door 2 is the forward door (triggers victory)
     rooms[1].prevRoomId = 0;
-    rooms[1].setDoorRequirements(0, 0, 0); // Door 0: No requirements (backward door)
-    rooms[1].setDoorRequirements(2, 2, 0); // Door 2: 2 keys, 0 switches (forward door - triggers victory)
+    rooms[1].setDoorRequirements(0, 0, 0); // Door 0: No requirements
+    rooms[1].setDoorRequirements(2, 2, 0); // Door 2: 2 keys, 0 switches
     rooms[1].addDarkZone(20, 5, 46, 14);
     rooms[1].addDarkZone(62, 5, 77, 8);
-
-    
 }
 
 //////////////////////////////////////////        changeRoom          //////////////////////////////////////////
@@ -401,7 +398,7 @@ void Game::changeRoom(int newRoomId, bool goingForward)
     Point spawn = goingForward ? rooms[newRoomId].spawnPoint : rooms[newRoomId].spawnPointFromNext;
 
     player1.setPosition(spawn.x, spawn.y);
-    player2.setPosition(spawn.x, spawn.y + 1); // Slight offset for 2nd player
+    player2.setPosition(spawn.x, spawn.y + 1);
 
     player1.pos.diff_x = 0;
     player1.pos.diff_y = 0;
@@ -410,7 +407,6 @@ void Game::changeRoom(int newRoomId, bool goingForward)
     player1.atDoor = false;
     player2.atDoor = false;
 
-    // Reset prevChar to prevent old room's door character from appearing
     player1.prevChar = ' ';
     player2.prevChar = ' ';
 

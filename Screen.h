@@ -1,4 +1,5 @@
 #pragma once
+
 //////////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 
 #include <iostream>
@@ -11,11 +12,10 @@ using std::cout, std::endl;
 
 //////////////////////////////////////////          Screen            //////////////////////////////////////////
 
-// Fixed character-based screen layout
 class Screen
 {
 private:
-    const char *screen[MAX_Y]; // Array of string pointers for each row
+    const char *screen[MAX_Y];
 
 public:
     // Construct from layout array

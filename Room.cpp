@@ -1,4 +1,6 @@
 
+//////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
+
 #include "Room.h"
 #include "Player.h"
 #include "Door.h"
@@ -124,7 +126,7 @@ Room &Room::operator=(const Room &other)
 
 //////////////////////////////////////////       Private Helpers       //////////////////////////////////////////
 
-// Deep copy objects using polymorphic clone()
+// Deep copy objects
 void Room::copyObjectsFrom(const Room &other)
 {
     objectCount = 0;
@@ -170,7 +172,7 @@ void Room::initFromLayout(const Screen *layout)
 
 //////////////////////////////////////////        loadObjects          //////////////////////////////////////////
 
-// Scan layout and create objects using factory function
+// Scan layout and create objects
 void Room::loadObjects()
 {
     totalKeysInRoom = 0;
@@ -190,7 +192,6 @@ void Room::loadObjects()
 
             if (obj != nullptr)
             {
-                // Track keys and switches
                 if (obj->getType() == ObjectType::KEY)
                     totalKeysInRoom++;
                 else if (obj->getType() == ObjectType::SWITCH_OFF)
@@ -224,7 +225,7 @@ void Room::setDoorRequirements(int doorId, int keys, int switches)
 
 //////////////////////////////////////////           draw              //////////////////////////////////////////
 
-// Draw room: base layout + modifications + darkness
+// Draw room: base layout -> modifications -> darkness
 void Room::draw()
 {
     if (baseLayout != nullptr)
@@ -311,7 +312,7 @@ void Room::resetMods()
 
 //////////////////////////////////////////        getObjectAt          //////////////////////////////////////////
 
-// Get object at position using polymorphism
+// Get object at position
 GameObject *Room::getObjectAt(int x, int y)
 {
     for (int i = 0; i < objectCount; i++)
@@ -340,7 +341,7 @@ const GameObject *Room::getObjectAt(int x, int y) const
 
 //////////////////////////////////////////         addObject           //////////////////////////////////////////
 
-// Add object to room (room takes ownership)
+// Add object to room
 bool Room::addObject(GameObject *obj)
 {
     if (obj == nullptr || objectCount >= RoomLimits::MAX_OBJECTS)
@@ -355,7 +356,7 @@ bool Room::addObject(GameObject *obj)
 
 //////////////////////////////////////////        removeObject         //////////////////////////////////////////
 
-// Remove object at index
+// Remove object at given index
 void Room::removeObject(int index)
 {
     if (index < 0 || index >= objectCount)
@@ -439,7 +440,7 @@ bool Room::isBlocked(int x, int y)
 
 //////////////////////////////////////////      hasLineOfSight         //////////////////////////////////////////
 
-// Check line of sight using Bresenham's algorithm
+// Check line of sight using Bresenham's algorithm - MADE WITH AI
 bool Room::hasLineOfSight(int x1, int y1, int x2, int y2)
 {
     int dx = abs(x2 - x1);
@@ -477,7 +478,7 @@ bool Room::hasLineOfSight(int x1, int y1, int x2, int y2)
 
 //////////////////////////////////////////     updatePuzzleState       //////////////////////////////////////////
 
-// Update puzzle state - check switches and remove obstacles if complete
+// Check switches and remove switch walls if complete
 void Room::updatePuzzleState()
 {
     activeSwitches = countActiveSwitches();
@@ -486,7 +487,6 @@ void Room::updatePuzzleState()
     {
         completed = true;
 
-        // Remove obstacles linked to switches
         for (int i = 0; i < objectCount; i++)
         {
             if (objects[i] != nullptr && objects[i]->getType() == ObjectType::SWITCH_WALL)
@@ -608,7 +608,6 @@ void Room::updateVisibility(Player *p1, Player *p2)
 
     initVisibility();
 
-    // Dark zones make areas invisible
     for (int i = 0; i < darkZoneCount; i++)
     {
         for (int y = darkZones[i].y1; y <= darkZones[i].y2; y++)
@@ -630,7 +629,7 @@ void Room::updateVisibility(Player *p1, Player *p2)
 
 //////////////////////////////////////////        lightRadius          //////////////////////////////////////////
 
-// Light circular area around center
+// Light circular area around center - MADE WITH AI
 void Room::lightRadius(int centerX, int centerY, int radius)
 {
     for (int dy = -radius; dy <= radius; dy++)
@@ -663,7 +662,7 @@ bool Room::isVisible(int x, int y) const
 
 //////////////////////////////////////////        explodeBomb          //////////////////////////////////////////
 
-// Process bomb explosion - destroy objects, check player hits
+// Process bomb explosion - destroy objects, check player hits - MADE WITH AI'S HELP
 ExplosionResult Room::explodeBomb(int centerX, int centerY, int radius, Player *p1, Player *p2)
 {
     ExplosionResult result;
@@ -742,7 +741,7 @@ void Room::handleBombDrop(Player &player)
     }
 
     if (bomb.active)
-        return; // Only one bomb at a time
+        return;
 
     Point dropPos = player.dropItem(this);
 

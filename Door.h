@@ -1,12 +1,12 @@
 #pragma once
 
+////////////////////////////////////////      INCLUDES & FORWARDS       //////////////////////////////////////////
+
 #include "InteractableObject.h"
 
 //////////////////////////////////////////           Door             //////////////////////////////////////////
 
 // A door that requires keys and/or switches to open
-// requiredKeys = keys needed PER PLAYER
-// requiredSwitches = number of switches that must be ON
 class Door : public InteractableObject
 {
 private:
@@ -33,7 +33,7 @@ public:
     const char *getName() const override { return "Door"; }
 
     bool isBlocking() const override { return false; }
-    bool onExplosion() override { return false; } // Doors survive explosions
+    bool onExplosion() override { return false; }
 
     // Getters
     int getDoorId() const { return doorId; }
@@ -52,8 +52,6 @@ public:
     void setRequiredSwitches(int switches) { requiredSwitches = switches; }
     void setIsOpen(bool open) { isOpen = open; }
     void setTargetRoomId(int target) { targetRoomId = target; }
-
-    // Check if door can be opened (both players need keys)
     bool canOpen(int keysAvailable, int switchesOn) const
     {
         bool keysOk = (keysAvailable >= requiredKeys * 2);

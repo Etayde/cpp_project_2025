@@ -1,10 +1,12 @@
 #pragma once
 
+//////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
+
 #include "PickableObject.h"
 
 //////////////////////////////////////////           Key              //////////////////////////////////////////
 
-// A key that unlocks doors
+// A key that unlocks doors (K)
 class Key : public PickableObject
 {
 public:
@@ -22,7 +24,7 @@ public:
 
 //////////////////////////////////////////          Torch             //////////////////////////////////////////
 
-// A light source that illuminates dark areas
+// A light source that illuminates dark areas (!)
 class Torch : public PickableObject
 {
 private:

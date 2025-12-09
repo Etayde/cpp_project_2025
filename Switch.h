@@ -6,7 +6,7 @@
 
 //////////////////////////////////////////          Switch            //////////////////////////////////////////
 
-// A switch that can be toggled on/off to control doors
+// A switch that can be toggled on/off to control doors and switch walls
 class Switch : public InteractableObject
 {
 private:

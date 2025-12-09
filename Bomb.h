@@ -1,15 +1,16 @@
 #pragma once
 
+////////////////////////////////////////      INCLUDES & FORWARDS       //////////////////////////////////////////
+
 #include "PickableObject.h"
 
 //////////////////////////////////////////           Bomb            //////////////////////////////////////////
 
-// An explosive that can be picked up by players
-// Once dropped, the bomb's state is tracked by RoomBomb struct in Room
+// An explosive that can be picked up by players (@)
 class Bomb : public PickableObject
 {
 public:
-    static const int DEFAULT_FUSE_TIME = 50; // ~5 seconds at 10 FPS
+    static const int DEFAULT_FUSE_TIME = 50;
     static const int EXPLOSION_RADIUS = 5;
 
     Bomb() : PickableObject()

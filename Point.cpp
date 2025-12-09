@@ -1,9 +1,10 @@
+//////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 
 #include "Point.h"
 
 //////////////////////////////////////////           move             //////////////////////////////////////////
 
-// Apply movement vector to position (clamped to game area)
+// Apply movement vector to position
 void Point::move()
 {
     int newX = x + diff_x;
@@ -17,7 +18,7 @@ void Point::move()
 
 //////////////////////////////////////////       setDirection         //////////////////////////////////////////
 
-// Set movement direction from Direction enum
+// Set movement direction
 void Point::setDirection(Direction dir)
 {
     switch (dir)

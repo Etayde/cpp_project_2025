@@ -8,7 +8,7 @@
 
 //////////////////////////////////////////          Point             //////////////////////////////////////////
 
-// 2D point with position, movement direction, and sprite
+// 2D point
 class Point
 {
 public:
@@ -31,14 +31,14 @@ public:
         std::cout << sprite << std::flush;
     }
 
-    // Draw custom character at current position
+    // Draw custom char at current position
     void draw(char c) const
     {
         gotoxy(x, y);
         std::cout << c << std::flush;
     }
 
-    // Apply movement vector to position
+    // Apply movement vector
     void move();
 
     // Set movement direction

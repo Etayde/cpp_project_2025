@@ -61,8 +61,7 @@ public:
 
 //////////////////////////////////////////         SwitchWall            //////////////////////////////////////////
 
-// Blocks movement until switches activate or bomb destroys it
-// At the moment this is not functional in the game
+// Blocks movement until switches activate or bomb destroys it (Z)
 class SwitchWall : public StaticObject
 {
 private:

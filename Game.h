@@ -1,5 +1,5 @@
-
 #pragma once
+
 //////////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 
 #include "Constants.h"
@@ -9,14 +9,14 @@
 
 //////////////////////////////////////////           Game             //////////////////////////////////////////
 
-// Main game controller - manages state, rooms, and gameplay
+// Main game controller
 class Game
 {
 public:
     GameState currentState;
     Room rooms[TOTAL_ROOMS];
     int currentRoomId;
-    int finalRoomId; // Room ID after which the game ends in victory
+    int finalRoomId;
     Player player1;
     Player player2;
 

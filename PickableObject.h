@@ -1,6 +1,10 @@
 #pragma once
 
+//////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
+
 #include "GameObject.h"
+
+/////////////////////////////////////////       PickableObject       //////////////////////////////////////////
 
 // Base class for items that can be picked up (keys, bombs, torches)
 class PickableObject : public GameObject
@@ -12,5 +16,4 @@ public:
     bool isBlocking() const override { return false; }
     bool isPickable() const override { return true; }
     bool isInteractable() const override { return false; }
-    bool onExplosion() override { return true; } // Destroyed by bombs
-};
+    bool onExplosion() override { return true; }

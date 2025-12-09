@@ -2,6 +2,7 @@
 #pragma once
 
 //////////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
+
 #include "Screen.h"
 #include "GameObject.h"
 #include "Constants.h"
@@ -11,7 +12,6 @@ class Player;
 
 //////////////////////////////////////////        Modification        //////////////////////////////////////////
 
-// Tracks a single character change to room layout
 struct Modification
 {
     int x;
@@ -24,7 +24,6 @@ struct Modification
 
 //////////////////////////////////////////         DarkZone           //////////////////////////////////////////
 
-// Defines a rectangular dark area
 struct DarkZone
 {
     int x1, y1; // Top-left corner
@@ -74,7 +73,6 @@ struct RoomBomb
 
 //////////////////////////////////////////      ExplosionResult       //////////////////////////////////////////
 
-// Results of a bomb explosion
 struct ExplosionResult
 {
     bool keyDestroyed;
@@ -89,8 +87,6 @@ struct ExplosionResult
 //////////////////////////////////////////     DoorRequirements       //////////////////////////////////////////
 
 // Requirements to open a specific door
-// requiredKeys = total keys needed (combined from both players)
-// requiredSwitches = switches that must be ON
 struct DoorRequirements
 {
     int doorId;
@@ -120,7 +116,7 @@ public:
     Modification mods[RoomLimits::MAX_MODS];
     int modCount;
 
-    // Objects (polymorphic pointers)
+    // Objects
     GameObject *objects[RoomLimits::MAX_OBJECTS];
     int objectCount;
 
@@ -170,7 +166,7 @@ public:
     void setCharAt(int x, int y, char c);
     void resetMods();
 
-    // Object management (polymorphic)
+    // Object management
     GameObject *getObjectAt(int x, int y);
     const GameObject *getObjectAt(int x, int y) const;
     bool addObject(GameObject *obj);

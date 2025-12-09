@@ -1,3 +1,4 @@
+//////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 
 #include "Screen.h"
 #include "Point.h"
@@ -18,7 +19,6 @@ bool Screen::isWall(const Point &p) const
 
 //////////////////////////////////////////         isObject           //////////////////////////////////////////
 
-// Returns true for any non-empty, non-wall character
 bool Screen::isObject(const Point &p) const
 {
     char c = getCharAt(p);
@@ -27,7 +27,6 @@ bool Screen::isObject(const Point &p) const
 
 //////////////////////////////////////////         objectIs           //////////////////////////////////////////
 
-// Convert character to ObjectType
 ObjectType Screen::objectIs(const Point &p) const
 {
     char ch = getCharAt(p);
