@@ -13,9 +13,9 @@ const char *mainMenuData[MAX_Y] = {
      "|                                                                             |", // 6
      "|                       TWO PLAYERS COOPERATIVE ADVENTURE                     |", // 7
      "|                                                                             |", // 8
-     "|                            (1) Start New Game                               |", // 9
-     "|                           (8) View Instructions                             |", // 10
-     "|                                 (9) Exit                                    |", // 11
+     "|                            [1] Start New Game                               |", // 9
+     "|                           [8] View Instructions                             |", // 10
+     "|                                 [9] Exit                                    |", // 11
      "|                                                                             |", // 12
      "|                                                                             |", // 13
      "|                                                                             |", // 14
@@ -42,16 +42,16 @@ const char *instructionsData[MAX_Y] = {
      "|  -------------------------------- | --------------------------------------  |",  // 4
      "|            CONTROLS (Auto - Move) | MAP LEGEND & ITEMS                      |",  // 5
      "|  -------------------------------- | --------------------------------------  |",  // 6
-     "|     ACTION      P1($)    P2(&)    |   W    Wall 1    Unbreakable            |",  // 7
-     "|     UP            W        I      |   =    Wall 2    Breakable              |",  // 8
-     "|     DOWN          X        M      |   #    Spring    Boosts speed           |",  // 9
+     "|     ACTION      P1($)    P2(&)    |   W    Wall 1     Unbreakable           |",  // 7
+     "|     UP            W        I      |   =    Wall 2     Breakable             |",  // 8
+     "|     DOWN          X        M      |   #    Spring     Boosts speed          |",  // 9
      "|     LEFT          A        J      |   Z    SwitchWall Can be pushed         |",  // 10
-     "|     RIGHT         D        L      |   !    Torch     Lights dark rooms      |",  // 11
-     "|     STAY          S        K      |   @    Bomb      Explodes (danger!)     |",  // 12
-     "|     DISPOSE       E        O      |   K    Key       Unlocks Doors (0-9)    |",  // 13
-     "|                                   |   \\ /  Switch    Toggles obstacles      |", // 14
-     "|    * Characters move until STOP   |   ?    Riddle    Must solve to pass     |",  // 15
-     "|      is pressed or hit a wall.    |   0-9  Doors     Go to next room        |",  // 16
+     "|     RIGHT         D        L      |   !    Torch      Lights dark rooms     |",  // 11
+     "|     STAY          S        K      |   @    Bomb       Explodes (danger!)    |",  // 12
+     "|     DISPOSE       E        O      |   K    Key        Unlocks Doors (0-9)   |",  // 13
+     "|                                   |   \\ /  Switch    Toggles obstacles     |", // 14
+     "|    * Characters move until STOP   |   ?    Riddle     Must solve to pass    |",  // 15
+     "|      is pressed or hit a wall.    |   0-9  Doors      Go to next room       |",  // 16
      "|  -------------------------------- | --------------------------------------  |",  // 17
      "|     SYSTEM: [ESC] - Pause game                                              |",  // 18
      "|             [H]   - From Pause menu, return to main menu                    |",  // 19
@@ -73,10 +73,10 @@ const char *pauseData[MAX_Y] = {
      "|                                                                             |", // 4
      "|                                                                             |", // 5
      "|                                                                             |", // 6
-     "|                              GAME PAUSED                                    |", // 7
-     "|                           ----------------                                  |", // 8
+     "|                               GAME PAUSED                                   |", // 7
+     "|                             ----------------                                |", // 8
      "|                                                                             |", // 9
-     "|                          Press [ESC] to Resume                              |", // 10
+     "|                           Press [ESC] to Resume                             |", // 10
      "|                          Press [H] for Main Menu                            |", // 11
      "|                                                                             |", // 12
      "|                                                                             |", // 13
@@ -102,11 +102,11 @@ const char *victoryData[MAX_Y] = {
      "|                                                                             |", // 2
      "|                                                                             |", // 3
      "|                                                                             |", // 4
-     "|                         *****  VICTORY!  *****                              |", // 5
+     "|                           *****  VICTORY!  *****                            |", // 5
      "|                                                                             |", // 6
-     "|                    Congratulations! You completed the game!                 |", // 7
+     "|                   Congratulations! You completed the game!                  |", // 7
      "|                                                                             |", // 8
-     "|                      Both players reached the final room.                   |", // 9
+     "|                     Both players reached the final room.                    |", // 9
      "|                                                                             |", // 10
      "|                                                                             |", // 11
      "|                         Press any key to continue                           |", // 12
@@ -133,14 +133,14 @@ const char *gameOverData[MAX_Y] = {
      "|                                                                             |", // 2
      "|                                                                             |", // 3
      "|                                                                             |", // 4
-     "|                           *** GAME OVER ***                                 |", // 5
+     "|                              *** GAME OVER ***                              |", // 5
      "|                                                                             |", // 6
      "|                                                                             |", // 7
      "|                      The bomb destroyed something vital!                    |", // 8
      "|                                                                             |", // 9
      "|                                                                             |", // 10
      "|                                                                             |", // 11
-     "|                         Press any key to continue                           |", // 12
+     "|                          Press any key to continue                          |", // 12
      "|                                                                             |", // 13
      "|                                                                             |", // 14
      "|                                                                             |", // 15
@@ -218,36 +218,6 @@ const char *room1Data[MAX_Y] = {
 };
 static Screen room1Layout(room1Data);
 
-// Room 2 - Final room (victory)
-const char *room2Data[MAX_Y] = {
-    //0123456789012345678901234567890123456789012345678901234567890123456789012345678
-     "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 0
-     "W                                                                             W", // 1
-     "W                                                                             W", // 2
-     "W                                                                             W", // 3
-     "W                                                                             W", // 4
-     "W                                                                             W", // 5
-     "W                                                                             W", // 6
-     "W                         *************************                           W", // 7
-     "W                         *                       *                           W", // 8
-     "W                         *    CONGRATULATIONS!   *                           W", // 9
-     "W                         *                       *                           W", // 10
-     "W                         *   YOU REACHED THE     *                           W", // 11
-     "W                         *     FINAL ROOM!       *                           W", // 12
-     "W                         *                       *                           W", // 13
-     "W                         *************************                           W", // 14
-     "W                                                                             W", // 15
-     "W                                                                             W", // 16
-     "W                                                                             W", // 17
-     "W                                                                             W", // 18
-     "W                                                                             W", // 19
-     "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW", // 20
-     "W                          ------ INVENTORY ------                            W", // 21
-     "W       PLAYER 1 ($):                 |       PLAYER 2 (&):                   W", // 22
-     "W                                     |                                       W", // 23
-     "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW"  // 24
-};
-static Screen room2Layout(room2Data);
 
 // Function to get layout by ID
 inline Screen *getLayoutById(int id)
