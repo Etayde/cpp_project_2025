@@ -371,10 +371,10 @@ void Game::initializeRooms()
     rooms[1].initFromLayout(&room1Layout);
     rooms[1].spawnPoint = Point(3, 5, 0, 0, ' ');
     rooms[1].spawnPointFromNext = Point(75, 17, 0, 0, ' ');
-    rooms[1].nextRoomId = -1; // No next room
+    rooms[1].nextRoomId = 2; // Door 2 is the forward door (triggers victory)
     rooms[1].prevRoomId = 0;
-    rooms[1].setDoorRequirements(0, 0, 0); // Door 0: No requirements
-    rooms[1].setDoorRequirements(2, 2, 0); // Door 2: 2 keys, 0 switches
+    rooms[1].setDoorRequirements(0, 0, 0); // Door 0: No requirements (backward door)
+    rooms[1].setDoorRequirements(2, 2, 0); // Door 2: 2 keys, 0 switches (forward door - triggers victory)
     rooms[1].addDarkZone(20, 5, 46, 14);
     rooms[1].addDarkZone(62, 5, 77, 8);
 
