@@ -366,16 +366,18 @@ void Game::initializeRooms()
     rooms[0].prevRoomId = -1;
     rooms[0].setDoorRequirements(1, 0, 2); // Door 1: 0 keys, 2 switches
 
-    // Room 1: Bomb puzzle with dark zones (final room)
+    // Room 1: Bomb puzzle with dark zones
     rooms[1] = Room(1);
     rooms[1].initFromLayout(&room1Layout);
     rooms[1].spawnPoint = Point(3, 5, 0, 0, ' ');
     rooms[1].spawnPointFromNext = Point(75, 17, 0, 0, ' ');
-    rooms[1].nextRoomId = -1; // No next room (triggers victory)
+    rooms[1].nextRoomId = 2;
     rooms[1].prevRoomId = 0;
-    rooms[1].setDoorRequirements(2, 2, 0); // Door 2: 2 keys, 0 switches
+    rooms[1].setDoorRequirements(2, 2, 1); // Door 2: 2 key, 1 switches
     rooms[1].addDarkZone(20, 5, 46, 14);
     rooms[1].addDarkZone(62, 5, 77, 8);
+
+    
 }
 
 //////////////////////////////////////////        changeRoom          //////////////////////////////////////////

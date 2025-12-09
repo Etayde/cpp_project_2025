@@ -72,11 +72,11 @@ public:
     SwitchWall() : StaticObject(), removedBySwitch(true)
     {
         sprite = 'Z';
-        type = ObjectType::OBSTACLE;
+        type = ObjectType::SWITCH_WALL;
     }
 
     SwitchWall(const Point &pos, bool removable = true)
-        : StaticObject(pos, 'Z', ObjectType::OBSTACLE), removedBySwitch(removable) {}
+        : StaticObject(pos, 'Z', ObjectType::SWITCH_WALL), removedBySwitch(removable) {}
 
     GameObject *clone() const override { return new SwitchWall(*this); }
     const char *getName() const override { return "Switch Wall"; }
