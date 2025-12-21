@@ -173,6 +173,10 @@ public:
     bool updateBomb(Player *p1, Player *p2);
     void handleBombDrop(Player &player);
 
+    // Spring system
+    Spring *getSpringAt(int x, int y);
+    void updateMovingObstacles(Player *p1, Player *p2);
+
     // Collision & movement
     bool isBlocked(int x, int y);
     bool hasLineOfSight(int x1, int y1, int x2, int y2);

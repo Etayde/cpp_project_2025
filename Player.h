@@ -8,6 +8,7 @@
 #include "GameObject.h"
 
 class Room;
+class Spring;
 
 //////////////////////////////////////////      PlayerKeyBinding       //////////////////////////////////////////
 
@@ -40,6 +41,33 @@ static const PlayerKeyBinding keyBindings[] = {
 
 static const int NUM_KEY_BINDINGS = sizeof(keyBindings) / sizeof(keyBindings[0]);
 
+//////////////////////////////////////////        LaunchState          //////////////////////////////////////////
+
+// Encapsulates all spring launch-related state
+struct LaunchState
+{
+    bool isLaunched;
+    int velocity;          // Cells per cycle
+    int duration;          // Cycles remaining
+    Direction direction;   // Launch direction
+    Spring *currentSpring; // Spring being compressed (nullptr if none)
+    int cellsCompressed;   // How many spring cells entered
+
+    LaunchState()
+        : isLaunched(false), velocity(0), duration(0),
+          direction(Direction::STAY), currentSpring(nullptr),
+          cellsCompressed(0) {}
+
+    void reset()
+    {
+        isLaunched = false;
+        velocity = 0;
+        duration = 0;
+        currentSpring = nullptr;
+        cellsCompressed = 0;
+    }
+};
+
 //////////////////////////////////////////          Player            //////////////////////////////////////////
 
 // Represents a player character
@@ -56,6 +84,7 @@ public:
     bool alive;
     int keyCount; // Number of keys collected
     bool waitingAtDoor; // True if player has crossed through door and is waiting
+    LaunchState launch; // Spring launch state
 
 public:
     // Constructors & Destructor
@@ -110,6 +139,14 @@ public:
     bool pickupItem(GameObject *item);
     Point dropItem(Room *room);
     void performAction(Action action);
+
+    // Spring launch methods
+    void handleSpringCompression(Spring *spring, int x, int y);
+    void triggerLaunch();
+    void updateLaunch(Room *room);
+    int countConsecutiveObstacles(Room *room, int startX, int startY, Direction dir);
+    int getDX(Direction dir);
+    int getDY(Direction dir);
 
 private:
     void clearInventory();

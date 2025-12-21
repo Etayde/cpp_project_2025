@@ -4,6 +4,8 @@
 #include "Room.h"
 #include "Switch.h"
 #include "Door.h"
+#include "Spring.h"
+#include "StaticObjects.h"
 
 //////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
 
@@ -34,7 +36,7 @@ Player::Player(const Player &other)
     : pos(other.pos), inventory(nullptr), playerId(other.playerId),
       sprite(other.sprite), prevChar(other.prevChar), atDoor(other.atDoor),
       doorId(other.doorId), alive(other.alive), keyCount(other.keyCount),
-      waitingAtDoor(other.waitingAtDoor)
+      waitingAtDoor(other.waitingAtDoor), launch(other.launch)
 {
     copyInventoryFrom(other);
 }
@@ -56,6 +58,7 @@ Player &Player::operator=(const Player &other)
         alive = other.alive;
         keyCount = other.keyCount;
         waitingAtDoor = other.waitingAtDoor;
+        launch = other.launch;
 
         copyInventoryFrom(other);
     }
@@ -86,6 +89,13 @@ bool Player::move(Room *room)
 {
     if (room == nullptr)
         return false;
+
+    // If launched, override normal movement with launch physics
+    if (launch.isLaunched)
+    {
+        updateLaunch(room);
+        return true;
+    }
 
     // Not moving - just redraw
     if (pos.diff_x == 0 && pos.diff_y == 0)
@@ -212,6 +222,18 @@ bool Player::move(Room *room)
     pos.x = nextX;
     pos.y = nextY;
     draw(room);
+
+    // Check for spring interaction
+    Spring *spring = room->getSpringAt(nextX, nextY);
+    if (spring != nullptr)
+    {
+        handleSpringCompression(spring, nextX, nextY);
+    }
+    else if (launch.currentSpring != nullptr)
+    {
+        // Exited spring - trigger launch!
+        triggerLaunch();
+    }
 
     return true;
 }
@@ -387,4 +409,203 @@ bool Player::useKey()
         return true;
     }
     return false;
+}
+
+//////////////////////////////////////////    handleSpringCompression  //////////////////////////////////////////
+
+// Track player compression of spring cells
+void Player::handleSpringCompression(Spring *spring, int x, int y)
+{
+    if (spring == nullptr)
+        return;
+
+    if (launch.currentSpring != spring)
+    {
+        // Entered new spring
+        launch.currentSpring = spring;
+        launch.cellsCompressed = 1;
+    }
+    else
+    {
+        // Continuing in same spring - track deepest compression
+        int cellIndex = spring->getCellIndex(x, y);
+        if (cellIndex >= 0)
+        {
+            launch.cellsCompressed = (cellIndex + 1 > launch.cellsCompressed) ? cellIndex + 1 : launch.cellsCompressed;
+        }
+    }
+}
+
+//////////////////////////////////////////       triggerLaunch         //////////////////////////////////////////
+
+// Initiate launch when player exits spring
+void Player::triggerLaunch()
+{
+    if (launch.currentSpring == nullptr || launch.cellsCompressed == 0)
+        return;
+
+    launch.velocity = launch.cellsCompressed;
+    launch.duration = launch.cellsCompressed * launch.cellsCompressed;
+    launch.direction = launch.currentSpring->getLaunchDirection();
+    launch.isLaunched = true;
+
+    // Reset spring tracking (but keep launch state)
+    launch.currentSpring = nullptr;
+    launch.cellsCompressed = 0;
+}
+
+//////////////////////////////////////////        updateLaunch         //////////////////////////////////////////
+
+// Update player position during launch
+void Player::updateLaunch(Room *room)
+{
+    if (!launch.isLaunched || launch.duration <= 0 || room == nullptr)
+    {
+        launch.isLaunched = false;
+        return;
+    }
+
+    // Move launch.velocity cells in launch.direction
+    for (int i = 0; i < launch.velocity; i++)
+    {
+        int nextX = pos.x + getDX(launch.direction);
+        int nextY = pos.y + getDY(launch.direction);
+
+        // Check bounds
+        if (nextX < 1 || nextX >= MAX_X - 1 || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
+        {
+            launch.isLaunched = false;
+            return;
+        }
+
+        // Check collision
+        GameObject *obj = room->getObjectAt(nextX, nextY);
+        char nextChar = room->getCharAt(nextX, nextY);
+
+        // Check walls
+        if (nextChar == 'W' || nextChar == '=' || nextChar == 'Z')
+        {
+            launch.isLaunched = false;
+            return;
+        }
+
+        // Check for obstacles
+        if (obj != nullptr && obj->getType() == ObjectType::OBSTACLE)
+        {
+            Obstacle *obstacle = static_cast<Obstacle *>(obj);
+
+            // Count consecutive obstacles in launch direction
+            int obstacleCount = countConsecutiveObstacles(room, nextX, nextY, launch.direction);
+            int remainingVelocity = launch.velocity - i;
+
+            if (remainingVelocity >= obstacleCount)
+            {
+                // Can push obstacle(s) - start the obstacle moving
+                obstacle->startMoving(getDX(launch.direction), getDY(launch.direction), launch.duration);
+
+                // Erase player from current position
+                gotoxy(pos.x, pos.y);
+                std::cout << prevChar << std::flush;
+
+                // Move player to obstacle position
+                prevChar = ' '; // Obstacle will move away
+                pos.x = nextX;
+                pos.y = nextY;
+            }
+            else
+            {
+                // Can't move obstacle - stop
+                launch.isLaunched = false;
+                return;
+            }
+        }
+        else if (obj != nullptr && obj->isBlocking())
+        {
+            // Hit other blocking object - stop
+            launch.isLaunched = false;
+            return;
+        }
+        else
+        {
+            // Move to next position
+            gotoxy(pos.x, pos.y);
+            std::cout << prevChar << std::flush;
+
+            prevChar = (nextChar == ' ' || nextChar == sprite) ? ' ' : nextChar;
+            pos.x = nextX;
+            pos.y = nextY;
+        }
+    }
+
+    // Draw player at new position
+    draw(room);
+
+    // Decrement duration
+    launch.duration--;
+    if (launch.duration <= 0)
+    {
+        launch.isLaunched = false;
+    }
+}
+
+//////////////////////////////////////////  countConsecutiveObstacles  //////////////////////////////////////////
+
+// Count number of consecutive obstacles in a direction
+int Player::countConsecutiveObstacles(Room *room, int startX, int startY, Direction dir)
+{
+    if (room == nullptr)
+        return 0;
+
+    int count = 0;
+    int x = startX;
+    int y = startY;
+
+    while (true)
+    {
+        GameObject *obj = room->getObjectAt(x, y);
+        if (obj != nullptr && obj->isActive() && obj->getType() == ObjectType::OBSTACLE)
+        {
+            count++;
+            x += getDX(dir);
+            y += getDY(dir);
+        }
+        else
+        {
+            break;
+        }
+    }
+
+    return count;
+}
+
+//////////////////////////////////////////           getDX             //////////////////////////////////////////
+
+// Get X delta for a direction
+int Player::getDX(Direction dir)
+{
+    switch (dir)
+    {
+    case Direction::LEFT:
+        return -1;
+    case Direction::RIGHT:
+        return 1;
+    default:
+        return 0;
+    }
+}
+
+//////////////////////////////////////////           getDY             //////////////////////////////////////////
+
+// Get Y delta for a direction
+int Player::getDY(Direction dir)
+{
+    switch (dir)
+    {
+    case Direction::UP:
+        return -1;
+    case Direction::DOWN:
+        return 1;
+    default:
+        return 0;
+    }
 }

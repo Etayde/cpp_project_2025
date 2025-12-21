@@ -8,6 +8,8 @@
 #include "Room.h"
 #include <vector>
 
+class Spring;
+
 //////////////////////////////////////////           Game             //////////////////////////////////////////
 
 // Main game controller
@@ -51,4 +53,10 @@ public:
     void checkRoomTransitions();
     void redrawCurrentRoom();
     bool canPassThroughDoor(Room *room, int doorId);
+
+    // Spring interactions
+    void handleSpringInteractions(Room *room);
+
+private:
+    Spring *prevCommonSpring; // Track if both players were on same spring
 };

@@ -86,3 +86,42 @@ public:
     bool isRemovedBySwitch() const { return removedBySwitch; }
     void setRemovedBySwitch(bool removable) { removedBySwitch = removable; }
 };
+
+//////////////////////////////////////////         Obstacle             //////////////////////////////////////////
+
+// Movable obstacle (*)
+class Obstacle : public StaticObject
+{
+private:
+    bool isMoving;
+    int velocityX, velocityY;
+    int duration;
+
+public:
+    Obstacle() : StaticObject(), isMoving(false), velocityX(0), velocityY(0), duration(0)
+    {
+        sprite = '*';
+        type = ObjectType::OBSTACLE;
+    }
+
+    Obstacle(const Point &pos)
+        : StaticObject(pos, '*', ObjectType::OBSTACLE),
+          isMoving(false), velocityX(0), velocityY(0), duration(0) {}
+
+    GameObject *clone() const override { return new Obstacle(*this); }
+    const char *getName() const override { return "Obstacle"; }
+
+    bool isBlocking() const override { return true; }
+    bool onExplosion() override { return true; }
+
+    void startMoving(int vx, int vy, int dur)
+    {
+        isMoving = true;
+        velocityX = vx;
+        velocityY = vy;
+        duration = dur;
+    }
+
+    bool updateMovement(Room *room);
+    bool getIsMoving() const { return isMoving; }
+};

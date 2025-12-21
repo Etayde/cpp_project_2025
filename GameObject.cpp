@@ -63,7 +63,10 @@ GameObject *createObjectFromChar(char ch, int x, int y)
     case 'Z':
         return new SwitchWall(pos);
     case '#':
-        return new Spring(pos);
+        // Springs are handled by Room::loadObjects() multi-cell detection
+        return nullptr;
+    case '*':
+        return new Obstacle(pos);
     case '?':
         return new Riddle(pos);
     default:

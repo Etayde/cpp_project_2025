@@ -2,11 +2,12 @@
 
 #include "Game.h"
 #include "Layouts.h"
+#include "Spring.h"
 
 //////////////////////////////////////////     Game Constructor       //////////////////////////////////////////
 
 Game::Game()
-    : currentState(GameState::mainMenu), currentRoomId(-1) {}
+    : currentState(GameState::mainMenu), currentRoomId(-1), prevCommonSpring(nullptr) {}
 
 Game::~Game() {}
 
@@ -179,6 +180,12 @@ void Game::update()
     player1.move(room);
     player2.move(room);
 
+    // Handle multi-player spring interactions
+    handleSpringInteractions(room);
+
+    // Update moving obstacles
+    room->updateMovingObstacles(&player1, &player2);
+
     // Update bomb
     bool causedGameOver = room->updateBomb(&player1, &player2);
     if (causedGameOver)
@@ -195,6 +202,64 @@ void Game::update()
 
     // Check room transitions
     checkRoomTransitions();
+}
+
+//////////////////////////////////////////  handleSpringInteractions  //////////////////////////////////////////
+
+// Handle multi-player spring physics interactions
+void Game::handleSpringInteractions(Room *room)
+{
+    if (room == nullptr)
+        return;
+
+    // Check if both players on same spring
+    Spring *p1Spring = room->getSpringAt(player1.getX(), player1.getY());
+    Spring *p2Spring = room->getSpringAt(player2.getX(), player2.getY());
+
+    // Track if both on same spring
+    if (p1Spring != nullptr && p2Spring != nullptr && p1Spring == p2Spring)
+    {
+        prevCommonSpring = p1Spring;
+    }
+    else if (prevCommonSpring != nullptr &&
+             player1.launch.currentSpring == nullptr &&
+             player2.launch.currentSpring == nullptr)
+    {
+        // Both just exited the same spring - add velocities!
+        if (player1.launch.isLaunched && player2.launch.isLaunched)
+        {
+            int combinedVelocity = player1.launch.velocity + player2.launch.velocity;
+            player1.launch.velocity = combinedVelocity;
+            player2.launch.velocity = combinedVelocity;
+            player1.launch.duration = combinedVelocity * combinedVelocity;
+            player2.launch.duration = combinedVelocity * combinedVelocity;
+        }
+        prevCommonSpring = nullptr;
+    }
+
+    // Check for player-player collision during launch
+    if (player1.launch.isLaunched && !player2.launch.isLaunched)
+    {
+        if (player1.getX() == player2.getX() && player1.getY() == player2.getY())
+        {
+            // Transfer velocity to player2, both continue moving
+            player2.launch.velocity = player1.launch.velocity;
+            player2.launch.duration = player1.launch.duration;
+            player2.launch.direction = player1.launch.direction;
+            player2.launch.isLaunched = true;
+        }
+    }
+    else if (player2.launch.isLaunched && !player1.launch.isLaunched)
+    {
+        // Mirror logic for player2 hitting player1
+        if (player2.getX() == player1.getX() && player2.getY() == player1.getY())
+        {
+            player1.launch.velocity = player2.launch.velocity;
+            player1.launch.duration = player2.launch.duration;
+            player1.launch.direction = player2.launch.direction;
+            player1.launch.isLaunched = true;
+        }
+    }
 }
 
 //////////////////////////////////////////       getCurrentRoom       //////////////////////////////////////////

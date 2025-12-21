@@ -6,6 +6,7 @@
 #include "Door.h"
 #include "Switch.h"
 #include "StaticObjects.h"
+#include "Spring.h"
 #include "Bomb.h"
 #include <cmath>
 
@@ -143,11 +144,136 @@ void Room::loadObjects()
     if (baseLayout == nullptr)
         return;
 
+    // Track which spring cells have been processed
+    bool processedSpringCells[MAX_Y_INGAME][MAX_X] = {{false}};
+
     for (int y = 0; y < MAX_Y_INGAME; y++)
     {
         for (int x = 0; x < MAX_X; x++)
         {
             char ch = baseLayout->getCharAt(x, y);
+
+            // Special handling for springs
+            if (ch == '#')
+            {
+                if (processedSpringCells[y][x])
+                    continue; // Already part of a detected spring
+
+                // Detect multi-cell spring
+                std::vector<Point> springCells;
+                Direction launchDir = Direction::STAY;
+                bool validSpring = false;
+
+                // Check for adjacent wall in each direction
+                int wallCount = 0;
+                Direction wallDirection = Direction::STAY;
+
+                if (x > 0 && getCharAt(x - 1, y) == 'W')
+                {
+                    wallCount++;
+                    wallDirection = Direction::LEFT;
+                    launchDir = Direction::RIGHT;
+                }
+                if (x < MAX_X - 1 && getCharAt(x + 1, y) == 'W')
+                {
+                    wallCount++;
+                    wallDirection = Direction::RIGHT;
+                    launchDir = Direction::LEFT;
+                }
+                if (y > 0 && getCharAt(x, y - 1) == 'W')
+                {
+                    wallCount++;
+                    wallDirection = Direction::UP;
+                    launchDir = Direction::DOWN;
+                }
+                if (y < MAX_Y_INGAME - 1 && getCharAt(x, y + 1) == 'W')
+                {
+                    wallCount++;
+                    wallDirection = Direction::DOWN;
+                    launchDir = Direction::UP;
+                }
+
+                // Valid spring must have exactly one adjacent wall
+                if (wallCount == 1)
+                {
+                    // Scan perpendicular to wall to find all spring cells
+                    springCells.push_back(Point(x, y));
+                    processedSpringCells[y][x] = true;
+
+                    // Determine scan direction (perpendicular to wall)
+                    int dx = 0, dy = 0;
+                    if (wallDirection == Direction::LEFT || wallDirection == Direction::RIGHT)
+                    {
+                        // Wall is horizontal, scan vertically
+                        dy = 1;
+                    }
+                    else
+                    {
+                        // Wall is vertical, scan horizontally
+                        dx = 1;
+                    }
+
+                    // Scan in both directions perpendicular to wall
+                    for (int dir = -1; dir <= 1; dir += 2)
+                    {
+                        int scanX = x + (dx * dir);
+                        int scanY = y + (dy * dir);
+
+                        while (scanX >= 0 && scanX < MAX_X && scanY >= 0 && scanY < MAX_Y_INGAME &&
+                               getCharAt(scanX, scanY) == '#')
+                        {
+                            // Check if this cell also has the same wall adjacent
+                            bool hasWall = false;
+                            if (wallDirection == Direction::LEFT && scanX > 0 && getCharAt(scanX - 1, scanY) == 'W')
+                                hasWall = true;
+                            else if (wallDirection == Direction::RIGHT && scanX < MAX_X - 1 && getCharAt(scanX + 1, scanY) == 'W')
+                                hasWall = true;
+                            else if (wallDirection == Direction::UP && scanY > 0 && getCharAt(scanX, scanY - 1) == 'W')
+                                hasWall = true;
+                            else if (wallDirection == Direction::DOWN && scanY < MAX_Y_INGAME - 1 && getCharAt(scanX, scanY + 1) == 'W')
+                                hasWall = true;
+
+                            if (hasWall)
+                            {
+                                springCells.push_back(Point(scanX, scanY));
+                                processedSpringCells[scanY][scanX] = true;
+                                scanX += (dx * dir);
+                                scanY += (dy * dir);
+                            }
+                            else
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    validSpring = true;
+                }
+
+                if (validSpring && !springCells.empty())
+                {
+                    // Create multi-cell spring object
+                    Spring *spring = new Spring(launchDir, springCells.size(), springCells);
+                    if (!addObject(spring))
+                        delete spring;
+                }
+                else
+                {
+                    // Invalid spring - replace with air
+                    for (const Point &cell : springCells)
+                    {
+                        setCharAt(cell.x, cell.y, ' ');
+                    }
+                    if (!validSpring)
+                    {
+                        setCharAt(x, y, ' ');
+                    }
+                }
+
+                continue; // Skip normal object creation for springs
+            }
+
+            // Normal object creation for non-spring objects
             GameObject *obj = createObjectFromChar(ch, x, y);
 
             if (obj != nullptr)
@@ -767,4 +893,88 @@ bool Room::updateBomb(Player *p1, Player *p2)
     }
 
     return anyPlayerHit;
+}
+
+//////////////////////////////////////////      getSpringAt           //////////////////////////////////////////
+
+// Returns Spring object containing the given cell, or nullptr if no spring there
+Spring *Room::getSpringAt(int x, int y)
+{
+    for (GameObject *obj : objects)
+    {
+        if (obj != nullptr && obj->isActive() && obj->getType() == ObjectType::SPRING)
+        {
+            Spring *spring = static_cast<Spring *>(obj);
+            if (spring->containsCell(x, y))
+            {
+                return spring;
+            }
+        }
+    }
+    return nullptr;
+}
+
+//////////////////////////////////////////   updateMovingObstacles    //////////////////////////////////////////
+
+// Update all moving obstacles
+void Room::updateMovingObstacles(Player *p1, Player *p2)
+{
+    for (GameObject *obj : objects)
+    {
+        if (obj != nullptr && obj->isActive() && obj->getType() == ObjectType::OBSTACLE)
+        {
+            Obstacle *obstacle = static_cast<Obstacle *>(obj);
+            if (obstacle->getIsMoving())
+            {
+                obstacle->updateMovement(this);
+            }
+        }
+    }
+}
+
+//////////////////////////////////////////  Obstacle::updateMovement  //////////////////////////////////////////
+
+// Update obstacle position during movement (implemented here to access Room)
+bool Obstacle::updateMovement(Room *room)
+{
+    if (!isMoving || duration <= 0 || room == nullptr)
+    {
+        isMoving = false;
+        return true;
+    }
+
+    // Try to move in the velocity direction
+    int nextX = position.x + velocityX;
+    int nextY = position.y + velocityY;
+
+    // Check if blocked
+    if (room->isBlocked(nextX, nextY))
+    {
+        isMoving = false;
+        return true;
+    }
+
+    // Erase from current position
+    room->setCharAt(position.x, position.y, ' ');
+    gotoxy(position.x, position.y);
+    std::cout << ' ' << std::flush;
+
+    // Move to new position
+    position.x = nextX;
+    position.y = nextY;
+    room->setCharAt(nextX, nextY, sprite);
+
+    // Draw at new position
+    gotoxy(nextX, nextY);
+    std::cout << sprite << std::flush;
+
+    // Decrement duration
+    duration--;
+    if (duration <= 0)
+    {
+        isMoving = false;
+        return true;
+    }
+
+    return false;
 }
