@@ -204,13 +204,13 @@ void Room::loadObjects()
                     int dx = 0, dy = 0;
                     if (wallDirection == Direction::LEFT || wallDirection == Direction::RIGHT)
                     {
-                        // Wall is horizontal, scan vertically
-                        dy = 1;
+                        // Wall is left/right (vertical wall), scan horizontally
+                        dx = 1;
                     }
                     else
                     {
-                        // Wall is vertical, scan horizontally
-                        dx = 1;
+                        // Wall is up/down (horizontal wall), scan vertically
+                        dy = 1;
                     }
 
                     // Scan in both directions perpendicular to wall
@@ -254,8 +254,18 @@ void Room::loadObjects()
                 {
                     // Create multi-cell spring object
                     Spring *spring = new Spring(launchDir, springCells.size(), springCells);
-                    if (!addObject(spring))
+                    if (addObject(spring))
+                    {
+                        // Ensure all spring cells remain as '#' in the display
+                        for (const Point &cell : springCells)
+                        {
+                            setCharAt(cell.x, cell.y, '#');
+                        }
+                    }
+                    else
+                    {
                         delete spring;
+                    }
                 }
                 else
                 {

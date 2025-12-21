@@ -173,7 +173,7 @@ const char *room0Data[MAX_Y] = {
      "W                                                               WWWW \\ W      W", // 6
      "W                                                               WWWWWWWW      W",  // 7
      "W                                                                             W",  // 8
-     "W                                                                             W",  // 9
+     "W                                                                     ########W",  // 9
      "W                                                                             W",  // 10
      "W                                                                             W",  // 11
      "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW                             W",  // 12
