@@ -9,6 +9,7 @@
 #include "Spring.h"
 #include "Bomb.h"
 #include <cmath>
+#include <fstream>
 
 //////////////////////////////////////////      Room Constructors      //////////////////////////////////////////
 
@@ -142,7 +143,20 @@ void Room::loadObjects()
     totalSwitches = 0;
 
     if (baseLayout == nullptr)
+    {
+        std::cerr << "DEBUG: baseLayout is nullptr!" << std::endl;
         return;
+    }
+
+    // Debug: Check line 9 for springs
+    std::ofstream debugFile("/tmp/spring_debug.txt", std::ios::app);
+    debugFile << "DEBUG: Line 9 of layout: '";
+    for (int x = 0; x < MAX_X && x < 80; x++)
+    {
+        char c = baseLayout->getCharAt(x, 9);
+        debugFile << c;
+    }
+    debugFile << "'" << std::endl;
 
     // Track which spring cells have been processed
     bool processedSpringCells[MAX_Y_INGAME][MAX_X] = {{false}};
@@ -156,8 +170,13 @@ void Room::loadObjects()
             // Special handling for springs
             if (ch == '#')
             {
+                std::cerr << "DEBUG: Found # at (" << x << "," << y << ")" << std::endl;
+
                 if (processedSpringCells[y][x])
+                {
+                    std::cerr << "DEBUG: Already processed, skipping" << std::endl;
                     continue; // Already part of a detected spring
+                }
 
                 // Detect multi-cell spring
                 std::vector<Point> springCells;
@@ -194,6 +213,14 @@ void Room::loadObjects()
                 }
 
                 // Valid spring must have exactly one adjacent wall
+                if (wallCount != 1)
+                {
+                    // Skip this cell - it might be part of a spring we'll detect later
+                    // when we find a cell that DOES touch the wall
+                    std::cerr << "DEBUG: Skipping # at (" << x << "," << y << ") with wallCount=" << wallCount << std::endl;
+                    continue;
+                }
+
                 if (wallCount == 1)
                 {
                     // Scan perpendicular to wall to find all spring cells
@@ -214,20 +241,24 @@ void Room::loadObjects()
                     }
 
                     // Scan in both directions perpendicular to wall
+                    std::cerr << "DEBUG: Starting scan with dx=" << dx << ", dy=" << dy << std::endl;
                     for (int dir = -1; dir <= 1; dir += 2)
                     {
+                        std::cerr << "DEBUG: Scanning direction " << dir << std::endl;
                         int scanX = x + (dx * dir);
                         int scanY = y + (dy * dir);
 
                         while (scanX >= 0 && scanX < MAX_X && scanY >= 0 && scanY < MAX_Y_INGAME &&
                                getCharAt(scanX, scanY) == '#')
                         {
+                            std::cerr << "DEBUG: Adding cell at (" << scanX << "," << scanY << ")" << std::endl;
                             // Add this spring cell (all cells in line are part of spring)
                             springCells.push_back(Point(scanX, scanY));
                             processedSpringCells[scanY][scanX] = true;
                             scanX += (dx * dir);
                             scanY += (dy * dir);
                         }
+                        std::cerr << "DEBUG: Scan stopped at (" << scanX << "," << scanY << "), char=" << getCharAt(scanX, scanY) << std::endl;
                     }
 
                     validSpring = true;
@@ -235,10 +266,15 @@ void Room::loadObjects()
 
                 if (validSpring && !springCells.empty())
                 {
+                    // DEBUG: Print spring detection info
+                    std::cerr << "DEBUG: Detected spring with " << springCells.size()
+                              << " cells at y=" << y << ", launch dir=" << (int)launchDir << std::endl;
+
                     // Create multi-cell spring object
                     Spring *spring = new Spring(launchDir, springCells.size(), springCells);
                     if (addObject(spring))
                     {
+                        std::cerr << "DEBUG: Spring added successfully!" << std::endl;
                         // Ensure all spring cells remain as '#' in the display
                         for (const Point &cell : springCells)
                         {
@@ -247,6 +283,7 @@ void Room::loadObjects()
                     }
                     else
                     {
+                        std::cerr << "DEBUG: Failed to add spring!" << std::endl;
                         delete spring;
                     }
                 }
