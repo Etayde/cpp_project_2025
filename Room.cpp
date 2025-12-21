@@ -43,7 +43,7 @@ Room::Room(const Room &other)
       activeSwitches(other.activeSwitches), totalSwitches(other.totalSwitches),
       doorReqs(other.doorReqs), nextRoomId(other.nextRoomId), prevRoomId(other.prevRoomId),
       spawnPoint(other.spawnPoint), spawnPointFromNext(other.spawnPointFromNext),
-      bomb(other.bomb), darkZones(other.darkZones)
+      bombs(other.bombs), darkZones(other.darkZones)
 {
     for (int y = 0; y < MAX_Y; y++)
         for (int x = 0; x < MAX_X; x++)
@@ -73,7 +73,7 @@ Room &Room::operator=(const Room &other)
         prevRoomId = other.prevRoomId;
         spawnPoint = other.spawnPoint;
         spawnPointFromNext = other.spawnPointFromNext;
-        bomb = other.bomb;
+        bombs = other.bombs;
         darkZones = other.darkZones;
         doorReqs = other.doorReqs;
 
@@ -698,17 +698,17 @@ void Room::handleBombDrop(Player &player)
         return;
     }
 
-    if (bomb.active)
-        return;
-
+    // No limit check - allow unlimited bombs
     Point dropPos = player.dropItem(this);
 
     if (dropPos.x >= 0 && dropPos.y >= 0)
     {
-        bomb.x = dropPos.x;
-        bomb.y = dropPos.y;
-        bomb.fuseTimer = BombConfig::FUSE_TIME;
-        bomb.active = true;
+        RoomBomb newBomb;
+        newBomb.x = dropPos.x;
+        newBomb.y = dropPos.y;
+        newBomb.fuseTimer = BombConfig::FUSE_TIME;
+        newBomb.active = true;
+        bombs.push_back(newBomb);
     }
 }
 
@@ -716,44 +716,55 @@ void Room::handleBombDrop(Player &player)
 
 bool Room::updateBomb(Player *p1, Player *p2)
 {
-
-    if (!bomb.active)
+    if (bombs.empty())
     {
         return false;
     }
 
-    bomb.decrementFuse();
-    // Blink effect
-    gotoxy(bomb.x, bomb.y);
-    if (bomb.fuseTimer % BombConfig::BLINK_RATE < 5)
-        std::cout << '@';
-    else
-        std::cout << '*';
-    std::cout.flush();
+    bool anyPlayerHit = false;
 
-    // Explode
-    if (bomb.isReadyToExplode())
+    // Update all bombs (iterate backwards to safely remove)
+    for (int i = bombs.size() - 1; i >= 0; i--)
     {
-        removeObjectAt(bomb.x, bomb.y);
-        setCharAt(bomb.x, bomb.y, ' ');
+        RoomBomb &bomb = bombs[i];
+
+        if (!bomb.active)
+            continue;
+
+        bomb.decrementFuse();
+
+        // Blink effect
         gotoxy(bomb.x, bomb.y);
-        std::cout << ' ' << std::flush;
+        if (bomb.fuseTimer % BombConfig::BLINK_RATE < 5)
+            std::cout << '@';
+        else
+            std::cout << '*';
+        std::cout.flush();
 
-        ExplosionResult result = explodeBomb(
-            bomb.x, bomb.y, BombConfig::RADIUS,
-            p1, p2);
-
-        // Reset bomb after explosion
-        bomb.reset();
-
-        p1->draw();
-        p2->draw();
-
-        if (result.keyDestroyed || result.player1Hit || result.player2Hit)
+        // Explode
+        if (bomb.isReadyToExplode())
         {
-            return true;
+            removeObjectAt(bomb.x, bomb.y);
+            setCharAt(bomb.x, bomb.y, ' ');
+            gotoxy(bomb.x, bomb.y);
+            std::cout << ' ' << std::flush;
+
+            ExplosionResult result = explodeBomb(
+                bomb.x, bomb.y, BombConfig::RADIUS,
+                p1, p2);
+
+            // Remove this bomb from vector
+            bombs.erase(bombs.begin() + i);
+
+            p1->draw();
+            p2->draw();
+
+            if (result.keyDestroyed || result.player1Hit || result.player2Hit)
+            {
+                anyPlayerHit = true;
+            }
         }
     }
 
-    return false;
+    return anyPlayerHit;
 }

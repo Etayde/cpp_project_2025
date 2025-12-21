@@ -55,6 +55,7 @@ public:
     int doorId;
     bool alive;
     int keyCount; // Number of keys collected
+    bool waitingAtDoor; // True if player has crossed through door and is waiting
 
 public:
     // Constructors & Destructor

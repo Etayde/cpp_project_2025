@@ -23,7 +23,7 @@ class Riddle;
 //////////////////////////////////////////         GameObject         //////////////////////////////////////////
 
 // Abstract base class for all game objects
-// Uses virtual methods for polymorphism (with help of AI since we didn't learn it yet and didn't have learn solo)
+// Uses virtual methods for polymorphism (with help of AI since we didn't learn it yet and didn't have time to learn solo)
 class GameObject
 {
 protected:

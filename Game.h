@@ -50,4 +50,5 @@ public:
     Room *getCurrentRoom();
     void checkRoomTransitions();
     void redrawCurrentRoom();
+    bool canPassThroughDoor(Room *room, int doorId);
 };

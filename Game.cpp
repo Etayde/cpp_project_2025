@@ -222,6 +222,26 @@ void Game::redrawCurrentRoom()
     player2.updateInventoryDisplay();
 }
 
+/////////////////////////////////////////    canPassThroughDoor       //////////////////////////////////////
+
+// Check if a door can be passed through (unlocked or requirements met)
+bool Game::canPassThroughDoor(Room *room, int doorId)
+{
+    if (room == nullptr)
+        return false;
+
+    if (doorId == room->nextRoomId)
+    {
+        return room->isDoorUnlocked(doorId) ||
+               room->canOpenDoor(doorId, player1.getKeyCount(), player2.getKeyCount());
+    }
+    else if (doorId == room->prevRoomId)
+    {
+        return true; // Backward doors always passable
+    }
+    return false;
+}
+
 /////////////////////////////////////////      checkRoomTransitions       //////////////////////////////////////
 
 // Checks if players have reached a door and can pass through, and handles room transition if so
@@ -232,52 +252,90 @@ void Game::checkRoomTransitions()
     if (room == nullptr)
         return;
 
-    // Check if both players are at the same door
-    if (!player1.isAtDoor() || !player2.isAtDoor())
-        return;
-    if (player1.getDoorId() != player2.getDoorId())
-        return;
-
-    int doorId = player1.getDoorId();
-
-    // Forward door check
-    if (doorId == room->nextRoomId)
+    // BOTH players at the same door - trigger transition
+    if (player1.isAtDoor() && player2.isAtDoor() &&
+        player1.getDoorId() == player2.getDoorId())
     {
-        if (room->isDoorUnlocked(doorId) ||
-            room->canOpenDoor(doorId, player1.getKeyCount(), player2.getKeyCount()))
+        int doorId = player1.getDoorId();
+
+        if (canPassThroughDoor(room, doorId))
         {
+            // Reset waiting state
+            player1.waitingAtDoor = false;
+            player2.waitingAtDoor = false;
 
-            if (!room->isDoorUnlocked(doorId))
+            // Forward door check
+            if (doorId == room->nextRoomId)
             {
-                int keysNeeded = room->doorReqs[doorId].requiredKeys;
+                if (!room->isDoorUnlocked(doorId))
+                {
+                    int keysNeeded = room->doorReqs[doorId].requiredKeys;
 
-                int keysConsumed = 0;
-                while (keysConsumed < keysNeeded && player1.getKeyCount() > 0)
-                {
-                    player1.useKey();
-                    keysConsumed++;
+                    int keysConsumed = 0;
+                    while (keysConsumed < keysNeeded && player1.getKeyCount() > 0)
+                    {
+                        player1.useKey();
+                        keysConsumed++;
+                    }
+                    while (keysConsumed < keysNeeded && player2.getKeyCount() > 0)
+                    {
+                        player2.useKey();
+                        keysConsumed++;
+                    }
                 }
-                while (keysConsumed < keysNeeded && player2.getKeyCount() > 0)
+                room->unlockDoor(doorId);
+
+                // Check if completing this room triggers victory
+                if (currentRoomId == finalRoomId)
                 {
-                    player2.useKey();
-                    keysConsumed++;
+                    currentState = GameState::victory;
+                    return;
                 }
+                changeRoom(doorId, true);
             }
-            room->unlockDoor(doorId);
-
-            // Check if completing this room triggers victory
-            if (currentRoomId == finalRoomId)
+            // Backward door check
+            else if (doorId == room->prevRoomId)
             {
-                currentState = GameState::victory;
-                return;
+                changeRoom(doorId, false);
             }
-            changeRoom(doorId, true);
         }
     }
-    // Backward door check
-    else if (doorId == room->prevRoomId)
+    // ONE player at door - make them wait (cosmetic)
+    else if (player1.isAtDoor() && !player2.isAtDoor())
     {
-        changeRoom(doorId, false);
+        if (canPassThroughDoor(room, player1.getDoorId()))
+        {
+            if (!player1.waitingAtDoor)
+            {
+                player1.waitingAtDoor = true;
+                player1.draw(room); // Redraw to hide
+            }
+        }
+    }
+    else if (player2.isAtDoor() && !player1.isAtDoor())
+    {
+        if (canPassThroughDoor(room, player2.getDoorId()))
+        {
+            if (!player2.waitingAtDoor)
+            {
+                player2.waitingAtDoor = true;
+                player2.draw(room); // Redraw to hide
+            }
+        }
+    }
+    // Neither or not at same door - reset waiting state
+    else
+    {
+        if (player1.waitingAtDoor)
+        {
+            player1.waitingAtDoor = false;
+            player1.draw(room); // Redraw to show
+        }
+        if (player2.waitingAtDoor)
+        {
+            player2.waitingAtDoor = false;
+            player2.draw(room); // Redraw to show
+        }
     }
 }
 

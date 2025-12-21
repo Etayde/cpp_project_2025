@@ -9,14 +9,14 @@
 
 Player::Player()
     : inventory(nullptr), playerId(0), sprite(' '), prevChar(' '),
-      atDoor(false), doorId(-1), alive(true), keyCount(0)
+      atDoor(false), doorId(-1), alive(true), keyCount(0), waitingAtDoor(false)
 {
     pos = Point(1, 1, 0, 0, ' ');
 }
 
 Player::Player(int id, int startX, int startY, char playerSprite)
     : inventory(nullptr), playerId(id), sprite(playerSprite), prevChar(' '),
-      atDoor(false), doorId(-1), alive(true), keyCount(0)
+      atDoor(false), doorId(-1), alive(true), keyCount(0), waitingAtDoor(false)
 {
     pos = Point(startX, startY, 0, 0, playerSprite);
 }
@@ -33,7 +33,8 @@ Player::~Player()
 Player::Player(const Player &other)
     : pos(other.pos), inventory(nullptr), playerId(other.playerId),
       sprite(other.sprite), prevChar(other.prevChar), atDoor(other.atDoor),
-      doorId(other.doorId), alive(other.alive), keyCount(other.keyCount)
+      doorId(other.doorId), alive(other.alive), keyCount(other.keyCount),
+      waitingAtDoor(other.waitingAtDoor)
 {
     copyInventoryFrom(other);
 }
@@ -54,6 +55,7 @@ Player &Player::operator=(const Player &other)
         doorId = other.doorId;
         alive = other.alive;
         keyCount = other.keyCount;
+        waitingAtDoor = other.waitingAtDoor;
 
         copyInventoryFrom(other);
     }
@@ -95,13 +97,29 @@ bool Player::move(Room *room)
     int nextX = pos.x + pos.diff_x;
     int nextY = pos.y + pos.diff_y;
 
-    // Check bounds
-    if (nextX < 0 || nextX >= MAX_X - 1 || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
+    // Check absolute screen bounds
+    if (nextX < 0 || nextX >= MAX_X || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
     {
         pos.diff_x = 0;
         pos.diff_y = 0;
         draw(room);
         return false;
+    }
+
+    // Check if outside normal playable bounds (1-78)
+    bool outsideNormalBounds = (nextX < 1 || nextX >= MAX_X - 1);
+
+    if (outsideNormalBounds)
+    {
+        // Only allow if there's a door at this position
+        GameObject *obj = room->getObjectAt(nextX, nextY);
+        if (obj == nullptr || obj->getType() != ObjectType::DOOR)
+        {
+            pos.diff_x = 0;
+            pos.diff_y = 0;
+            draw(room);
+            return false;
+        }
     }
 
     // Check wall collision
@@ -204,6 +222,14 @@ bool Player::move(Room *room)
 void Player::draw(Room *room)
 {
     gotoxy(pos.x, pos.y);
+
+    // Don't draw if waiting at door (player has "crossed through")
+    if (waitingAtDoor)
+    {
+        std::cout << prevChar << std::flush;
+        return;
+    }
+
     // Don't draw player if in dark zone without visibility
     if (room != nullptr && room->isInDarkZone(pos.x, pos.y) && !room->isVisible(pos.x, pos.y))
     {

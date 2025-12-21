@@ -134,7 +134,7 @@ public:
     Point spawnPointFromNext;
 
     // Bomb system
-    RoomBomb bomb;
+    std::vector<RoomBomb> bombs;
 
     // Dark zones
     std::vector<DarkZone> darkZones;
