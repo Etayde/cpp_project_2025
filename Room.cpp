@@ -222,28 +222,11 @@ void Room::loadObjects()
                         while (scanX >= 0 && scanX < MAX_X && scanY >= 0 && scanY < MAX_Y_INGAME &&
                                getCharAt(scanX, scanY) == '#')
                         {
-                            // Check if this cell also has the same wall adjacent
-                            bool hasWall = false;
-                            if (wallDirection == Direction::LEFT && scanX > 0 && getCharAt(scanX - 1, scanY) == 'W')
-                                hasWall = true;
-                            else if (wallDirection == Direction::RIGHT && scanX < MAX_X - 1 && getCharAt(scanX + 1, scanY) == 'W')
-                                hasWall = true;
-                            else if (wallDirection == Direction::UP && scanY > 0 && getCharAt(scanX, scanY - 1) == 'W')
-                                hasWall = true;
-                            else if (wallDirection == Direction::DOWN && scanY < MAX_Y_INGAME - 1 && getCharAt(scanX, scanY + 1) == 'W')
-                                hasWall = true;
-
-                            if (hasWall)
-                            {
-                                springCells.push_back(Point(scanX, scanY));
-                                processedSpringCells[scanY][scanX] = true;
-                                scanX += (dx * dir);
-                                scanY += (dy * dir);
-                            }
-                            else
-                            {
-                                break;
-                            }
+                            // Add this spring cell (all cells in line are part of spring)
+                            springCells.push_back(Point(scanX, scanY));
+                            processedSpringCells[scanY][scanX] = true;
+                            scanX += (dx * dir);
+                            scanY += (dy * dir);
                         }
                     }
 
