@@ -930,17 +930,25 @@ bool Room::updateBomb(Player *p1, Player *p2)
 // Returns Spring object containing the given cell, or nullptr if no spring there
 Spring *Room::getSpringAt(int x, int y)
 {
+    std::ofstream debugFile("/tmp/spring_debug.txt", std::ios::app);
+    debugFile << "getSpringAt(" << x << "," << y << ") checking " << objects.size() << " objects" << std::endl;
+
     for (GameObject *obj : objects)
     {
         if (obj != nullptr && obj->isActive() && obj->getType() == ObjectType::SPRING)
         {
+            debugFile << "  Found spring object!" << std::endl;
             Spring *spring = static_cast<Spring *>(obj);
-            if (spring->containsCell(x, y))
+            bool contains = spring->containsCell(x, y);
+            debugFile << "  containsCell returned: " << contains << std::endl;
+            if (contains)
             {
+                debugFile << "  Returning spring!" << std::endl;
                 return spring;
             }
         }
     }
+    debugFile << "  No spring found at this position" << std::endl;
     return nullptr;
 }
 

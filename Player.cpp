@@ -6,6 +6,7 @@
 #include "Door.h"
 #include "Spring.h"
 #include "StaticObjects.h"
+#include <fstream>
 
 //////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
 
@@ -225,15 +226,21 @@ bool Player::move(Room *room)
 
     // Check for spring interaction
     Spring *spring = room->getSpringAt(nextX, nextY);
+    std::ofstream debugFile("/tmp/spring_debug.txt", std::ios::app);
+    debugFile << "Player at (" << nextX << "," << nextY << "), spring=" << (spring ? "YES" : "NO") << std::endl;
+
     if (spring != nullptr)
     {
+        debugFile << "  Handling spring compression" << std::endl;
         handleSpringCompression(spring, nextX, nextY);
     }
     else if (launch.currentSpring != nullptr)
     {
         // Exited spring - trigger launch!
+        debugFile << "  Triggering launch!" << std::endl;
         triggerLaunch();
     }
+    debugFile.close();
 
     return true;
 }
