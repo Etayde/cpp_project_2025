@@ -358,6 +358,9 @@ void Game::initializeRooms()
     // Set which room triggers victory when completed
     finalRoomId = 1; // Game ends after completing room 1 - can be changed as needed
 
+    // Initialize rooms vector
+    rooms.resize(2);
+
     // Room 0
     rooms[0] = Room(0);
     rooms[0].initFromLayout(&room0Layout);

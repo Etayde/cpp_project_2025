@@ -6,6 +6,7 @@
 #include "Screen.h"
 #include "Player.h"
 #include "Room.h"
+#include <vector>
 
 //////////////////////////////////////////           Game             //////////////////////////////////////////
 
@@ -14,7 +15,7 @@ class Game
 {
 public:
     GameState currentState;
-    Room rooms[TOTAL_ROOMS];
+    std::vector<Room> rooms;
     int currentRoomId;
     int finalRoomId;
     Player player1;

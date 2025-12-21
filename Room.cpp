@@ -13,39 +13,17 @@
 
 Room::Room()
     : roomId(-1), active(false), completed(false), baseLayout(nullptr),
-      modCount(0), objectCount(0), totalKeysInRoom(0), keysCollected(0),
-      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1),
-      darkZoneCount(0)
+      totalKeysInRoom(0), keysCollected(0),
+      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1)
 {
-    for (int i = 0; i < RoomLimits::MAX_OBJECTS; i++)
-    {
-        objects[i] = nullptr;
-    }
-
-    for (int i = 0; i < MAX_DOORS; i++)
-    {
-        doorReqs[i] = DoorRequirements(i, DoorConfig::DEFAULT_REQUIRED_KEYS);
-    }
-
     initVisibility();
 }
 
 Room::Room(int id)
     : roomId(id), active(false), completed(false), baseLayout(nullptr),
-      modCount(0), objectCount(0), totalKeysInRoom(0), keysCollected(0),
-      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1),
-      darkZoneCount(0)
+      totalKeysInRoom(0), keysCollected(0),
+      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1)
 {
-    for (int i = 0; i < RoomLimits::MAX_OBJECTS; i++)
-    {
-        objects[i] = nullptr;
-    }
-
-    for (int i = 0; i < MAX_DOORS; i++)
-    {
-        doorReqs[i] = DoorRequirements(i, DoorConfig::DEFAULT_REQUIRED_KEYS);
-    }
-
     initVisibility();
 }
 
@@ -60,26 +38,16 @@ Room::~Room()
 
 Room::Room(const Room &other)
     : roomId(other.roomId), active(other.active), completed(other.completed),
-      baseLayout(other.baseLayout), modCount(other.modCount), objectCount(0),
+      baseLayout(other.baseLayout), mods(other.mods),
       totalKeysInRoom(other.totalKeysInRoom), keysCollected(other.keysCollected),
       activeSwitches(other.activeSwitches), totalSwitches(other.totalSwitches),
-      nextRoomId(other.nextRoomId), prevRoomId(other.prevRoomId),
+      doorReqs(other.doorReqs), nextRoomId(other.nextRoomId), prevRoomId(other.prevRoomId),
       spawnPoint(other.spawnPoint), spawnPointFromNext(other.spawnPointFromNext),
-      bomb(other.bomb), darkZoneCount(other.darkZoneCount)
+      bomb(other.bomb), darkZones(other.darkZones)
 {
-    for (int i = 0; i < modCount; i++)
-        mods[i] = other.mods[i];
-    for (int i = 0; i < MAX_DOORS; i++)
-        doorReqs[i] = other.doorReqs[i];
-    for (int i = 0; i < darkZoneCount; i++)
-        darkZones[i] = other.darkZones[i];
-
     for (int y = 0; y < MAX_Y; y++)
         for (int x = 0; x < MAX_X; x++)
             visibilityMap[y][x] = other.visibilityMap[y][x];
-
-    for (int i = 0; i < RoomLimits::MAX_OBJECTS; i++)
-        objects[i] = nullptr;
 
     copyObjectsFrom(other);
 }
@@ -96,7 +64,7 @@ Room &Room::operator=(const Room &other)
         active = other.active;
         completed = other.completed;
         baseLayout = other.baseLayout;
-        modCount = other.modCount;
+        mods = other.mods;
         totalKeysInRoom = other.totalKeysInRoom;
         keysCollected = other.keysCollected;
         activeSwitches = other.activeSwitches;
@@ -106,14 +74,8 @@ Room &Room::operator=(const Room &other)
         spawnPoint = other.spawnPoint;
         spawnPointFromNext = other.spawnPointFromNext;
         bomb = other.bomb;
-        darkZoneCount = other.darkZoneCount;
-
-        for (int i = 0; i < modCount; i++)
-            mods[i] = other.mods[i];
-        for (int i = 0; i < MAX_DOORS; i++)
-            doorReqs[i] = other.doorReqs[i];
-        for (int i = 0; i < darkZoneCount; i++)
-            darkZones[i] = other.darkZones[i];
+        darkZones = other.darkZones;
+        doorReqs = other.doorReqs;
 
         for (int y = 0; y < MAX_Y; y++)
             for (int x = 0; x < MAX_X; x++)
@@ -129,13 +91,12 @@ Room &Room::operator=(const Room &other)
 // Deep copy objects
 void Room::copyObjectsFrom(const Room &other)
 {
-    objectCount = 0;
-    for (int i = 0; i < other.objectCount; i++)
+    objects.clear();
+    for (GameObject* obj : other.objects)
     {
-        if (other.objects[i] != nullptr)
+        if (obj != nullptr)
         {
-            objects[objectCount] = other.objects[i]->clone();
-            objectCount++;
+            objects.push_back(obj->clone());
         }
     }
 }
@@ -143,12 +104,11 @@ void Room::copyObjectsFrom(const Room &other)
 // Delete all allocated objects
 void Room::deleteAllObjects()
 {
-    for (int i = 0; i < objectCount; i++)
+    for (GameObject* obj : objects)
     {
-        delete objects[i];
-        objects[i] = nullptr;
+        delete obj;
     }
-    objectCount = 0;
+    objects.clear();
 }
 
 // Set all visibility to true
@@ -165,7 +125,7 @@ void Room::initVisibility()
 void Room::initFromLayout(const Screen *layout)
 {
     baseLayout = layout;
-    modCount = 0;
+    mods.clear();
     deleteAllObjects();
     loadObjects();
 }
@@ -214,13 +174,19 @@ void Room::loadObjects()
 // Set key and switch requirements for a door
 void Room::setDoorRequirements(int doorId, int keys, int switches)
 {
-    if (doorId >= 0 && doorId < MAX_DOORS)
+    if (doorId < 0)
+        return;
+
+    // Ensure vector is large enough
+    if (doorId >= static_cast<int>(doorReqs.size()))
     {
-        doorReqs[doorId].doorId = doorId;
-        doorReqs[doorId].requiredKeys = keys;
-        doorReqs[doorId].requiredSwitches = switches;
-        doorReqs[doorId].isUnlocked = false;
+        doorReqs.resize(doorId + 1);
     }
+
+    doorReqs[doorId].doorId = doorId;
+    doorReqs[doorId].requiredKeys = keys;
+    doorReqs[doorId].requiredSwitches = switches;
+    doorReqs[doorId].isUnlocked = false;
 }
 
 //////////////////////////////////////////           draw              //////////////////////////////////////////
@@ -231,10 +197,10 @@ void Room::draw()
     if (baseLayout != nullptr)
         baseLayout->draw();
 
-    for (int i = 0; i < modCount; i++)
+    for (const Modification& mod : mods)
     {
-        gotoxy(mods[i].x, mods[i].y);
-        std::cout << mods[i].newChar;
+        gotoxy(mod.x, mod.y);
+        std::cout << mod.newChar;
     }
 
     drawDarkness();
@@ -246,7 +212,7 @@ void Room::draw()
 // Draw darkness overlay for dark zones
 void Room::drawDarkness()
 {
-    if (darkZoneCount == 0)
+    if (darkZones.empty())
         return;
 
     for (int y = 0; y < MAX_Y_INGAME; y++)
@@ -271,10 +237,10 @@ void Room::drawDarkness()
 // Get character at position (checks mods first, then base)
 char Room::getCharAt(int x, int y) const
 {
-    for (int i = 0; i < modCount; i++)
+    for (const Modification& mod : mods)
     {
-        if (mods[i].x == x && mods[i].y == y)
-            return mods[i].newChar;
+        if (mod.x == x && mod.y == y)
+            return mod.newChar;
     }
 
     if (baseLayout != nullptr)
@@ -287,27 +253,23 @@ char Room::getCharAt(int x, int y) const
 // Set/modify character at position
 void Room::setCharAt(int x, int y, char c)
 {
-    for (int i = 0; i < modCount; i++)
+    for (Modification& mod : mods)
     {
-        if (mods[i].x == x && mods[i].y == y)
+        if (mod.x == x && mod.y == y)
         {
-            mods[i].newChar = c;
+            mod.newChar = c;
             return;
         }
     }
 
-    if (modCount < RoomLimits::MAX_MODS)
-    {
-        mods[modCount] = Modification(x, y, c);
-        modCount++;
-    }
+    mods.push_back(Modification(x, y, c));
 }
 
 //////////////////////////////////////////         resetMods           //////////////////////////////////////////
 
 void Room::resetMods()
 {
-    modCount = 0;
+    mods.clear();
 }
 
 //////////////////////////////////////////        getObjectAt          //////////////////////////////////////////
@@ -315,12 +277,12 @@ void Room::resetMods()
 // Get object at position
 GameObject *Room::getObjectAt(int x, int y)
 {
-    for (int i = 0; i < objectCount; i++)
+    for (GameObject* obj : objects)
     {
-        if (objects[i] != nullptr && objects[i]->isActive() &&
-            objects[i]->getX() == x && objects[i]->getY() == y)
+        if (obj != nullptr && obj->isActive() &&
+            obj->getX() == x && obj->getY() == y)
         {
-            return objects[i];
+            return obj;
         }
     }
     return nullptr;
@@ -328,12 +290,12 @@ GameObject *Room::getObjectAt(int x, int y)
 
 const GameObject *Room::getObjectAt(int x, int y) const
 {
-    for (int i = 0; i < objectCount; i++)
+    for (const GameObject* obj : objects)
     {
-        if (objects[i] != nullptr && objects[i]->isActive() &&
-            objects[i]->getX() == x && objects[i]->getY() == y)
+        if (obj != nullptr && obj->isActive() &&
+            obj->getX() == x && obj->getY() == y)
         {
-            return objects[i];
+            return obj;
         }
     }
     return nullptr;
@@ -344,11 +306,10 @@ const GameObject *Room::getObjectAt(int x, int y) const
 // Add object to room
 bool Room::addObject(GameObject *obj)
 {
-    if (obj == nullptr || objectCount >= RoomLimits::MAX_OBJECTS)
+    if (obj == nullptr)
         return false;
 
-    objects[objectCount] = obj;
-    objectCount++;
+    objects.push_back(obj);
     setCharAt(obj->getX(), obj->getY(), obj->getSprite());
 
     return true;
@@ -359,7 +320,7 @@ bool Room::addObject(GameObject *obj)
 // Remove object at given index
 void Room::removeObject(int index)
 {
-    if (index < 0 || index >= objectCount)
+    if (index < 0 || index >= static_cast<int>(objects.size()))
         return;
 
     GameObject *obj = objects[index];
@@ -367,8 +328,8 @@ void Room::removeObject(int index)
     {
         setCharAt(obj->getX(), obj->getY(), ' ');
         delete obj;
-        objects[index] = nullptr;
     }
+    objects.erase(objects.begin() + index);
 }
 
 //////////////////////////////////////////       removeObjectAt        //////////////////////////////////////////
@@ -376,7 +337,7 @@ void Room::removeObject(int index)
 // Remove object at position
 void Room::removeObjectAt(int x, int y)
 {
-    for (int i = 0; i < objectCount; i++)
+    for (size_t i = 0; i < objects.size(); i++)
     {
         if (objects[i] != nullptr && objects[i]->getX() == x && objects[i]->getY() == y)
         {
@@ -392,11 +353,11 @@ void Room::removeObjectAt(int x, int y)
 std::vector<Door *> Room::getDoors()
 {
     std::vector<Door *> doors;
-    for (int i = 0; i < objectCount; i++)
+    for (GameObject* obj : objects)
     {
-        if (objects[i] != nullptr && objects[i]->getType() == ObjectType::DOOR)
+        if (obj != nullptr && obj->getType() == ObjectType::DOOR)
         {
-            doors.push_back(static_cast<Door *>(objects[i]));
+            doors.push_back(static_cast<Door *>(obj));
         }
     }
     return doors;
@@ -408,13 +369,13 @@ std::vector<Door *> Room::getDoors()
 std::vector<Switch *> Room::getSwitches()
 {
     std::vector<Switch *> switches;
-    for (int i = 0; i < objectCount; i++)
+    for (GameObject* obj : objects)
     {
-        if (objects[i] != nullptr &&
-            (objects[i]->getType() == ObjectType::SWITCH_ON ||
-             objects[i]->getType() == ObjectType::SWITCH_OFF))
+        if (obj != nullptr &&
+            (obj->getType() == ObjectType::SWITCH_ON ||
+             obj->getType() == ObjectType::SWITCH_OFF))
         {
-            switches.push_back(static_cast<Switch *>(objects[i]));
+            switches.push_back(static_cast<Switch *>(obj));
         }
     }
     return switches;
@@ -487,11 +448,11 @@ void Room::updatePuzzleState()
     {
         completed = true;
 
-        for (int i = 0; i < objectCount; i++)
+        for (GameObject* obj : objects)
         {
-            if (objects[i] != nullptr && objects[i]->getType() == ObjectType::SWITCH_WALL)
+            if (obj != nullptr && obj->getType() == ObjectType::SWITCH_WALL)
             {
-                SwitchWall *sww = dynamic_cast<SwitchWall *>(objects[i]);
+                SwitchWall *sww = dynamic_cast<SwitchWall *>(obj);
                 if (sww != nullptr && sww->isRemovedBySwitch())
                 {
                     setCharAt(sww->getX(), sww->getY(), ' ');
@@ -510,9 +471,9 @@ void Room::updatePuzzleState()
 int Room::countActiveSwitches() const
 {
     int count = 0;
-    for (int i = 0; i < objectCount; i++)
+    for (const GameObject* obj : objects)
     {
-        if (objects[i] != nullptr && objects[i]->getType() == ObjectType::SWITCH_ON)
+        if (obj != nullptr && obj->getType() == ObjectType::SWITCH_ON)
             count++;
     }
     return count;
@@ -523,7 +484,7 @@ int Room::countActiveSwitches() const
 // Check if door requirements are met
 bool Room::canOpenDoor(int doorId, int player1Keys, int player2Keys) const
 {
-    if (doorId < 0 || doorId >= MAX_DOORS)
+    if (doorId < 0 || doorId >= static_cast<int>(doorReqs.size()))
         return false;
 
     const DoorRequirements &req = doorReqs[doorId];
@@ -555,7 +516,7 @@ int Room::getDoorIdAt(int x, int y) const
 
 void Room::unlockDoor(int doorId)
 {
-    if (doorId >= 0 && doorId < MAX_DOORS)
+    if (doorId >= 0 && doorId < static_cast<int>(doorReqs.size()))
         doorReqs[doorId].isUnlocked = true;
 }
 
@@ -563,7 +524,7 @@ void Room::unlockDoor(int doorId)
 
 bool Room::isDoorUnlocked(int doorId) const
 {
-    if (doorId >= 0 && doorId < MAX_DOORS)
+    if (doorId >= 0 && doorId < static_cast<int>(doorReqs.size()))
         return doorReqs[doorId].isUnlocked;
     return false;
 }
@@ -572,17 +533,14 @@ bool Room::isDoorUnlocked(int doorId) const
 
 void Room::addDarkZone(int x1, int y1, int x2, int y2)
 {
-    if (darkZoneCount >= RoomLimits::MAX_DARK_ZONES)
-        return;
-    darkZones[darkZoneCount] = DarkZone(x1, y1, x2, y2);
-    darkZoneCount++;
+    darkZones.push_back(DarkZone(x1, y1, x2, y2));
 }
 
 //////////////////////////////////////////       clearDarkZones        //////////////////////////////////////////
 
 void Room::clearDarkZones()
 {
-    darkZoneCount = 0;
+    darkZones.clear();
     initVisibility();
 }
 
@@ -590,9 +548,9 @@ void Room::clearDarkZones()
 
 bool Room::isInDarkZone(int x, int y) const
 {
-    for (int i = 0; i < darkZoneCount; i++)
+    for (const DarkZone& zone : darkZones)
     {
-        if (darkZones[i].contains(x, y))
+        if (zone.contains(x, y))
             return true;
     }
     return false;
@@ -603,16 +561,16 @@ bool Room::isInDarkZone(int x, int y) const
 // Update visibility based on player torches
 void Room::updateVisibility(Player *p1, Player *p2)
 {
-    if (darkZoneCount == 0)
+    if (darkZones.empty())
         return;
 
     initVisibility();
 
-    for (int i = 0; i < darkZoneCount; i++)
+    for (const DarkZone& zone : darkZones)
     {
-        for (int y = darkZones[i].y1; y <= darkZones[i].y2; y++)
+        for (int y = zone.y1; y <= zone.y2; y++)
         {
-            for (int x = darkZones[i].x1; x <= darkZones[i].x2; x++)
+            for (int x = zone.x1; x <= zone.x2; x++)
             {
                 if (x >= 0 && x < MAX_X && y >= 0 && y < MAX_Y)
                     visibilityMap[y][x] = false;

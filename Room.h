@@ -113,12 +113,10 @@ public:
 
     // Layout
     const Screen *baseLayout;
-    Modification mods[RoomLimits::MAX_MODS];
-    int modCount;
+    std::vector<Modification> mods;
 
     // Objects
-    GameObject *objects[RoomLimits::MAX_OBJECTS];
-    int objectCount;
+    std::vector<GameObject*> objects;
 
     // Key counter system
     int totalKeysInRoom;
@@ -127,8 +125,7 @@ public:
     int totalSwitches;
 
     // Door requirements
-    static const int MAX_DOORS = 10;
-    DoorRequirements doorReqs[MAX_DOORS];
+    std::vector<DoorRequirements> doorReqs;
 
     // Room navigation
     int nextRoomId;
@@ -140,8 +137,7 @@ public:
     RoomBomb bomb;
 
     // Dark zones
-    DarkZone darkZones[RoomLimits::MAX_DARK_ZONES];
-    int darkZoneCount;
+    std::vector<DarkZone> darkZones;
     bool visibilityMap[MAX_Y][MAX_X];
 
 public:
