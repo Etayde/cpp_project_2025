@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(make:*)",
+      "Bash(timeout 2 ./game:*)",
+      "Bash(cat:*)",
+      "Bash(timeout:*)",
+      "Bash(./game)"
+    ]
+  }
+}

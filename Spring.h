@@ -20,6 +20,7 @@ public:
     {
         sprite = '#';
         type = ObjectType::SPRING;
+        active = true;
     }
 
     Spring(Direction dir, int len, const std::vector<Point> &cellPositions)
@@ -27,6 +28,7 @@ public:
     {
         sprite = '#';
         type = ObjectType::SPRING;
+        active = true;
         // Set position to first cell
         if (!cells.empty())
         {
