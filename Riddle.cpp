@@ -19,7 +19,7 @@ RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer) {
     // 3. Get player input (blocking)
     int playerAnswer = getPlayerAnswer();
 
-    // 4. Handle ESC
+    // 4. Handle ESC - don't restore screen, keep riddle visible
     if (playerAnswer == -1)
         return RiddleResult::ESCAPED;
 
@@ -37,7 +37,7 @@ RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer) {
     // 8. Exit animation
     playExitAnimation();
 
-    // 9. Restore screen
+    // 9. Restore screen (only when riddle is answered, not on ESC)
     if (room != nullptr)
         room->draw();
 

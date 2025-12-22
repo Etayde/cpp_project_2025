@@ -55,8 +55,8 @@ void Game::run()
                 handlePauseInput();
                 sleep_ms(50);
             }
-            if (currentState == GameState::inGame)
-                redrawCurrentRoom();
+            // Don't redraw - let the calling context handle screen restoration
+            // This allows riddles to persist across pause/resume
             break;
 
         case GameState::victory:
