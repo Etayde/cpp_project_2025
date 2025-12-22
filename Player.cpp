@@ -237,11 +237,14 @@ bool Player::move(Room *room)
     // Check if player moved onto a spring or is compressing one
     if (obj != nullptr && obj->getType() == ObjectType::SPRING)
     {
+        std::cout << "DEBUG Player: Found SPRING object at (" << nextX << "," << nextY << ")" << std::endl;
         Spring* spring = dynamic_cast<Spring*>(obj);
         if (spring != nullptr && spring->occupiesPosition(nextX, nextY))
         {
+            std::cout << "  Spring occupies this position" << std::endl;
             if (activeSpring == nullptr)
             {
+                std::cout << "  Beginning spring compression" << std::endl;
                 // Just stepped on spring
                 beginSpringCompression(spring);
             }
