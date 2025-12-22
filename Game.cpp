@@ -427,6 +427,11 @@ void Game::initializeRooms()
     rooms[0].nextRoomId = 1;
     rooms[0].prevRoomId = -1;
     rooms[0].setDoorRequirements(1, 0, 2); // Door 1: 0 keys, 2 switches
+    rooms[0].addSpring({Point(73, 9), Point(74, 9), Point(75, 9), Point(76, 9), Point(77, 9)}, 5);
+
+    // Example: Add a 3-character horizontal spring at positions (10,10), (11,10), (12,10)
+    // Make sure there's a wall at (9,10) - the spring will project right
+    // rooms[0].addSpring({Point(10, 10), Point(11, 10), Point(12, 10)}, 3);
 
     // Room 1
     rooms[1] = Room(1);
@@ -439,6 +444,10 @@ void Game::initializeRooms()
     rooms[1].setDoorRequirements(2, 2, 0); // Door 2: 2 keys, 0 switches
     rooms[1].addDarkZone(20, 5, 46, 14);
     rooms[1].addDarkZone(62, 5, 77, 8);
+
+    // Example: Add a 2-character vertical spring at positions (25,10), (25,11)
+    // Make sure there's a wall at (25,9) - the spring will project down
+    // rooms[1].addSpring({Point(25, 10), Point(25, 11)}, 2);
 }
 
 //////////////////////////////////////////        changeRoom          //////////////////////////////////////////
@@ -467,6 +476,18 @@ void Game::changeRoom(int newRoomId, bool goingForward)
     player2.pos.diff_y = 0;
     player1.atDoor = false;
     player2.atDoor = false;
+
+    // Reset spring states when changing rooms
+    player1.inSpringMotion = false;
+    player1.activeSpring = nullptr;
+    player1.springMomentum = 0;
+    player1.springFramesRemaining = 0;
+    player1.springCompressionProgress = 0;
+    player2.inSpringMotion = false;
+    player2.activeSpring = nullptr;
+    player2.springMomentum = 0;
+    player2.springFramesRemaining = 0;
+    player2.springCompressionProgress = 0;
 
     player1.prevChar = ' ';
     player2.prevChar = ' ';

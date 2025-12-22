@@ -37,7 +37,9 @@ enum class Direction
     DOWN,
     LEFT,
     RIGHT,
-    STAY
+    STAY,
+    HORIZONTAL,  // For spring orientation (not movement direction)
+    VERTICAL     // For spring orientation (not movement direction)
 };
 
 //////////////////////////////////////////        PLAYER ACTIONS       //////////////////////////////////////////

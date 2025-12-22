@@ -62,8 +62,7 @@ GameObject *createObjectFromChar(char ch, int x, int y)
         return new BreakableWall(pos);
     case 'Z':
         return new SwitchWall(pos);
-    case '#':
-        return new Spring(pos);
+    // '#' removed - springs are created via Room::addSpring(), not from layout chars
     case '?':
         return new Riddle(pos);
     default:

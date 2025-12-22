@@ -40,6 +40,8 @@ void Point::setDirection(Direction dir)
         diff_y = 0;
         break;
     case Direction::STAY:
+    case Direction::HORIZONTAL:  // Not used for player movement
+    case Direction::VERTICAL:    // Not used for player movement
         diff_x = 0;
         diff_y = 0;
         break;

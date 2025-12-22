@@ -3,24 +3,41 @@
 //////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 
 #include "StaticObjects.h"
+#include <vector>
 
 //////////////////////////////////////////          Spring            //////////////////////////////////////////
 
-// Boosts player movement
+// Multi-character spring that compresses and launches players
 class Spring : public StaticObject
 {
 private:
-    int boostStrength;
+    int length;                           // Number of '#' characters in spring
+    Direction orientation;                // HORIZONTAL or VERTICAL
+    Direction projectionDirection;        // Direction spring pushes (away from wall)
+    Point wallAnchor;                     // Position where spring attaches to wall
+    int compressionState;                 // How many chars currently compressed (0 to length)
+    std::vector<Point> positions;         // All positions occupied by spring chars
 
 public:
-    Spring() : StaticObject(), boostStrength(1)
+    // Default constructor (for compatibility)
+    Spring() : StaticObject(), length(1), orientation(Direction::HORIZONTAL),
+               projectionDirection(Direction::RIGHT), wallAnchor(0, 0),
+               compressionState(0)
     {
         sprite = '#';
         type = ObjectType::SPRING;
+        positions.push_back(Point(0, 0));
     }
 
-    Spring(const Point &pos, int boost = 1)
-        : StaticObject(pos, '#', ObjectType::SPRING), boostStrength(boost) {}
+    // Multi-character spring constructor
+    Spring(const std::vector<Point>& springPositions, Direction orient,
+           Direction projDir, const Point& anchor)
+        : StaticObject(springPositions.empty() ? Point(0, 0) : springPositions[0], '#', ObjectType::SPRING),
+          length(springPositions.size()), orientation(orient),
+          projectionDirection(projDir), wallAnchor(anchor),
+          compressionState(0), positions(springPositions)
+    {
+    }
 
     GameObject *clone() const override { return new Spring(*this); }
     const char *getName() const override { return "Spring"; }
@@ -28,5 +45,66 @@ public:
     bool isBlocking() const override { return false; }
     bool onExplosion() override { return true; }
 
-    int getBoostStrength() const { return boostStrength; }
+    // Position queries
+    bool occupiesPosition(int x, int y) const
+    {
+        for (const Point& p : positions)
+        {
+            if (p.x == x && p.y == y)
+                return true;
+        }
+        return false;
+    }
+
+    // Getters
+    int getLength() const { return length; }
+    int getCompressionState() const { return compressionState; }
+    Direction getOrientation() const { return orientation; }
+    Direction getProjectionDirection() const { return projectionDirection; }
+
+    // State management
+    void compress(int numChars)
+    {
+        if (numChars >= 0 && numChars <= length)
+            compressionState = numChars;
+    }
+
+    void release()
+    {
+        compressionState = 0;
+    }
+
+    // Override draw to handle compression visualization
+    void draw() const override
+    {
+        if (!active)
+            return;
+
+        // Calculate how many characters are visible
+        int visibleCount = length - compressionState;
+
+        // Determine which positions to draw based on projection direction
+        // We keep the chars closest to the wall visible
+        int startIndex = 0;
+        if (projectionDirection == Direction::LEFT || projectionDirection == Direction::UP)
+        {
+            // Wall is on the right/bottom side, keep last N chars
+            startIndex = compressionState;
+        }
+        // else: Wall is on left/top side, keep first N chars (startIndex = 0)
+
+        // Draw visible positions
+        for (int i = 0; i < static_cast<int>(positions.size()); i++)
+        {
+            gotoxy(positions[i].x, positions[i].y);
+            if (i >= startIndex && i < startIndex + visibleCount)
+            {
+                std::cout << sprite << std::flush;
+            }
+            else
+            {
+                std::cout << ' ' << std::flush;
+            }
+        }
+    }
 };

@@ -7,7 +7,9 @@
 #include "Switch.h"
 #include "StaticObjects.h"
 #include "Bomb.h"
+#include "Spring.h"
 #include <cmath>
+#include <algorithm>
 
 //////////////////////////////////////////      Room Constructors      //////////////////////////////////////////
 
@@ -767,4 +769,182 @@ bool Room::updateBomb(Player *p1, Player *p2)
     }
 
     return anyPlayerHit;
+}
+
+//////////////////////////////////////////     Spring Creation        //////////////////////////////////////////
+
+void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
+{
+    // Step 1: Validate input
+    if (positions.empty() || static_cast<int>(positions.size()) != expectedLength)
+    {
+        return; // Invalid input
+    }
+
+    // Step 2: Check if positions are consecutive
+    Direction orientation = detectOrientation(positions);
+    if (orientation == Direction::STAY)
+    {
+        return; // Not consecutive in a line
+    }
+
+    // Step 3: Sort positions based on orientation
+    std::vector<Point> sorted = sortPositions(positions, orientation);
+    if (sorted.empty())
+    {
+        return; // Failed to sort (not consecutive)
+    }
+
+    // Step 4: Verify wall adjacency and determine projection
+    WallCheckResult wallCheck = checkWallAdjacency(sorted, orientation);
+    if (!wallCheck.valid)
+    {
+        return; // No wall found at either end
+    }
+
+    // Step 5: Create Spring object
+    Spring* spring = new Spring(
+        sorted,
+        orientation,
+        wallCheck.projectionDirection,
+        wallCheck.anchorPosition
+    );
+
+    // Step 6: Add to objects vector
+    if (addObject(spring))
+    {
+        // Success - update room's character map to show spring chars
+        for (const Point& p : sorted)
+        {
+            setCharAt(p.x, p.y, '#');
+        }
+    }
+    else
+    {
+        delete spring;
+    }
+}
+
+Direction Room::detectOrientation(const std::vector<Point>& positions)
+{
+    if (positions.size() < 2)
+        return Direction::STAY;
+
+    bool allSameX = true;
+    bool allSameY = true;
+
+    int firstX = positions[0].x;
+    int firstY = positions[0].y;
+
+    for (size_t i = 1; i < positions.size(); i++)
+    {
+        if (positions[i].x != firstX)
+            allSameX = false;
+        if (positions[i].y != firstY)
+            allSameY = false;
+    }
+
+    if (allSameX)
+        return Direction::VERTICAL;   // Same column
+    if (allSameY)
+        return Direction::HORIZONTAL; // Same row
+    return Direction::STAY; // Not aligned
+}
+
+std::vector<Point> Room::sortPositions(const std::vector<Point>& positions, Direction orientation)
+{
+    std::vector<Point> sorted = positions;
+
+    if (orientation == Direction::HORIZONTAL)
+    {
+        // Sort by x coordinate (left to right)
+        std::sort(sorted.begin(), sorted.end(),
+                  [](const Point& a, const Point& b) { return a.x < b.x; });
+    }
+    else
+    {
+        // Sort by y coordinate (top to bottom)
+        std::sort(sorted.begin(), sorted.end(),
+                  [](const Point& a, const Point& b) { return a.y < b.y; });
+    }
+
+    // Verify consecutive
+    for (size_t i = 1; i < sorted.size(); i++)
+    {
+        if (orientation == Direction::HORIZONTAL)
+        {
+            if (sorted[i].x != sorted[i-1].x + 1)
+            {
+                return {}; // Not consecutive
+            }
+        }
+        else
+        {
+            if (sorted[i].y != sorted[i-1].y + 1)
+            {
+                return {}; // Not consecutive
+            }
+        }
+    }
+
+    return sorted;
+}
+
+Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted, Direction orientation)
+{
+    WallCheckResult result;
+
+    if (sorted.empty())
+        return result;
+
+    // Check first position (index 0) for wall adjacency
+    Point first = sorted[0];
+    Point last = sorted[sorted.size() - 1];
+
+    if (orientation == Direction::HORIZONTAL)
+    {
+        // Check left of first position
+        char leftChar = getCharAt(first.x - 1, first.y);
+        if (leftChar == 'W' || leftChar == '=')
+        {
+            result.valid = true;
+            result.projectionDirection = Direction::RIGHT;
+            result.anchorPosition = first;
+            return result;
+        }
+
+        // Check right of last position
+        char rightChar = getCharAt(last.x + 1, last.y);
+        if (rightChar == 'W' || rightChar == '=')
+        {
+            result.valid = true;
+            result.projectionDirection = Direction::LEFT;
+            result.anchorPosition = last;
+            return result;
+        }
+    }
+    else // VERTICAL
+    {
+        // Check above first position
+        char topChar = getCharAt(first.x, first.y - 1);
+        if (topChar == 'W' || topChar == '=')
+        {
+            result.valid = true;
+            result.projectionDirection = Direction::DOWN;
+            result.anchorPosition = first;
+            return result;
+        }
+
+        // Check below last position
+        char bottomChar = getCharAt(last.x, last.y + 1);
+        if (bottomChar == 'W' || bottomChar == '=')
+        {
+            result.valid = true;
+            result.projectionDirection = Direction::UP;
+            result.anchorPosition = last;
+            return result;
+        }
+    }
+
+    return result;
 }

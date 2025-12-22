@@ -8,6 +8,7 @@
 #include "GameObject.h"
 
 class Room;
+class Spring;
 
 //////////////////////////////////////////      PlayerKeyBinding       //////////////////////////////////////////
 
@@ -57,6 +58,16 @@ public:
     int keyCount; // Number of keys collected
     bool waitingAtDoor; // True if player has crossed through door and is waiting
 
+    // Spring motion tracking
+    bool inSpringMotion;              // True if being launched by spring
+    int springMomentum;               // Speed multiplier (1-N)
+    Direction springDirection;        // Direction of spring launch
+    int springFramesRemaining;        // Frames left in spring motion
+
+    // Spring compression tracking
+    Spring* activeSpring;             // Current spring (nullptr if none)
+    int springCompressionProgress;    // How many chars compressed
+
 public:
     // Constructors & Destructor
     Player();
@@ -91,7 +102,13 @@ public:
         pos.y = y;
     }
     void setDirection(Direction dir) { pos.setDirection(dir); }
-    void kill() { alive = false; }
+    void kill()
+    {
+        alive = false;
+        inSpringMotion = false;
+        activeSpring = nullptr;
+        springMomentum = 0;
+    }
     void addKey() { keyCount++; }
     bool useKey();
 
@@ -110,6 +127,16 @@ public:
     bool pickupItem(GameObject *item);
     Point dropItem(Room *room);
     void performAction(Action action);
+
+    // Spring mechanics
+    bool isInSpringMotion() const { return inSpringMotion; }
+    void beginSpringCompression(Spring* spring);
+    void releaseSpring();
+    bool moveWithSpringMomentum(Room* room);
+    void transferMomentum(Player* other);
+    bool canMoveToPosition(int x, int y, Room* room);
+    Direction getCurrentDirection() const;
+    Direction actionToDirection(Action action) const;
 
 private:
     void clearInventory();
