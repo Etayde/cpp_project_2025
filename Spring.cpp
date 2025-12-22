@@ -87,24 +87,26 @@ void Spring::releaseForPlayer(Player* player)
     // Calculate launch parameters for each player
     if (compressingPlayer != nullptr && playerCompressionAmount > 0)
     {
-        int frames = playerCompressionAmount * playerCompressionAmount;
+        int compression = playerCompressionAmount;
 
         // Set player's motion state
+        // Speed = compression cells/frame, Duration = compression frames
+        // Total distance = compression * compression = compression²
         compressingPlayer->inSpringMotion = true;
-        compressingPlayer->springMomentum = 1;  // Always move 1 cell per frame
+        compressingPlayer->springMomentum = compression;  // Cells per frame
         compressingPlayer->springDirection = projectionDirection;
-        compressingPlayer->springFramesRemaining = frames;
+        compressingPlayer->springFramesRemaining = compression;  // Number of frames
     }
 
     if (secondCompressingPlayer != nullptr && secondPlayerCompressionAmount > 0)
     {
-        int frames = secondPlayerCompressionAmount * secondPlayerCompressionAmount;
+        int compression = secondPlayerCompressionAmount;
 
         // Set player's motion state
         secondCompressingPlayer->inSpringMotion = true;
-        secondCompressingPlayer->springMomentum = 1;  // Always move 1 cell per frame
+        secondCompressingPlayer->springMomentum = compression;  // Cells per frame
         secondCompressingPlayer->springDirection = projectionDirection;
-        secondCompressingPlayer->springFramesRemaining = frames;
+        secondCompressingPlayer->springFramesRemaining = compression;  // Number of frames
     }
 
     // Reset spring state
