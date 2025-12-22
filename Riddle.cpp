@@ -58,8 +58,6 @@ void Riddle::displayRiddleQuestion() const {
         return;
     }
 
-    clrscr();
-
     // Draw top border
     gotoxy(11, 4);
     cout << "/";
