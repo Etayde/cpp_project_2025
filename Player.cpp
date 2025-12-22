@@ -505,6 +505,8 @@ void Player::releaseSpring()
     // Calculate launch parameters based on compression
     int compressedChars = springCompressionProgress;
 
+    std::cerr << "RELEASE SPRING! Compressed: " << compressedChars << std::endl;
+
     if (compressedChars > 0)
     {
         // Launch the player
@@ -512,6 +514,10 @@ void Player::releaseSpring()
         springFramesRemaining = compressedChars * compressedChars;
         springDirection = activeSpring->getProjectionDirection();
         inSpringMotion = true;
+
+        std::cerr << "  LAUNCHING! Momentum=" << springMomentum
+                  << ", Frames=" << springFramesRemaining
+                  << ", Direction=" << (int)springDirection << std::endl;
 
         // Visual: release spring to original state
         activeSpring->release();
@@ -525,8 +531,11 @@ void Player::releaseSpring()
 
 bool Player::moveWithSpringMomentum(Room* room)
 {
+    std::cerr << "moveWithSpringMomentum called! Frames remaining: " << springFramesRemaining << std::endl;
+
     if (springFramesRemaining <= 0)
     {
+        std::cerr << "  Motion complete, stopping" << std::endl;
         // Spring motion complete
         inSpringMotion = false;
         springMomentum = 0;
