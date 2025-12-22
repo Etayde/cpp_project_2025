@@ -234,57 +234,62 @@ bool Player::move(Room *room)
     pos.y = nextY;
     draw(room);
 
-    // Check if player moved onto a spring or is compressing one
-    if (obj != nullptr && obj->getType() == ObjectType::SPRING)
+    // Check if player is on an active spring (need to check activeSpring first,
+    // because getObjectAt only returns the spring for its first position!)
+    if (activeSpring != nullptr && activeSpring->occupiesPosition(nextX, nextY))
     {
-        std::cout << "DEBUG Player: Found SPRING object at (" << nextX << "," << nextY << ")" << std::endl;
+        std::cerr << "DEBUG Player: On active spring at (" << nextX << "," << nextY << ")" << std::endl;
+        // Continue compressing the same spring
+        Direction moveDir = getCurrentDirection();
+        Direction springProj = activeSpring->getProjectionDirection();
+
+        std::cerr << "  Move dir: " << (int)moveDir << ", Spring proj: " << (int)springProj << std::endl;
+
+        // Check if moving toward wall (opposite to projection direction)
+        bool isCompressing = false;
+        if (springProj == Direction::UP && moveDir == Direction::DOWN) isCompressing = true;
+        if (springProj == Direction::DOWN && moveDir == Direction::UP) isCompressing = true;
+        if (springProj == Direction::LEFT && moveDir == Direction::RIGHT) isCompressing = true;
+        if (springProj == Direction::RIGHT && moveDir == Direction::LEFT) isCompressing = true;
+
+        std::cerr << "  Is compressing? " << (isCompressing ? "YES" : "NO") << std::endl;
+        std::cerr << "  Progress: " << springCompressionProgress << "/" << activeSpring->getLength() << std::endl;
+
+        if (isCompressing && springCompressionProgress < activeSpring->getLength())
+        {
+            springCompressionProgress++;
+            activeSpring->compress(springCompressionProgress);
+            std::cerr << "  Compressed to: " << springCompressionProgress << "/" << activeSpring->getLength() << std::endl;
+
+            // Check if we're about to hit a wall - if so, release
+            int wallCheckX = nextX + pos.diff_x;
+            int wallCheckY = nextY + pos.diff_y;
+            char wallChar = room->getCharAt(wallCheckX, wallCheckY);
+            if (wallChar == 'W' || wallChar == '=')
+            {
+                std::cerr << "  Hit wall! Releasing spring" << std::endl;
+                releaseSpring();
+            }
+        }
+    }
+    // Check if player moved onto a NEW spring
+    else if (obj != nullptr && obj->getType() == ObjectType::SPRING)
+    {
+        std::cerr << "DEBUG Player: Found SPRING object at (" << nextX << "," << nextY << ")" << std::endl;
         Spring* spring = dynamic_cast<Spring*>(obj);
         if (spring != nullptr && spring->occupiesPosition(nextX, nextY))
         {
-            std::cout << "  Spring occupies this position" << std::endl;
-            if (activeSpring == nullptr)
-            {
-                std::cout << "  Beginning spring compression" << std::endl;
-                // Just stepped on spring
-                beginSpringCompression(spring);
-            }
-            else if (activeSpring == spring)
-            {
-                std::cout << "  Continuing compression on active spring" << std::endl;
-                // Continue compressing the same spring
-                Direction moveDir = getCurrentDirection();
-                Direction springProj = spring->getProjectionDirection();
-
-                std::cout << "  Move dir: " << (int)moveDir << ", Spring proj: " << (int)springProj << std::endl;
-
-                // Check if moving toward wall (opposite to projection direction)
-                bool isCompressing = false;
-                if (springProj == Direction::UP && moveDir == Direction::DOWN) isCompressing = true;
-                if (springProj == Direction::DOWN && moveDir == Direction::UP) isCompressing = true;
-                if (springProj == Direction::LEFT && moveDir == Direction::RIGHT) isCompressing = true;
-                if (springProj == Direction::RIGHT && moveDir == Direction::LEFT) isCompressing = true;
-
-                std::cout << "  Is compressing? " << (isCompressing ? "YES" : "NO") << std::endl;
-                std::cout << "  Progress: " << springCompressionProgress << "/" << spring->getLength() << std::endl;
-
-                if (isCompressing && springCompressionProgress < spring->getLength())
-                {
-                    springCompressionProgress++;
-                    spring->compress(springCompressionProgress);
-                    std::cout << "  Compressed to: " << springCompressionProgress << "/" << spring->getLength() << std::endl;
-
-                    // Check if we're about to hit a wall - if so, release
-                    int wallCheckX = nextX + pos.diff_x;
-                    int wallCheckY = nextY + pos.diff_y;
-                    char wallChar = room->getCharAt(wallCheckX, wallCheckY);
-                    if (wallChar == 'W' || wallChar == '=')
-                    {
-                        std::cout << "  Hit wall! Releasing spring" << std::endl;
-                        releaseSpring();
-                    }
-                }
-            }
+            std::cerr << "  Beginning spring compression" << std::endl;
+            // Just stepped on spring
+            beginSpringCompression(spring);
         }
+    }
+    // Player left the spring
+    else if (activeSpring != nullptr)
+    {
+        std::cerr << "DEBUG Player: Left spring without compressing" << std::endl;
+        activeSpring = nullptr;
+        springCompressionProgress = 0;
     }
 
     return true;
@@ -489,7 +494,7 @@ void Player::beginSpringCompression(Spring* spring)
     activeSpring = spring;
     springCompressionProgress = 1; // First step counts as compressing 1 char
     spring->compress(1);
-    std::cout << "  Compression started: 1/" << spring->getLength() << std::endl;
+    std::cerr << "  Compression started: 1/" << spring->getLength() << std::endl;
 }
 
 void Player::releaseSpring()

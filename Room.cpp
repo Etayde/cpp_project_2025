@@ -778,7 +778,7 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     // Step 1: Validate input
     if (positions.empty() || static_cast<int>(positions.size()) != expectedLength)
     {
-        std::cout << "DEBUG: Spring creation failed - invalid input size" << std::endl;
+        std::cerr << "DEBUG: Spring creation failed - invalid input size" << std::endl;
         return; // Invalid input
     }
 
@@ -786,7 +786,7 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     Direction orientation = detectOrientation(positions);
     if (orientation == Direction::STAY)
     {
-        std::cout << "DEBUG: Spring creation failed - not consecutive in a line" << std::endl;
+        std::cerr << "DEBUG: Spring creation failed - not consecutive in a line" << std::endl;
         return; // Not consecutive in a line
     }
 
@@ -794,7 +794,7 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     std::vector<Point> sorted = sortPositions(positions, orientation);
     if (sorted.empty())
     {
-        std::cout << "DEBUG: Spring creation failed - sorting failed (not consecutive)" << std::endl;
+        std::cerr << "DEBUG: Spring creation failed - sorting failed (not consecutive)" << std::endl;
         return; // Failed to sort (not consecutive)
     }
 
@@ -802,9 +802,9 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     WallCheckResult wallCheck = checkWallAdjacency(sorted, orientation);
     if (!wallCheck.valid)
     {
-        std::cout << "DEBUG: Spring creation failed - no wall adjacent" << std::endl;
-        std::cout << "  First pos: (" << sorted[0].x << "," << sorted[0].y << ")" << std::endl;
-        std::cout << "  Last pos: (" << sorted[sorted.size()-1].x << "," << sorted[sorted.size()-1].y << ")" << std::endl;
+        std::cerr << "DEBUG: Spring creation failed - no wall adjacent" << std::endl;
+        std::cerr << "  First pos: (" << sorted[0].x << "," << sorted[0].y << ")" << std::endl;
+        std::cerr << "  Last pos: (" << sorted[sorted.size()-1].x << "," << sorted[sorted.size()-1].y << ")" << std::endl;
         return; // No wall found at either end
     }
 
@@ -816,23 +816,23 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
         wallCheck.anchorPosition
     );
 
-    std::cout << "DEBUG: Spring created successfully!" << std::endl;
-    std::cout << "  Length: " << spring->getLength() << std::endl;
-    std::cout << "  Orientation: " << (orientation == Direction::HORIZONTAL ? "HORIZONTAL" : "VERTICAL") << std::endl;
-    std::cout << "  Projection: ";
+    std::cerr << "DEBUG: Spring created successfully!" << std::endl;
+    std::cerr << "  Length: " << spring->getLength() << std::endl;
+    std::cerr << "  Orientation: " << (orientation == Direction::HORIZONTAL ? "HORIZONTAL" : "VERTICAL") << std::endl;
+    std::cerr << "  Projection: ";
     switch(wallCheck.projectionDirection) {
-        case Direction::UP: std::cout << "UP"; break;
-        case Direction::DOWN: std::cout << "DOWN"; break;
-        case Direction::LEFT: std::cout << "LEFT"; break;
-        case Direction::RIGHT: std::cout << "RIGHT"; break;
-        default: std::cout << "UNKNOWN"; break;
+        case Direction::UP: std::cerr << "UP"; break;
+        case Direction::DOWN: std::cerr << "DOWN"; break;
+        case Direction::LEFT: std::cerr << "LEFT"; break;
+        case Direction::RIGHT: std::cerr << "RIGHT"; break;
+        default: std::cerr << "UNKNOWN"; break;
     }
-    std::cout << std::endl;
+    std::cerr << std::endl;
 
     // Step 6: Add to objects vector
     if (addObject(spring))
     {
-        std::cout << "  Added to objects vector successfully" << std::endl;
+        std::cerr << "  Added to objects vector successfully" << std::endl;
         // Success - update room's character map to show spring chars
         for (const Point& p : sorted)
         {
@@ -841,7 +841,7 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     }
     else
     {
-        std::cout << "  Failed to add to objects vector" << std::endl;
+        std::cerr << "  Failed to add to objects vector" << std::endl;
         delete spring;
     }
 }
