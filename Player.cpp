@@ -143,10 +143,35 @@ bool Player::move(Room *room)
         }
     }
 
-    // Check wall collision
+    // Check wall collision (allow if compressing spring toward wall)
     char nextChar = room->getCharAt(nextX, nextY);
     if (nextChar == 'W' || nextChar == '=')
     {
+        // If actively compressing a spring and moving toward wall, this is the final compression
+        if (activeSpring != nullptr && activeSpring->occupiesPosition(pos.x, pos.y))
+        {
+            Direction moveDir = getCurrentDirection();
+            Direction springProj = activeSpring->getProjectionDirection();
+
+            // Check if moving toward wall (opposite to projection)
+            bool compressingTowardWall = false;
+            if (springProj == Direction::UP && moveDir == Direction::DOWN) compressingTowardWall = true;
+            if (springProj == Direction::DOWN && moveDir == Direction::UP) compressingTowardWall = true;
+            if (springProj == Direction::LEFT && moveDir == Direction::RIGHT) compressingTowardWall = true;
+            if (springProj == Direction::RIGHT && moveDir == Direction::LEFT) compressingTowardWall = true;
+
+            if (compressingTowardWall && springCompressionProgress < activeSpring->getLength())
+            {
+                // Final compression step - release the spring
+                springCompressionProgress++;
+                activeSpring->compress(springCompressionProgress);
+                activeSpring->draw();
+                releaseSpring();
+                return true;
+            }
+        }
+
+        // Normal wall collision - stop movement
         pos.diff_x = 0;
         pos.diff_y = 0;
         draw(room);
