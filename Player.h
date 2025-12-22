@@ -56,7 +56,9 @@ public:
     int doorId;
     bool alive;
     int keyCount; // Number of keys collected
+    int lives;    // Player's remaining lives (for riddles and future features)
     bool waitingAtDoor; // True if player has crossed through door and is waiting
+    bool requestPause; // Set when ESC pressed during riddle
 
     // Spring motion tracking
     bool inSpringMotion;              // True if being launched by spring
@@ -87,6 +89,7 @@ public:
     bool hasKey() const { return inventory != nullptr && inventory->getType() == ObjectType::KEY; }
     bool hasBomb() const { return inventory != nullptr && inventory->getType() == ObjectType::BOMB; }
     int getKeyCount() const { return keyCount; }
+    int getLives() const { return lives; }
     GameObject *getInventory() { return inventory; }
     const GameObject *getInventory() const { return inventory; }
     ObjectType getInventoryType() const { return inventory ? inventory->getType() : ObjectType::AIR; }
@@ -107,6 +110,8 @@ public:
     }
     void addKey() { keyCount++; }
     bool useKey();
+    void setLives(int l) { lives = l; }
+    void loseLife() { if (lives > 0) lives--; }
 
     void draw(Room *room = nullptr);
 

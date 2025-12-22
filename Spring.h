@@ -82,44 +82,10 @@ public:
             compressionState = numChars;
     }
 
-    void release()
-    {
-        compressionState = 0;
-    }
+    void release() { compressionState = 0; }
 
     // Override draw to handle compression visualization
-    void draw() const override
-    {
-        if (!active)
-            return;
-
-        // Calculate how many characters are visible
-        int visibleCount = length - compressionState;
-
-        // Determine which positions to draw based on projection direction
-        // We keep the chars closest to the wall visible
-        int startIndex = 0;
-        if (projectionDirection == Direction::LEFT || projectionDirection == Direction::UP)
-        {
-            // Wall is on the right/bottom side, keep last N chars
-            startIndex = compressionState;
-        }
-        // else: Wall is on left/top side, keep first N chars (startIndex = 0)
-
-        // Draw visible positions
-        for (int i = 0; i < static_cast<int>(positions.size()); i++)
-        {
-            gotoxy(positions[i].x, positions[i].y);
-            if (i >= startIndex && i < startIndex + visibleCount)
-            {
-                std::cout << sprite << std::flush;
-            }
-            else
-            {
-                std::cout << ' ' << std::flush;
-            }
-        }
-    }
+    void draw() const override;
 
     // Spring compression and launch methods
     void startCompression(Player* player);

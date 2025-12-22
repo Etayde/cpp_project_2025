@@ -5,12 +5,14 @@
 #include "Switch.h"
 #include "Door.h"
 #include "Spring.h"
+#include "Riddle.h"
 
 //////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
 
 Player::Player()
     : inventory(nullptr), playerId(0), sprite(' '), prevChar(' '),
-      atDoor(false), doorId(-1), alive(true), keyCount(0), waitingAtDoor(false),
+      atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
+      waitingAtDoor(false), requestPause(false),
       inSpringMotion(false), springMomentum(0), springDirection(Direction::STAY),
       springFramesRemaining(0)
 {
@@ -19,7 +21,8 @@ Player::Player()
 
 Player::Player(int id, int startX, int startY, char playerSprite)
     : inventory(nullptr), playerId(id), sprite(playerSprite), prevChar(' '),
-      atDoor(false), doorId(-1), alive(true), keyCount(0), waitingAtDoor(false),
+      atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
+      waitingAtDoor(false), requestPause(false),
       inSpringMotion(false), springMomentum(0), springDirection(Direction::STAY),
       springFramesRemaining(0)
 {
@@ -39,7 +42,8 @@ Player::Player(const Player &other)
     : pos(other.pos), inventory(nullptr), playerId(other.playerId),
       sprite(other.sprite), prevChar(other.prevChar), atDoor(other.atDoor),
       doorId(other.doorId), alive(other.alive), keyCount(other.keyCount),
-      waitingAtDoor(other.waitingAtDoor),
+      lives(other.lives), waitingAtDoor(other.waitingAtDoor),
+      requestPause(other.requestPause),
       inSpringMotion(other.inSpringMotion), springMomentum(other.springMomentum),
       springDirection(other.springDirection), springFramesRemaining(other.springFramesRemaining)
 {
@@ -62,7 +66,9 @@ Player &Player::operator=(const Player &other)
         doorId = other.doorId;
         alive = other.alive;
         keyCount = other.keyCount;
+        lives = other.lives;
         waitingAtDoor = other.waitingAtDoor;
+        requestPause = other.requestPause;
 
         inSpringMotion = other.inSpringMotion;
         springMomentum = other.springMomentum;
@@ -603,6 +609,36 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room)
     }
 
     ObjectType objType = obj->getType();
+
+    // Riddles - auto-trigger when stepped on
+    if (objType == ObjectType::RIDDLE)
+    {
+        Riddle* riddle = dynamic_cast<Riddle*>(obj);
+        if (riddle != nullptr)
+        {
+            // Enter riddle (blocks game) - pass 'this' to track triggering player
+            RiddleResult result = riddle->enterRiddle(room, this);
+
+            if (result == RiddleResult::SOLVED)
+            {
+                // Remove riddle from room entirely
+                room->removeObjectAt(nextX, nextY);
+                return false;  // Allow movement onto position
+            }
+            else if (result == RiddleResult::ESCAPED)
+            {
+                // Signal pause to game loop
+                requestPause = true;
+                return true;  // Block movement
+            }
+            else
+            {
+                // Failed - block movement, riddle stays
+                // Note: Player already lost a life in enterRiddle()
+                return true;
+            }
+        }
+    }
 
     // Switches - toggle and stop (handle BEFORE blocking check)
     if (objType == ObjectType::SWITCH_OFF || objType == ObjectType::SWITCH_ON)

@@ -6,7 +6,7 @@
 
 ////////////////////////////////////////       InteractableObject      //////////////////////////////////////////
 
-// Base class for objects that can be interacted with (doors, switches)
+// Base class for objects that can be interacted with (doors, switches, riddles)
 
 class InteractableObject : public GameObject
 {
@@ -23,26 +23,4 @@ public:
 
     int getLinkedDoorId() const { return linkedDoorId; }
     void setLinkedDoorId(int id) { linkedDoorId = id; }
-};
-
-//////////////////////////////////////////          Riddle            //////////////////////////////////////////
-
-// Puzzle marker placeholder (?)
-// Not used yet - reserved for future puzzle implementation
-class Riddle : public InteractableObject
-{
-public:
-    Riddle() : InteractableObject()
-    {
-        sprite = '?';
-        type = ObjectType::RIDDLE;
-    }
-
-    Riddle(const Point &pos) : InteractableObject(pos, '?', ObjectType::RIDDLE) {}
-
-    GameObject *clone() const override { return new Riddle(*this); }
-    const char *getName() const override { return "Riddle"; }
-
-    bool isBlocking() const override { return false; }
-    bool onExplosion() override { return true; }
 };

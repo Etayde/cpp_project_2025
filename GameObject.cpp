@@ -8,6 +8,7 @@
 #include "Door.h"
 #include "StaticObjects.h"
 #include "Spring.h"
+#include "Riddle.h"
 
 class Player;
 

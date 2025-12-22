@@ -179,6 +179,15 @@ void Game::update()
     player1.move(room);
     player2.move(room);
 
+    // Check if either player requested pause (from riddle ESC)
+    if (player1.requestPause || player2.requestPause)
+    {
+        player1.requestPause = false;
+        player2.requestPause = false;
+        currentState = GameState::paused;
+        return;
+    }
+
     // Update bomb
     bool causedGameOver = room->updateBomb(&player1, &player2);
     if (causedGameOver)

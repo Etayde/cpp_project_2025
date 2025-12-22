@@ -55,6 +55,15 @@ enum class Action
     ESC = 27
 };
 
+//////////////////////////////////////////        RIDDLE RESULTS        //////////////////////////////////////////
+
+enum class RiddleResult
+{
+    SOLVED,   // Correct answer - remove riddle
+    FAILED,   // Wrong answer - keep riddle
+    ESCAPED   // ESC pressed - pause game
+};
+
 //////////////////////////////////////////        OBJECT TYPES         //////////////////////////////////////////
 
 // Char values match sprites for easy mapping
