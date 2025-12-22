@@ -281,10 +281,22 @@ GameObject *Room::getObjectAt(int x, int y)
 {
     for (GameObject* obj : objects)
     {
-        if (obj != nullptr && obj->isActive() &&
-            obj->getX() == x && obj->getY() == y)
+        if (obj != nullptr && obj->isActive())
         {
-            return obj;
+            // For springs, check all positions
+            if (obj->getType() == ObjectType::SPRING)
+            {
+                Spring* spring = dynamic_cast<Spring*>(obj);
+                if (spring != nullptr && spring->occupiesPosition(x, y))
+                {
+                    return obj;
+                }
+            }
+            // For other objects, check single position
+            else if (obj->getX() == x && obj->getY() == y)
+            {
+                return obj;
+            }
         }
     }
     return nullptr;
@@ -294,10 +306,22 @@ const GameObject *Room::getObjectAt(int x, int y) const
 {
     for (const GameObject* obj : objects)
     {
-        if (obj != nullptr && obj->isActive() &&
-            obj->getX() == x && obj->getY() == y)
+        if (obj != nullptr && obj->isActive())
         {
-            return obj;
+            // For springs, check all positions
+            if (obj->getType() == ObjectType::SPRING)
+            {
+                const Spring* spring = dynamic_cast<const Spring*>(obj);
+                if (spring != nullptr && spring->occupiesPosition(x, y))
+                {
+                    return obj;
+                }
+            }
+            // For other objects, check single position
+            else if (obj->getX() == x && obj->getY() == y)
+            {
+                return obj;
+            }
         }
     }
     return nullptr;
@@ -814,9 +838,13 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     if (addObject(spring))
     {
         // Success - update room's character map to show spring chars
+        // Only add modifications if the base layout doesn't already have '#'
         for (const Point& p : sorted)
         {
-            setCharAt(p.x, p.y, '#');
+            if (baseLayout->getCharAt(p.x, p.y) != '#')
+            {
+                setCharAt(p.x, p.y, '#');
+            }
         }
     }
     else
