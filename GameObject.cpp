@@ -35,6 +35,9 @@ GameObject *createObjectFromChar(char ch, int x, int y)
 {
     Point pos(x, y, 0, 0, ch);
 
+    // Static counter for auto-incrementing riddle IDs
+    static int nextRiddleId = 0;
+
     switch (ch)
     {
     case 'K':
@@ -65,7 +68,7 @@ GameObject *createObjectFromChar(char ch, int x, int y)
         return new SwitchWall(pos);
     // '#' removed - springs are created via Room::addSpring(), not from layout chars
     case '?':
-        return new Riddle(pos);
+        return new Riddle(pos, nextRiddleId++);  // Auto-increment riddle ID
     default:
         return nullptr;
     }

@@ -59,10 +59,14 @@ void Riddle::displayRiddleQuestion() const {
     }
 
     // Draw top border
-    for (int i = 0; i < 57; i++) {
+    gotoxy(11, 4);
+    cout << "/";
+    for (int i = 1; i < 56; i++) {
         gotoxy(11 + i, 4);
         cout << "-";
     }
+    gotoxy(67, 4);
+    cout << "\\";
 
     // Draw sides and clear interior (rows 5-19)
     for (int row = 5; row < 20; row++) {
@@ -77,10 +81,14 @@ void Riddle::displayRiddleQuestion() const {
     }
 
     // Draw bottom border
-    for (int i = 0; i < 57; i++) {
+    gotoxy(11, 4);
+    cout << "\\";
+    for (int i = 1; i < 56; i++) {
         gotoxy(11 + i, 20);
         cout << "-";
     }
+    gotoxy(67, 4);
+    cout << "/";
 
     // Display question
     gotoxy(13, 6);
