@@ -5,6 +5,9 @@
 #include "StaticObjects.h"
 #include <vector>
 
+class Player;
+class Room;
+
 //////////////////////////////////////////          Spring            //////////////////////////////////////////
 
 // Multi-character spring that compresses and launches players
@@ -18,11 +21,19 @@ private:
     int compressionState;                 // How many chars currently compressed (0 to length)
     std::vector<Point> positions;         // All positions occupied by spring chars
 
+    // Compression tracking
+    Player* compressingPlayer;            // First player compressing (nullptr if none)
+    Player* secondCompressingPlayer;      // Second player if dual compression
+    int playerCompressionAmount;          // Compression by first player
+    int secondPlayerCompressionAmount;    // Compression by second player
+
 public:
     // Default constructor (for compatibility)
     Spring() : StaticObject(), length(1), orientation(Direction::HORIZONTAL),
                projectionDirection(Direction::RIGHT), wallAnchor(0, 0),
-               compressionState(0)
+               compressionState(0), compressingPlayer(nullptr),
+               secondCompressingPlayer(nullptr), playerCompressionAmount(0),
+               secondPlayerCompressionAmount(0)
     {
         sprite = '#';
         type = ObjectType::SPRING;
@@ -35,7 +46,9 @@ public:
         : StaticObject(springPositions.empty() ? Point(0, 0) : springPositions[0], '#', ObjectType::SPRING),
           length(springPositions.size()), orientation(orient),
           projectionDirection(projDir), wallAnchor(anchor),
-          compressionState(0), positions(springPositions)
+          compressionState(0), positions(springPositions),
+          compressingPlayer(nullptr), secondCompressingPlayer(nullptr),
+          playerCompressionAmount(0), secondPlayerCompressionAmount(0)
     {
     }
 
@@ -107,4 +120,12 @@ public:
             }
         }
     }
+
+    // Spring compression and launch methods
+    void startCompression(Player* player);
+    bool continueCompression(Player* player, Direction moveDir);
+    void releaseForPlayer(Player* player);
+    bool updateLaunchedPlayer(Player* player, Room* room);
+    bool isCompressedByPlayer(const Player* player) const;
+    bool isTwoPlayerCompression() const;
 };

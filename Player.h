@@ -64,10 +64,6 @@ public:
     Direction springDirection;        // Direction of spring launch
     int springFramesRemaining;        // Frames left in spring motion
 
-    // Spring compression tracking
-    Spring* activeSpring;             // Current spring (nullptr if none)
-    int springCompressionProgress;    // How many chars compressed
-
 public:
     // Constructors & Destructor
     Player();
@@ -106,8 +102,8 @@ public:
     {
         alive = false;
         inSpringMotion = false;
-        activeSpring = nullptr;
         springMomentum = 0;
+        springFramesRemaining = 0;
     }
     void addKey() { keyCount++; }
     bool useKey();
@@ -126,12 +122,12 @@ public:
     bool move(Room *room);
     bool pickupItem(GameObject *item);
     Point dropItem(Room *room);
-    void performAction(Action action);
+    void performAction(Action action, Room* room = nullptr);
+    bool checkWallCollision(int nextX, int nextY, Room* room);
+    bool checkObjectInteraction(int nextX, int nextY, Room* room);
 
     // Spring mechanics
     bool isInSpringMotion() const { return inSpringMotion; }
-    void beginSpringCompression(Spring* spring);
-    void releaseSpring();
     bool moveWithSpringMomentum(Room* room);
     void transferMomentum(Player* other);
     bool canMoveToPosition(int x, int y, Room* room);
@@ -141,4 +137,6 @@ public:
 private:
     void clearInventory();
     void copyInventoryFrom(const Player &other);
+    void updateSpringState(Room* room);
+    Spring* findSpringAtPosition(int x, int y, Room* room);
 };

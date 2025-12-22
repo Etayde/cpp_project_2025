@@ -159,7 +159,7 @@ void Game::handleInput()
                 }
                 else
                 {
-                    player.performAction(keyBindings[i].action);
+                    player.performAction(keyBindings[i].action, getCurrentRoom());
                 }
                 break;
             }
@@ -481,15 +481,11 @@ void Game::changeRoom(int newRoomId, bool goingForward)
 
     // Reset spring states when changing rooms
     player1.inSpringMotion = false;
-    player1.activeSpring = nullptr;
     player1.springMomentum = 0;
     player1.springFramesRemaining = 0;
-    player1.springCompressionProgress = 0;
     player2.inSpringMotion = false;
-    player2.activeSpring = nullptr;
     player2.springMomentum = 0;
     player2.springFramesRemaining = 0;
-    player2.springCompressionProgress = 0;
 
     player1.prevChar = ' ';
     player2.prevChar = ' ';
