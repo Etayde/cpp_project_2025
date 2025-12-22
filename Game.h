@@ -20,6 +20,7 @@ public:
     int finalRoomId;
     Player player1;
     Player player2;
+    bool gameInitialized;  // Track if game is already started
 
 public:
     Game();

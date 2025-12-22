@@ -81,13 +81,13 @@ void Riddle::displayRiddleQuestion() const {
     }
 
     // Draw bottom border
-    gotoxy(11, 4);
+    gotoxy(11, 20);
     cout << "\\";
     for (int i = 1; i < 56; i++) {
         gotoxy(11 + i, 20);
         cout << "-";
     }
-    gotoxy(67, 4);
+    gotoxy(67, 20);
     cout << "/";
 
     // Display question

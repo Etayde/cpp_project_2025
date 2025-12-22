@@ -6,7 +6,7 @@
 //////////////////////////////////////////     Game Constructor       //////////////////////////////////////////
 
 Game::Game()
-    : currentState(GameState::mainMenu), currentRoomId(-1) {}
+    : currentState(GameState::mainMenu), currentRoomId(-1), gameInitialized(false) {}
 
 Game::~Game() {}
 
@@ -40,7 +40,11 @@ void Game::run()
             break;
 
         case GameState::inGame:
-            startNewGame();
+            if (!gameInitialized)
+            {
+                startNewGame();
+                gameInitialized = true;
+            }
             gameLoop();
             break;
 
@@ -62,6 +66,7 @@ void Game::run()
             while (!check_kbhit())
                 sleep_ms(50);
             get_single_char();
+            gameInitialized = false;  // Reset for next game
             currentState = GameState::mainMenu;
             break;
 
@@ -72,6 +77,7 @@ void Game::run()
             while (!check_kbhit())
                 sleep_ms(50);
             get_single_char();
+            gameInitialized = false;  // Reset for next game
             currentState = GameState::mainMenu;
             break;
 
@@ -93,6 +99,7 @@ void Game::startNewGame()
 
     currentRoomId = 0;
     rooms[0].active = true;
+    gameInitialized = true;
 }
 
 //////////////////////////////////////////         gameLoop           //////////////////////////////////////////
@@ -403,7 +410,10 @@ void Game::handlePauseInput()
         if (choice == 27)
             currentState = GameState::inGame;
         else if (choice == 'h' || choice == 'H')
+        {
+            gameInitialized = false;  // Reset when going to main menu
             currentState = GameState::mainMenu;
+        }
     }
 }
 
