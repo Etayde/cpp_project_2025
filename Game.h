@@ -10,9 +10,32 @@
 
 //////////////////////////////////////////           Game             //////////////////////////////////////////
 
+// Forward declarations
+class Riddle;
+
 // Main game controller
 class Game
 {
+private:
+    struct ActiveRiddle
+    {
+        Riddle* riddle;
+        Player* player;
+
+        ActiveRiddle() : riddle(nullptr), player(nullptr) {}
+
+        void reset() {
+            riddle = nullptr;
+            player = nullptr;
+        }
+
+        bool isActive() const {
+            return riddle != nullptr;
+        }
+    };
+
+    ActiveRiddle aRiddle;  // Track currently active riddle
+
 public:
     GameState currentState;
     std::vector<Room> rooms;

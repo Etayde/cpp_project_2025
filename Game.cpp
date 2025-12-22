@@ -2,6 +2,7 @@
 
 #include "Game.h"
 #include "Layouts.h"
+#include "Riddle.h"
 
 //////////////////////////////////////////     Game Constructor       //////////////////////////////////////////
 
@@ -107,6 +108,30 @@ void Game::startNewGame()
 void Game::gameLoop()
 {
     Room *room = getCurrentRoom();
+
+    // Check if we're resuming a riddle interaction
+    if (aRiddle.isActive())
+    {
+        RiddleResult result = aRiddle.riddle->enterRiddle(room, aRiddle.player);
+
+        if (result == RiddleResult::SOLVED)
+        {
+            room->removeObjectAt(aRiddle.riddle->pos.x, aRiddle.riddle->pos.y);
+            aRiddle.reset();  // Clear active riddle
+        }
+        else if (result == RiddleResult::ESCAPED)
+        {
+            currentState = GameState::paused;
+            return;  // Will come back here after pause, aRiddle stays set
+        }
+        else
+        {
+            // Failed - player answered wrong, reset aRiddle
+            aRiddle.reset();
+        }
+    }
+
+    // Normal game loop (only if no riddle active)
     if (room)
     {
         room->draw();
@@ -189,6 +214,26 @@ void Game::update()
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
     {
+        // Check which player is on a riddle and store it
+        if (player1.requestPause)
+        {
+            GameObject* obj = room->getObjectAt(player1.pos.x, player1.pos.y);
+            if (obj != nullptr && obj->getType() == ObjectType::RIDDLE)
+            {
+                aRiddle.riddle = dynamic_cast<Riddle*>(obj);
+                aRiddle.player = &player1;
+            }
+        }
+        else if (player2.requestPause)
+        {
+            GameObject* obj = room->getObjectAt(player2.pos.x, player2.pos.y);
+            if (obj != nullptr && obj->getType() == ObjectType::RIDDLE)
+            {
+                aRiddle.riddle = dynamic_cast<Riddle*>(obj);
+                aRiddle.player = &player2;
+            }
+        }
+
         player1.requestPause = false;
         player2.requestPause = false;
         currentState = GameState::paused;

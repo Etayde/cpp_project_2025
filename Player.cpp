@@ -616,39 +616,26 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room)
         Riddle* riddle = dynamic_cast<Riddle*>(obj);
         if (riddle != nullptr)
         {
-            // Enter riddle loop - keep showing until solved or failed
-            while (true)
+            // Enter riddle (blocks game) - pass 'this' to track triggering player
+            RiddleResult result = riddle->enterRiddle(room, this);
+
+            if (result == RiddleResult::SOLVED)
             {
-                // Enter riddle (blocks game) - pass 'this' to track triggering player
-                RiddleResult result = riddle->enterRiddle(room, this);
-
-                if (result == RiddleResult::SOLVED)
-                {
-                    // Remove riddle from room entirely
-                    room->removeObjectAt(nextX, nextY);
-                    return false;  // Allow movement onto position
-                }
-                else if (result == RiddleResult::ESCAPED)
-                {
-                    // Signal pause to game loop, but keep riddle active
-                    requestPause = true;
-
-                    // Wait for pause to be handled and resumed
-                    // The riddle screen is still visible, so we'll loop back
-                    while (requestPause)
-                    {
-                        sleep_ms(50);  // Wait for game loop to handle pause
-                    }
-
-                    // After resume, redisplay the riddle and continue
-                    continue;  // Go back to start of while loop
-                }
-                else
-                {
-                    // Failed - block movement, riddle stays
-                    // Note: Player already lost a life in enterRiddle()
-                    return true;
-                }
+                // Remove riddle from room entirely
+                room->removeObjectAt(nextX, nextY);
+                return false;  // Allow movement onto position
+            }
+            else if (result == RiddleResult::ESCAPED)
+            {
+                // Signal pause to game loop
+                requestPause = true;
+                return true;  // Block movement
+            }
+            else
+            {
+                // Failed - block movement, riddle stays
+                // Note: Player already lost a life in enterRiddle()
+                return true;
             }
         }
     }
