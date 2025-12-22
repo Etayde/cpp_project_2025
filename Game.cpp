@@ -427,10 +427,10 @@ void Game::initializeRooms()
     rooms[0].nextRoomId = 1;
     rooms[0].prevRoomId = -1;
     rooms[0].setDoorRequirements(1, 0, 2); // Door 1: 0 keys, 2 switches
-    rooms[0].addSpring({Point(73, 9), Point(74, 9), Point(75, 9), Point(76, 9), Point(77, 9)}, 5);
-    rooms[0].addSpring({Point(51, 1), Point(51, 2), Point(51, 3), Point(51, 4)}, 4);
-    rooms[0].addSpring({Point(1, 10), Point(2, 10), Point(3, 10)}, 3);
-    rooms[0].addSpring({Point(63, 18), Point(63, 19)}, 2);
+    rooms[0].addSpring({Point(73, 9), Point(74, 9), Point(75, 9), Point(76, 9), Point(77, 9)}, 5); //spring 1
+    rooms[0].addSpring({Point(51, 1), Point(51, 2), Point(51, 3), Point(51, 4)}, 4); //spring 2
+    rooms[0].addSpring({Point(1, 10), Point(2, 10), Point(3, 10)}, 3); //spring 3
+    rooms[0].addSpring({Point(63, 18), Point(63, 19)}, 2); //spring 4
     // Example: Add a 3-character horizontal spring at positions (10,10), (11,10), (12,10)
     // Make sure there's a wall at (9,10) - the spring will project right
     // rooms[0].addSpring({Point(10, 10), Point(11, 10), Point(12, 10)}, 3);
