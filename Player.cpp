@@ -250,9 +250,12 @@ bool Player::move(Room *room)
             }
             else if (activeSpring == spring)
             {
+                std::cout << "  Continuing compression on active spring" << std::endl;
                 // Continue compressing the same spring
                 Direction moveDir = getCurrentDirection();
                 Direction springProj = spring->getProjectionDirection();
+
+                std::cout << "  Move dir: " << (int)moveDir << ", Spring proj: " << (int)springProj << std::endl;
 
                 // Check if moving toward wall (opposite to projection direction)
                 bool isCompressing = false;
@@ -261,10 +264,14 @@ bool Player::move(Room *room)
                 if (springProj == Direction::LEFT && moveDir == Direction::RIGHT) isCompressing = true;
                 if (springProj == Direction::RIGHT && moveDir == Direction::LEFT) isCompressing = true;
 
+                std::cout << "  Is compressing? " << (isCompressing ? "YES" : "NO") << std::endl;
+                std::cout << "  Progress: " << springCompressionProgress << "/" << spring->getLength() << std::endl;
+
                 if (isCompressing && springCompressionProgress < spring->getLength())
                 {
                     springCompressionProgress++;
                     spring->compress(springCompressionProgress);
+                    std::cout << "  Compressed to: " << springCompressionProgress << "/" << spring->getLength() << std::endl;
 
                     // Check if we're about to hit a wall - if so, release
                     int wallCheckX = nextX + pos.diff_x;
@@ -272,6 +279,7 @@ bool Player::move(Room *room)
                     char wallChar = room->getCharAt(wallCheckX, wallCheckY);
                     if (wallChar == 'W' || wallChar == '=')
                     {
+                        std::cout << "  Hit wall! Releasing spring" << std::endl;
                         releaseSpring();
                     }
                 }
@@ -479,7 +487,9 @@ void Player::beginSpringCompression(Spring* spring)
         return;
 
     activeSpring = spring;
-    springCompressionProgress = 0;
+    springCompressionProgress = 1; // First step counts as compressing 1 char
+    spring->compress(1);
+    std::cout << "  Compression started: 1/" << spring->getLength() << std::endl;
 }
 
 void Player::releaseSpring()
