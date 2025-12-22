@@ -238,12 +238,9 @@ bool Player::move(Room *room)
     // because getObjectAt only returns the spring for its first position!)
     if (activeSpring != nullptr && activeSpring->occupiesPosition(nextX, nextY))
     {
-        std::cerr << "DEBUG Player: On active spring at (" << nextX << "," << nextY << ")" << std::endl;
         // Continue compressing the same spring
         Direction moveDir = getCurrentDirection();
         Direction springProj = activeSpring->getProjectionDirection();
-
-        std::cerr << "  Move dir: " << (int)moveDir << ", Spring proj: " << (int)springProj << std::endl;
 
         // Check if moving toward wall (opposite to projection direction)
         bool isCompressing = false;
@@ -252,14 +249,10 @@ bool Player::move(Room *room)
         if (springProj == Direction::LEFT && moveDir == Direction::RIGHT) isCompressing = true;
         if (springProj == Direction::RIGHT && moveDir == Direction::LEFT) isCompressing = true;
 
-        std::cerr << "  Is compressing? " << (isCompressing ? "YES" : "NO") << std::endl;
-        std::cerr << "  Progress: " << springCompressionProgress << "/" << activeSpring->getLength() << std::endl;
-
         if (isCompressing && springCompressionProgress < activeSpring->getLength())
         {
             springCompressionProgress++;
             activeSpring->compress(springCompressionProgress);
-            std::cerr << "  Compressed to: " << springCompressionProgress << "/" << activeSpring->getLength() << std::endl;
 
             // Check if we're about to hit a wall - if so, release
             int wallCheckX = nextX + pos.diff_x;
@@ -267,7 +260,6 @@ bool Player::move(Room *room)
             char wallChar = room->getCharAt(wallCheckX, wallCheckY);
             if (wallChar == 'W' || wallChar == '=')
             {
-                std::cerr << "  Hit wall! Releasing spring" << std::endl;
                 releaseSpring();
             }
         }
@@ -275,11 +267,9 @@ bool Player::move(Room *room)
     // Check if player moved onto a NEW spring
     else if (obj != nullptr && obj->getType() == ObjectType::SPRING)
     {
-        std::cerr << "DEBUG Player: Found SPRING object at (" << nextX << "," << nextY << ")" << std::endl;
         Spring* spring = dynamic_cast<Spring*>(obj);
         if (spring != nullptr && spring->occupiesPosition(nextX, nextY))
         {
-            std::cerr << "  Beginning spring compression" << std::endl;
             // Just stepped on spring
             beginSpringCompression(spring);
         }
@@ -287,7 +277,6 @@ bool Player::move(Room *room)
     // Player left the spring
     else if (activeSpring != nullptr)
     {
-        std::cerr << "DEBUG Player: Left spring without compressing" << std::endl;
         activeSpring = nullptr;
         springCompressionProgress = 0;
     }
@@ -494,7 +483,6 @@ void Player::beginSpringCompression(Spring* spring)
     activeSpring = spring;
     springCompressionProgress = 1; // First step counts as compressing 1 char
     spring->compress(1);
-    std::cerr << "  Compression started: 1/" << spring->getLength() << std::endl;
 }
 
 void Player::releaseSpring()
@@ -505,8 +493,6 @@ void Player::releaseSpring()
     // Calculate launch parameters based on compression
     int compressedChars = springCompressionProgress;
 
-    std::cerr << "RELEASE SPRING! Compressed: " << compressedChars << std::endl;
-
     if (compressedChars > 0)
     {
         // Launch the player
@@ -514,10 +500,6 @@ void Player::releaseSpring()
         springFramesRemaining = compressedChars * compressedChars;
         springDirection = activeSpring->getProjectionDirection();
         inSpringMotion = true;
-
-        std::cerr << "  LAUNCHING! Momentum=" << springMomentum
-                  << ", Frames=" << springFramesRemaining
-                  << ", Direction=" << (int)springDirection << std::endl;
 
         // Visual: release spring to original state
         activeSpring->release();
@@ -531,11 +513,8 @@ void Player::releaseSpring()
 
 bool Player::moveWithSpringMomentum(Room* room)
 {
-    std::cerr << "moveWithSpringMomentum called! Frames remaining: " << springFramesRemaining << std::endl;
-
     if (springFramesRemaining <= 0)
     {
-        std::cerr << "  Motion complete, stopping" << std::endl;
         // Spring motion complete
         inSpringMotion = false;
         springMomentum = 0;

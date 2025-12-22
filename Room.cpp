@@ -778,7 +778,6 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     // Step 1: Validate input
     if (positions.empty() || static_cast<int>(positions.size()) != expectedLength)
     {
-        std::cerr << "DEBUG: Spring creation failed - invalid input size" << std::endl;
         return; // Invalid input
     }
 
@@ -786,7 +785,6 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     Direction orientation = detectOrientation(positions);
     if (orientation == Direction::STAY)
     {
-        std::cerr << "DEBUG: Spring creation failed - not consecutive in a line" << std::endl;
         return; // Not consecutive in a line
     }
 
@@ -794,7 +792,6 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     std::vector<Point> sorted = sortPositions(positions, orientation);
     if (sorted.empty())
     {
-        std::cerr << "DEBUG: Spring creation failed - sorting failed (not consecutive)" << std::endl;
         return; // Failed to sort (not consecutive)
     }
 
@@ -802,9 +799,6 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     WallCheckResult wallCheck = checkWallAdjacency(sorted, orientation);
     if (!wallCheck.valid)
     {
-        std::cerr << "DEBUG: Spring creation failed - no wall adjacent" << std::endl;
-        std::cerr << "  First pos: (" << sorted[0].x << "," << sorted[0].y << ")" << std::endl;
-        std::cerr << "  Last pos: (" << sorted[sorted.size()-1].x << "," << sorted[sorted.size()-1].y << ")" << std::endl;
         return; // No wall found at either end
     }
 
@@ -816,23 +810,9 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
         wallCheck.anchorPosition
     );
 
-    std::cerr << "DEBUG: Spring created successfully!" << std::endl;
-    std::cerr << "  Length: " << spring->getLength() << std::endl;
-    std::cerr << "  Orientation: " << (orientation == Direction::HORIZONTAL ? "HORIZONTAL" : "VERTICAL") << std::endl;
-    std::cerr << "  Projection: ";
-    switch(wallCheck.projectionDirection) {
-        case Direction::UP: std::cerr << "UP"; break;
-        case Direction::DOWN: std::cerr << "DOWN"; break;
-        case Direction::LEFT: std::cerr << "LEFT"; break;
-        case Direction::RIGHT: std::cerr << "RIGHT"; break;
-        default: std::cerr << "UNKNOWN"; break;
-    }
-    std::cerr << std::endl;
-
     // Step 6: Add to objects vector
     if (addObject(spring))
     {
-        std::cerr << "  Added to objects vector successfully" << std::endl;
         // Success - update room's character map to show spring chars
         for (const Point& p : sorted)
         {
@@ -841,7 +821,6 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
     }
     else
     {
-        std::cerr << "  Failed to add to objects vector" << std::endl;
         delete spring;
     }
 }
