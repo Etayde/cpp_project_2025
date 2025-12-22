@@ -281,6 +281,12 @@ void Game::redrawCurrentRoom()
     player2.draw(room);
     player1.updateInventoryDisplay();
     player2.updateInventoryDisplay();
+
+    if (aRiddle.isActive())
+    {
+        // Redraw the active riddle on top
+        aRiddle.riddle->draw();
+    }
 }
 
 /////////////////////////////////////////    canPassThroughDoor       //////////////////////////////////////
