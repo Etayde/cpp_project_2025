@@ -253,6 +253,7 @@ bool Player::move(Room *room)
         {
             springCompressionProgress++;
             activeSpring->compress(springCompressionProgress);
+            activeSpring->draw(); // Update visual display
 
             // Check if we're about to hit a wall - if so, release
             int wallCheckX = nextX + pos.diff_x;
@@ -483,6 +484,7 @@ void Player::beginSpringCompression(Spring* spring)
     activeSpring = spring;
     springCompressionProgress = 1; // First step counts as compressing 1 char
     spring->compress(1);
+    spring->draw(); // Update visual display
 }
 
 void Player::releaseSpring()
