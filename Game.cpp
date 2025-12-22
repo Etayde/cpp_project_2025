@@ -116,7 +116,7 @@ void Game::gameLoop()
 
         if (result == RiddleResult::SOLVED)
         {
-            room->removeObjectAt(aRiddle.riddle->pos.x, aRiddle.riddle->pos.y);
+            room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
             aRiddle.reset();  // Clear active riddle
         }
         else if (result == RiddleResult::ESCAPED)
