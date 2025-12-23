@@ -112,6 +112,17 @@ void Game::gameLoop()
     // Check if we're resuming a riddle interaction
     if (aRiddle.isActive())
     {
+        // Clear screen and redraw base game state before showing riddle
+        clrscr();
+        if (room)
+        {
+            room->draw();
+        }
+        player1.draw(room);
+        player2.draw(room);
+        player1.updateInventoryDisplay();
+        player2.updateInventoryDisplay();
+
         // Riddle is active - keep showing it until answered or ESC multiple times
         while (aRiddle.isActive() && currentState == GameState::inGame)
         {
