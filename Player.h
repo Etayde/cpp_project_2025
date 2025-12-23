@@ -124,12 +124,12 @@ public:
     void updateInventoryDisplay();
 
     // Movement & interaction
-    bool move(Room *room);
+    bool move(Room *room, class Riddle** activeRiddle = nullptr, Player** activePlayer = nullptr);
     bool pickupItem(GameObject *item);
     Point dropItem(Room *room);
     void performAction(Action action, Room* room = nullptr);
     bool checkWallCollision(int nextX, int nextY, Room* room);
-    bool checkObjectInteraction(int nextX, int nextY, Room* room);
+    bool checkObjectInteraction(int nextX, int nextY, Room* room, class Riddle** activeRiddle = nullptr, Player** activePlayer = nullptr);
 
     // Spring mechanics
     bool isInSpringMotion() const { return inSpringMotion; }

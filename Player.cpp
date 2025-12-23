@@ -103,7 +103,7 @@ void Player::copyInventoryFrom(const Player &other)
 //////////////////////////////////////////           move             //////////////////////////////////////////
 
 // Move player in current direction, handle collisions and interactions
-bool Player::move(Room *room)
+bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer)
 {
     if (room == nullptr)
         return false;
@@ -159,7 +159,7 @@ bool Player::move(Room *room)
     }
 
     // Check object interaction
-    if (checkObjectInteraction(nextX, nextY, room))
+    if (checkObjectInteraction(nextX, nextY, room, activeRiddle, activePlayer))
     {
         pos.diff_x = 0;
         pos.diff_y = 0;
@@ -596,7 +596,7 @@ bool Player::checkWallCollision(int nextX, int nextY, Room* room)
 //////////////////////////////////////////  checkObjectInteraction  //////////////////////////////////////////
 
 // Check object interaction at next position - returns true if object blocks movement
-bool Player::checkObjectInteraction(int nextX, int nextY, Room* room)
+bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** activeRiddle, Player** activePlayer)
 {
     if (room == nullptr)
         return false;
@@ -619,6 +619,14 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room)
         Riddle* riddle = dynamic_cast<Riddle*>(obj);
         if (riddle != nullptr)
         {
+            // Store riddle IMMEDIATELY in Game's aRiddle (for pause persistence)
+            if (activeRiddle != nullptr && activePlayer != nullptr)
+            {
+                *activeRiddle = riddle;
+                *activePlayer = this;
+                debugLog << "[DEBUG] Player::checkObjectInteraction: Stored riddle in aRiddle, ptr = " << (void*)riddle << std::endl;
+            }
+
             // Enter riddle (blocks game) - pass 'this' to track triggering player
             RiddleResult result = riddle->enterRiddle(room, this);
 
@@ -626,21 +634,23 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room)
             {
                 // Remove riddle from room entirely
                 room->removeObjectAt(nextX, nextY);
+                // Clear aRiddle since solved
+                if (activeRiddle != nullptr) *activeRiddle = nullptr;
+                if (activePlayer != nullptr) *activePlayer = nullptr;
                 return false;  // Allow movement onto position
             }
             else if (result == RiddleResult::ESCAPED)
             {
-                debugLog << "[DEBUG] Player::checkObjectInteraction: Riddle ESCAPED at nextPos(" << nextX << "," << nextY << ")" << std::endl;
-                debugLog << "[DEBUG] Player::checkObjectInteraction: Current player pos = (" << pos.x << "," << pos.y << ")" << std::endl;
-                debugLog << "[DEBUG] Player::checkObjectInteraction: Riddle object pointer = " << (void*)riddle << std::endl;
-                // Signal pause to game loop
+                debugLog << "[DEBUG] Player::checkObjectInteraction: Riddle ESCAPED, aRiddle still set" << std::endl;
+                // Signal pause to game loop (aRiddle stays set for resuming)
                 requestPause = true;
                 return true;  // Block movement
             }
             else
             {
-                // Failed - block movement, riddle stays
-                // Note: Player already lost a life in enterRiddle()
+                // Failed - block movement, riddle stays, clear aRiddle
+                if (activeRiddle != nullptr) *activeRiddle = nullptr;
+                if (activePlayer != nullptr) *activePlayer = nullptr;
                 return true;
             }
         }

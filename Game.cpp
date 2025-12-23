@@ -267,42 +267,15 @@ void Game::update()
     if (room == nullptr)
         return;
 
-    // Handle player movement
-    player1.move(room);
-    player2.move(room);
+    // Handle player movement - pass pointers to aRiddle so it gets set immediately
+    player1.move(room, &aRiddle.riddle, &aRiddle.player);
+    player2.move(room, &aRiddle.riddle, &aRiddle.player);
 
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
     {
         debugLog << "[DEBUG] update: requestPause detected, p1=" << player1.requestPause << " p2=" << player2.requestPause << std::endl;
-
-        // Check which player is on a riddle and store it
-        if (player1.requestPause)
-        {
-            GameObject* obj = room->getObjectAt(player1.pos.x, player1.pos.y);
-            debugLog << "[DEBUG] update: player1 at (" << player1.pos.x << "," << player1.pos.y << "), obj=" << (obj ? "EXISTS" : "NULL");
-            if (obj) debugLog << ", obj pointer = " << (void*)obj;
-            debugLog << std::endl;
-            if (obj != nullptr && obj->getType() == ObjectType::RIDDLE)
-            {
-                debugLog << "[DEBUG] update: Storing riddle for player1 in aRiddle" << std::endl;
-                aRiddle.riddle = dynamic_cast<Riddle*>(obj);
-                aRiddle.player = &player1;
-            }
-        }
-        else if (player2.requestPause)
-        {
-            GameObject* obj = room->getObjectAt(player2.pos.x, player2.pos.y);
-            debugLog << "[DEBUG] update: player2 at (" << player2.pos.x << "," << player2.pos.y << "), obj=" << (obj ? "EXISTS" : "NULL") << std::endl;
-            if (obj != nullptr && obj->getType() == ObjectType::RIDDLE)
-            {
-                debugLog << "[DEBUG] update: Storing riddle for player2 in aRiddle" << std::endl;
-                aRiddle.riddle = dynamic_cast<Riddle*>(obj);
-                aRiddle.player = &player2;
-            }
-        }
-
-        debugLog << "[DEBUG] update: Setting currentState = paused, aRiddle.isActive() = " << aRiddle.isActive() << std::endl;
+        debugLog << "[DEBUG] update: aRiddle.isActive() = " << aRiddle.isActive() << std::endl;
 
         player1.requestPause = false;
         player2.requestPause = false;
