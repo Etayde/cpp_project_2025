@@ -3,6 +3,7 @@
 #include "Game.h"
 #include "Layouts.h"
 #include "Riddle.h"
+#include "Spring.h"
 
 //////////////////////////////////////////     Game Constructor       //////////////////////////////////////////
 
@@ -249,6 +250,16 @@ void Game::update()
     // Handle player movement - pass pointers to aRiddle so it gets set immediately
     player1.move(room, &aRiddle.riddle, &aRiddle.player);
     player2.move(room, &aRiddle.riddle, &aRiddle.player);
+
+    // Update all springs (manage launch state and set player velocities)
+    for (GameObject* obj : room->objects)
+    {
+        if (obj && obj->getType() == ObjectType::SPRING)
+        {
+            Spring* spring = static_cast<Spring*>(obj);
+            spring->update(&player1, &player2);
+        }
+    }
 
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
@@ -569,12 +580,18 @@ void Game::changeRoom(int newRoomId, bool goingForward)
     player2.atDoor = false;
 
     // Reset spring states when changing rooms
-    player1.inSpringMotion = false;
-    player1.springMomentum = 0;
-    player1.springFramesRemaining = 0;
-    player2.inSpringMotion = false;
-    player2.springMomentum = 0;
-    player2.springFramesRemaining = 0;
+    Room* currentRoom = getCurrentRoom();
+    if (currentRoom)
+    {
+        for (GameObject* obj : currentRoom->objects)
+        {
+            if (obj && obj->getType() == ObjectType::SPRING)
+            {
+                Spring* spring = static_cast<Spring*>(obj);
+                spring->reset();
+            }
+        }
+    }
 
     player1.prevChar = ' ';
     player2.prevChar = ' ';

@@ -8,90 +8,88 @@
 class Player;
 class Room;
 
+//////////////////////////////////////////      SpringCell           //////////////////////////////////////////
+
+// Individual cell in a spring
+struct SpringCell
+{
+    Point position;
+    bool visible;
+
+    SpringCell(const Point& pos) : position(pos), visible(true) {}
+};
+
 //////////////////////////////////////////          Spring            //////////////////////////////////////////
 
 // Multi-character spring that compresses and launches players
 class Spring : public StaticObject
 {
 private:
-    int length;                           // Number of '#' characters in spring
+    std::vector<SpringCell> cells;       // All spring cells
     Direction orientation;                // HORIZONTAL or VERTICAL
-    Direction projectionDirection;        // Direction spring pushes (away from wall)
-    Point wallAnchor;                     // Position where spring attaches to wall
-    int compressionState;                 // How many chars currently compressed (0 to length)
-    std::vector<Point> positions;         // All positions occupied by spring chars
+    Direction projectionDirection;        // Direction away from wall
+    Point wallAnchor;                     // Wall attachment position
+    int maxLength;                        // Total cells
 
-    // Compression tracking
-    Player* compressingPlayer;            // First player compressing (nullptr if none)
-    Player* secondCompressingPlayer;      // Second player if dual compression
-    int playerCompressionAmount;          // Compression by first player
-    int secondPlayerCompressionAmount;    // Compression by second player
+    // Simple compression tracking (player IDs, not pointers!)
+    int compressingPlayer1Id;             // 0 = not compressing
+    int compressingPlayer2Id;             // 0 = not compressing
+    int player1Compression;               // How many cells player 1 compressed
+    int player2Compression;               // How many cells player 2 compressed
+
+    // Launch state tracking (replaces Player data members!)
+    int launchedPlayer1Id;                // 0 = not launched
+    int launchedPlayer2Id;                // 0 = not launched
+    int player1LaunchFrames;              // Frames remaining for player 1
+    int player2LaunchFrames;              // Frames remaining for player 2
+    int player1LaunchSpeed;               // Speed for player 1
+    int player2LaunchSpeed;               // Speed for player 2
 
 public:
     // Default constructor (for compatibility)
-    Spring() : StaticObject(), length(1), orientation(Direction::HORIZONTAL),
+    Spring() : StaticObject(), orientation(Direction::HORIZONTAL),
                projectionDirection(Direction::RIGHT), wallAnchor(0, 0),
-               compressionState(0), compressingPlayer(nullptr),
-               secondCompressingPlayer(nullptr), playerCompressionAmount(0),
-               secondPlayerCompressionAmount(0)
+               maxLength(1), compressingPlayer1Id(0), compressingPlayer2Id(0),
+               player1Compression(0), player2Compression(0),
+               launchedPlayer1Id(0), launchedPlayer2Id(0),
+               player1LaunchFrames(0), player2LaunchFrames(0),
+               player1LaunchSpeed(0), player2LaunchSpeed(0)
     {
         sprite = '#';
         type = ObjectType::SPRING;
-        positions.push_back(Point(0, 0));
+        cells.push_back(SpringCell(Point(0, 0)));
     }
 
     // Multi-character spring constructor
-    Spring(const std::vector<Point>& springPositions, Direction orient,
-           Direction projDir, const Point& anchor)
-        : StaticObject(springPositions.empty() ? Point(0, 0) : springPositions[0], '#', ObjectType::SPRING),
-          length(springPositions.size()), orientation(orient),
-          projectionDirection(projDir), wallAnchor(anchor),
-          compressionState(0), positions(springPositions),
-          compressingPlayer(nullptr), secondCompressingPlayer(nullptr),
-          playerCompressionAmount(0), secondPlayerCompressionAmount(0)
-    {
-    }
+    Spring(const std::vector<Point>& positions, Direction orient,
+           Direction projDir, const Point& anchor);
 
-    GameObject *clone() const override { return new Spring(*this); }
-    const char *getName() const override { return "Spring"; }
-
+    // GameObject interface
+    GameObject* clone() const override;
+    const char* getName() const override { return "Spring"; }
     bool isBlocking() const override { return false; }
     bool onExplosion() override { return true; }
+    void draw() const override;
+    void update(Player* player1, Player* player2);  // Called each game cycle
 
     // Position queries
-    bool occupiesPosition(int x, int y) const
-    {
-        for (const Point& p : positions)
-        {
-            if (p.x == x && p.y == y)
-                return true;
-        }
-        return false;
-    }
+    bool occupiesPosition(int x, int y) const;
 
     // Getters
-    int getLength() const { return length; }
-    int getCompressionState() const { return compressionState; }
-    Direction getOrientation() const { return orientation; }
+    int getMaxLength() const { return maxLength; }
     Direction getProjectionDirection() const { return projectionDirection; }
 
-    // State management
-    void compress(int numChars)
-    {
-        if (numChars >= 0 && numChars <= length)
-            compressionState = numChars;
-    }
+    // Compression management (called by Player)
+    bool isPlayerCompressing(int playerId) const;
+    int getPlayerCompression(int playerId) const;
+    int getTotalCompression() const { return player1Compression + player2Compression; }
+    bool isPlayerBeingLaunched(int playerId) const;
 
-    void release() { compressionState = 0; }
+    void addCompression(int playerId);        // Increment compression for player
+    void launchPlayer(int playerId);          // Start launch for player
+    void reset();                              // Full reset (room transitions)
 
-    // Override draw to handle compression visualization
-    void draw() const override;
-
-    // Spring compression and launch methods
-    void startCompression(Player* player);
-    bool continueCompression(Player* player, Direction moveDir);
-    void releaseForPlayer(Player* player);
-    bool updateLaunchedPlayer(Player* player, Room* room);
-    bool isCompressedByPlayer(const Player* player) const;
-    bool isTwoPlayerCompression() const;
+private:
+    void updateVisual();                      // Update cell visibility based on total compression
+    void updateLaunch(Player* player);        // Update player velocity during launch
 };

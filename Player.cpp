@@ -12,9 +12,7 @@
 Player::Player()
     : inventory(nullptr), playerId(0), sprite(' '), prevChar(' '),
       atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
-      waitingAtDoor(false), requestPause(false),
-      inSpringMotion(false), springMomentum(0), springDirection(Direction::STAY),
-      springFramesRemaining(0)
+      waitingAtDoor(false), requestPause(false)
 {
     pos = Point(1, 1, 0, 0, ' ');
 }
@@ -22,9 +20,7 @@ Player::Player()
 Player::Player(int id, int startX, int startY, char playerSprite)
     : inventory(nullptr), playerId(id), sprite(playerSprite), prevChar(' '),
       atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
-      waitingAtDoor(false), requestPause(false),
-      inSpringMotion(false), springMomentum(0), springDirection(Direction::STAY),
-      springFramesRemaining(0)
+      waitingAtDoor(false), requestPause(false)
 {
     pos = Point(startX, startY, 0, 0, playerSprite);
 }
@@ -43,9 +39,7 @@ Player::Player(const Player &other)
       sprite(other.sprite), prevChar(other.prevChar), atDoor(other.atDoor),
       doorId(other.doorId), alive(other.alive), keyCount(other.keyCount),
       lives(other.lives), waitingAtDoor(other.waitingAtDoor),
-      requestPause(other.requestPause),
-      inSpringMotion(other.inSpringMotion), springMomentum(other.springMomentum),
-      springDirection(other.springDirection), springFramesRemaining(other.springFramesRemaining)
+      requestPause(other.requestPause)
 {
     copyInventoryFrom(other);
 }
@@ -69,11 +63,6 @@ Player &Player::operator=(const Player &other)
         lives = other.lives;
         waitingAtDoor = other.waitingAtDoor;
         requestPause = other.requestPause;
-
-        inSpringMotion = other.inSpringMotion;
-        springMomentum = other.springMomentum;
-        springDirection = other.springDirection;
-        springFramesRemaining = other.springFramesRemaining;
 
         copyInventoryFrom(other);
     }
@@ -104,12 +93,6 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer)
 {
     if (room == nullptr)
         return false;
-
-    // Spring motion takes priority
-    if (inSpringMotion)
-    {
-        return moveWithSpringMomentum(room);
-    }
 
     // Not moving - just redraw
     if (pos.diff_x == 0 && pos.diff_y == 0)
@@ -307,20 +290,27 @@ Point Player::dropItem(Room *room)
 
 void Player::performAction(Action action, Room* room)
 {
-    // Check if player is on spring and tries to change direction or stay
-    Spring* spring = findSpringAtPosition(pos.x, pos.y, room);
-    if (spring != nullptr && spring->isCompressedByPlayer(this))
+    // Check if player is compressing a spring and tries to change direction or stay
+    if (room)
     {
-        Direction currentDir = getCurrentDirection();
-        Direction newDir = actionToDirection(action);
-
-        // Release conditions: STAY action or direction change attempt
-        if (action == Action::STAY ||
-            (newDir != Direction::STAY && newDir != currentDir))
+        GameObject* obj = room->getObjectAt(pos.x, pos.y);
+        if (obj && obj->getType() == ObjectType::SPRING)
         {
-            spring->releaseForPlayer(this);
-            pos.setDirection(Direction::STAY);
-            return;
+            Spring* spring = static_cast<Spring*>(obj);
+            if (spring->isPlayerCompressing(playerId))
+            {
+                Direction currentDir = getCurrentDirection();
+                Direction newDir = actionToDirection(action);
+
+                // Release conditions: STAY action or direction change attempt
+                if (action == Action::STAY ||
+                    (newDir != Direction::STAY && newDir != currentDir))
+                {
+                    spring->launchPlayer(playerId);
+                    pos.setDirection(Direction::STAY);
+                    return;
+                }
+            }
         }
     }
 
@@ -382,144 +372,6 @@ bool Player::useKey()
     return false;
 }
 
-//////////////////////////////////////////      Spring Mechanics       //////////////////////////////////////////
-
-bool Player::moveWithSpringMomentum(Room* room)
-{
-    if (springFramesRemaining <= 0)
-    {
-        // Spring motion complete
-        inSpringMotion = false;
-        springMomentum = 0;
-        springFramesRemaining = 0;
-        pos.diff_x = 0;
-        pos.diff_y = 0;
-        draw(room);
-        return false;
-    }
-
-    // Calculate movement delta based on momentum and direction
-    int dx = 0, dy = 0;
-
-    switch (springDirection)
-    {
-    case Direction::UP:    dy = -springMomentum; break;
-    case Direction::DOWN:  dy = springMomentum; break;
-    case Direction::LEFT:  dx = -springMomentum; break;
-    case Direction::RIGHT: dx = springMomentum; break;
-    default: break;
-    }
-
-    // Try to move the full momentum distance
-    int actualMoveX = 0, actualMoveY = 0;
-    bool blocked = false;
-
-    // Move step by step to check for obstacles
-    for (int step = 1; step <= abs(dx) && !blocked; step++)
-    {
-        int testX = pos.x + (dx > 0 ? step : -step);
-        int testY = pos.y;
-
-        if (canMoveToPosition(testX, testY, room))
-        {
-            actualMoveX = (dx > 0 ? step : -step);
-        }
-        else
-        {
-            blocked = true;
-        }
-    }
-
-    for (int step = 1; step <= abs(dy) && !blocked; step++)
-    {
-        int testX = pos.x + actualMoveX;
-        int testY = pos.y + (dy > 0 ? step : -step);
-
-        if (canMoveToPosition(testX, testY, room))
-        {
-            actualMoveY = (dy > 0 ? step : -step);
-        }
-        else
-        {
-            blocked = true;
-        }
-    }
-
-    // Perform the move
-    if (actualMoveX != 0 || actualMoveY != 0)
-    {
-        // Erase from current position
-        gotoxy(pos.x, pos.y);
-        std::cout << prevChar << std::flush;
-
-        // Update position
-        pos.x += actualMoveX;
-        pos.y += actualMoveY;
-
-        // Store new prevChar
-        prevChar = room->getCharAt(pos.x, pos.y);
-        if (prevChar == sprite)
-            prevChar = ' ';
-
-        draw(room);
-    }
-
-    if (blocked)
-    {
-        // Stop spring motion if we hit something
-        inSpringMotion = false;
-        springMomentum = 0;
-        springFramesRemaining = 0;
-        pos.diff_x = 0;
-        pos.diff_y = 0;
-    }
-    else
-    {
-        springFramesRemaining--;
-    }
-
-    return true;
-}
-
-void Player::transferMomentum(Player* other)
-{
-    if (other == nullptr)
-        return;
-
-    // Transfer momentum to other player
-    other->inSpringMotion = true;
-    other->springMomentum = this->springMomentum;
-    other->springDirection = this->springDirection;
-    other->springFramesRemaining = this->springFramesRemaining;
-
-    // Stop this player's motion
-    this->inSpringMotion = false;
-    this->springMomentum = 0;
-    this->springFramesRemaining = 0;
-}
-
-bool Player::canMoveToPosition(int x, int y, Room* room)
-{
-    if (room == nullptr)
-        return false;
-
-    // Check bounds
-    if (x < 0 || x >= MAX_X || y < 1 || y >= MAX_Y_INGAME - 1)
-        return false;
-
-    // Check walls
-    char c = room->getCharAt(x, y);
-    if (c == 'W' || c == '=')
-        return false;
-
-    // Check blocking objects
-    GameObject* obj = room->getObjectAt(x, y);
-    if (obj != nullptr && obj->isBlocking())
-        return false;
-
-    return true;
-}
-
 Direction Player::getCurrentDirection() const
 {
     if (pos.diff_x == 0 && pos.diff_y == 0)
@@ -560,33 +412,7 @@ bool Player::checkWallCollision(int nextX, int nextY, Room* room)
     if (nextChar != 'W' && nextChar != '=')
         return false; // No wall
 
-    // Wall detected - check if we're compressing a spring toward it
-    Spring* spring = findSpringAtPosition(pos.x, pos.y, room);
-    if (spring != nullptr && spring->isCompressedByPlayer(this))
-    {
-        Direction moveDir = getCurrentDirection();
-        Direction springProj = spring->getProjectionDirection();
-
-        // Check if moving toward wall (opposite to projection)
-        bool compressingTowardWall = false;
-        if (springProj == Direction::UP && moveDir == Direction::DOWN) compressingTowardWall = true;
-        if (springProj == Direction::DOWN && moveDir == Direction::UP) compressingTowardWall = true;
-        if (springProj == Direction::LEFT && moveDir == Direction::RIGHT) compressingTowardWall = true;
-        if (springProj == Direction::RIGHT && moveDir == Direction::LEFT) compressingTowardWall = true;
-
-        if (compressingTowardWall)
-        {
-            // Try to continue compression
-            if (spring->continueCompression(this, moveDir))
-            {
-                // Final compression step - release the spring
-                spring->releaseForPlayer(this);
-                return false; // Movement consumed by compression, don't block
-            }
-        }
-    }
-
-    // Normal wall collision - block movement
+    // Wall blocks movement
     return true;
 }
 
@@ -709,51 +535,34 @@ void Player::updateSpringState(Room* room)
     if (room == nullptr)
         return;
 
-    Spring* spring = findSpringAtPosition(pos.x, pos.y, room);
+    // Check if standing on a spring
+    GameObject* obj = room->getObjectAt(pos.x, pos.y);
+    if (obj == nullptr || obj->getType() != ObjectType::SPRING)
+        return;
 
-    // Case 1: Already on a spring we're compressing
-    if (spring != nullptr && spring->isCompressedByPlayer(this))
+    Spring* spring = static_cast<Spring*>(obj);
+
+    // Skip if already being launched by this spring
+    if (spring->isPlayerBeingLaunched(playerId))
+        return;
+
+    Direction projDir = spring->getProjectionDirection();
+
+    // Check if moving toward wall (opposite of projection direction)
+    bool movingTowardWall = false;
+    if (projDir == Direction::UP && pos.diff_y > 0) movingTowardWall = true;
+    if (projDir == Direction::DOWN && pos.diff_y < 0) movingTowardWall = true;
+    if (projDir == Direction::LEFT && pos.diff_x > 0) movingTowardWall = true;
+    if (projDir == Direction::RIGHT && pos.diff_x < 0) movingTowardWall = true;
+
+    if (movingTowardWall)
     {
-        Direction moveDir = getCurrentDirection();
+        spring->addCompression(playerId);
 
-        // Try to continue compressing
-        if (spring->continueCompression(this, moveDir))
+        // Check if fully compressed - auto launch
+        if (spring->getTotalCompression() >= spring->getMaxLength())
         {
-            // Check if we're about to hit a wall - if so, release
-            int wallCheckX = pos.x + pos.diff_x;
-            int wallCheckY = pos.y + pos.diff_y;
-            char wallChar = room->getCharAt(wallCheckX, wallCheckY);
-            if (wallChar == 'W' || wallChar == '=')
-            {
-                spring->releaseForPlayer(this);
-            }
+            spring->launchPlayer(playerId);
         }
     }
-    // Case 2: New spring at current position
-    else if (spring != nullptr)
-    {
-        spring->startCompression(this);
-    }
-    // Case 3: Left spring - Spring handles cleanup automatically
-}
-
-//////////////////////////////////////////  findSpringAtPosition  //////////////////////////////////////////
-
-// Helper to find a spring at a given position
-Spring* Player::findSpringAtPosition(int x, int y, Room* room)
-{
-    if (room == nullptr)
-        return nullptr;
-
-    // Iterate through all objects to find a spring at this position
-    // We can't use getObjectAt because it only returns the first position
-    GameObject* obj = room->getObjectAt(x, y);
-    if (obj != nullptr && obj->getType() == ObjectType::SPRING)
-    {
-        Spring* spring = dynamic_cast<Spring*>(obj);
-        if (spring != nullptr && spring->occupiesPosition(x, y))
-            return spring;
-    }
-
-    return nullptr;
 }

@@ -24,7 +24,18 @@ struct PlayerKeyBinding
 // Player 1: WAXDS for movement, E to drop
 // Player 2: IJKLM for movement, O to drop
 static const PlayerKeyBinding keyBindings[] = {
-    {'w', 1, Action::MOVE_UP}, {'W', 1, Action::MOVE_UP}, {'x', 1, Action::MOVE_DOWN}, {'X', 1, Action::MOVE_DOWN}, {'a', 1, Action::MOVE_LEFT}, {'A', 1, Action::MOVE_LEFT}, {'d', 1, Action::MOVE_RIGHT}, {'D', 1, Action::MOVE_RIGHT}, {'s', 1, Action::STAY}, {'S', 1, Action::STAY}, {'e', 1, Action::DROP_ITEM}, {'E', 1, Action::DROP_ITEM},
+    {'w', 1, Action::MOVE_UP},
+    {'W', 1, Action::MOVE_UP}, 
+    {'x', 1, Action::MOVE_DOWN}, 
+    {'X', 1, Action::MOVE_DOWN}, 
+    {'a', 1, Action::MOVE_LEFT}, 
+    {'A', 1, Action::MOVE_LEFT}, 
+    {'d', 1, Action::MOVE_RIGHT}, 
+    {'D', 1, Action::MOVE_RIGHT}, 
+    {'s', 1, Action::STAY}, 
+    {'S', 1, Action::STAY}, 
+    {'e', 1, Action::DROP_ITEM}, 
+    {'E', 1, Action::DROP_ITEM},
 
     {'i', 2, Action::MOVE_UP},
     {'I', 2, Action::MOVE_UP},
@@ -59,12 +70,6 @@ public:
     int lives;    // Player's remaining lives (for riddles and future features)
     bool waitingAtDoor; // True if player has crossed through door and is waiting
     bool requestPause; // Set when ESC pressed during riddle
-
-    // Spring motion tracking
-    bool inSpringMotion;              // True if being launched by spring
-    int springMomentum;               // Speed multiplier (1-N)
-    Direction springDirection;        // Direction of spring launch
-    int springFramesRemaining;        // Frames left in spring motion
 
 public:
     // Constructors & Destructor
@@ -104,9 +109,8 @@ public:
     void kill()
     {
         alive = false;
-        inSpringMotion = false;
-        springMomentum = 0;
-        springFramesRemaining = 0;
+        pos.diff_x = 0;
+        pos.diff_y = 0;
     }
     void addKey() { keyCount++; }
     bool useKey();
@@ -131,11 +135,7 @@ public:
     bool checkWallCollision(int nextX, int nextY, Room* room);
     bool checkObjectInteraction(int nextX, int nextY, Room* room, class Riddle** activeRiddle = nullptr, Player** activePlayer = nullptr);
 
-    // Spring mechanics
-    bool isInSpringMotion() const { return inSpringMotion; }
-    bool moveWithSpringMomentum(Room* room);
-    void transferMomentum(Player* other);
-    bool canMoveToPosition(int x, int y, Room* room);
+    // Movement helpers
     Direction getCurrentDirection() const;
     Direction actionToDirection(Action action) const;
 
@@ -143,5 +143,4 @@ private:
     void clearInventory();
     void copyInventoryFrom(const Player &other);
     void updateSpringState(Room* room);
-    Spring* findSpringAtPosition(int x, int y, Room* room);
 };

@@ -2,180 +2,233 @@
 #include "Player.h"
 #include "Room.h"
 
-//////////////////////////////////////////     startCompression     //////////////////////////////////////////
+//////////////////////////////////////////     Constructor           //////////////////////////////////////////
 
-// Called when a player first steps onto the spring
-void Spring::startCompression(Player* player)
+Spring::Spring(const std::vector<Point>& positions, Direction orient,
+               Direction projDir, const Point& anchor)
+    : StaticObject(positions.empty() ? Point(0, 0) : positions[0], '#', ObjectType::SPRING),
+      orientation(orient), projectionDirection(projDir), wallAnchor(anchor),
+      maxLength(positions.size()),
+      compressingPlayer1Id(0), compressingPlayer2Id(0),
+      player1Compression(0), player2Compression(0),
+      launchedPlayer1Id(0), launchedPlayer2Id(0),
+      player1LaunchFrames(0), player2LaunchFrames(0),
+      player1LaunchSpeed(0), player2LaunchSpeed(0)
 {
-    if (player == nullptr)
-        return;
-
-    // First player compressing this spring
-    if (compressingPlayer == nullptr)
-    {
-        compressingPlayer = player;
-        playerCompressionAmount = 1;
-        compress(1);
-        draw();
-    }
-    // Second player joining compression
-    else if (compressingPlayer != player && secondCompressingPlayer == nullptr)
-    {
-        secondCompressingPlayer = player;
-        secondPlayerCompressionAmount = 1;
-        // Update total compression
-        compress(playerCompressionAmount + secondPlayerCompressionAmount);
-        draw();
-    }
+    for (const Point& p : positions)
+        cells.push_back(SpringCell(p));
 }
 
-//////////////////////////////////////////    continueCompression    //////////////////////////////////////////
+//////////////////////////////////////////        clone              //////////////////////////////////////////
 
-// Continue compressing the spring - returns true if compression continued
-bool Spring::continueCompression(Player* player, Direction moveDir)
+GameObject* Spring::clone() const
 {
-    if (player == nullptr)
-        return false;
-
-    // Check if moving toward wall (opposite to projection direction)
-    bool compressingTowardWall = false;
-    if (projectionDirection == Direction::UP && moveDir == Direction::DOWN) compressingTowardWall = true;
-    if (projectionDirection == Direction::DOWN && moveDir == Direction::UP) compressingTowardWall = true;
-    if (projectionDirection == Direction::LEFT && moveDir == Direction::RIGHT) compressingTowardWall = true;
-    if (projectionDirection == Direction::RIGHT && moveDir == Direction::LEFT) compressingTowardWall = true;
-
-    if (!compressingTowardWall)
-        return false;
-
-    // Determine which player this is and increment their compression
-    int* compressionAmount = nullptr;
-    if (player == compressingPlayer)
-        compressionAmount = &playerCompressionAmount;
-    else if (player == secondCompressingPlayer)
-        compressionAmount = &secondPlayerCompressionAmount;
-    else
-        return false; // Player not compressing this spring
-
-    // Check if not fully compressed
-    int totalCompression = playerCompressionAmount + secondPlayerCompressionAmount;
-    if (totalCompression >= length)
-        return false;
-
-    // Increment compression for this player
-    (*compressionAmount)++;
-    totalCompression = playerCompressionAmount + secondPlayerCompressionAmount;
-
-    // Update visual compression
-    compress(totalCompression);
-    draw();
-
-    return true;
+    return new Spring(*this);
 }
 
-//////////////////////////////////////////     releaseForPlayer     //////////////////////////////////////////
+//////////////////////////////////////////    occupiesPosition       //////////////////////////////////////////
 
-// Release spring and launch player(s)
-void Spring::releaseForPlayer(Player* player)
+bool Spring::occupiesPosition(int x, int y) const
 {
-    if (player == nullptr)
-        return;
-
-    // Check if this player is compressing the spring
-    if (player != compressingPlayer && player != secondCompressingPlayer)
-        return;
-
-    // Calculate launch parameters for each player
-    if (compressingPlayer != nullptr && playerCompressionAmount > 0)
-    {
-        int compression = playerCompressionAmount;
-
-        // Set player's motion state
-        // Speed = compression cells/frame, Duration = compression frames
-        // Total distance = compression * compression = compression²
-        compressingPlayer->inSpringMotion = true;
-        compressingPlayer->springMomentum = compression;  // Cells per frame
-        compressingPlayer->springDirection = projectionDirection;
-        compressingPlayer->springFramesRemaining = compression;  // Number of frames
-    }
-
-    if (secondCompressingPlayer != nullptr && secondPlayerCompressionAmount > 0)
-    {
-        int compression = secondPlayerCompressionAmount;
-
-        // Set player's motion state
-        secondCompressingPlayer->inSpringMotion = true;
-        secondCompressingPlayer->springMomentum = compression;  // Cells per frame
-        secondCompressingPlayer->springDirection = projectionDirection;
-        secondCompressingPlayer->springFramesRemaining = compression;  // Number of frames
-    }
-
-    // Reset spring state
-    release();
-    draw();
-    compressingPlayer = nullptr;
-    secondCompressingPlayer = nullptr;
-    playerCompressionAmount = 0;
-    secondPlayerCompressionAmount = 0;
-}
-
-//////////////////////////////////////////   updateLaunchedPlayer   //////////////////////////////////////////
-
-// Move player during spring motion - returns true if motion continues
-bool Spring::updateLaunchedPlayer(Player* player, Room* room)
-{
-    // This method is kept for future use, but for now we'll keep the
-    // existing implementation in Player::moveWithSpringMomentum()
-    // to avoid breaking changes during refactoring
+    for (const SpringCell& cell : cells)
+        if (cell.position.x == x && cell.position.y == y)
+            return true;
     return false;
 }
 
-//////////////////////////////////////////   isCompressedByPlayer   //////////////////////////////////////////
+//////////////////////////////////////////  isPlayerCompressing      //////////////////////////////////////////
 
-// Check if a specific player is compressing this spring
-bool Spring::isCompressedByPlayer(const Player* player) const
+bool Spring::isPlayerCompressing(int playerId) const
 {
-    return (player != nullptr && (player == compressingPlayer || player == secondCompressingPlayer));
+    if (compressingPlayer1Id == playerId) return player1Compression > 0;
+    if (compressingPlayer2Id == playerId) return player2Compression > 0;
+    return false;
 }
 
-//////////////////////////////////////////  isTwoPlayerCompression  //////////////////////////////////////////
+//////////////////////////////////////////  getPlayerCompression     //////////////////////////////////////////
 
-// Check if two players are simultaneously compressing
-bool Spring::isTwoPlayerCompression() const
+int Spring::getPlayerCompression(int playerId) const
 {
-    return (compressingPlayer != nullptr && secondCompressingPlayer != nullptr);
+    if (compressingPlayer1Id == playerId) return player1Compression;
+    if (compressingPlayer2Id == playerId) return player2Compression;
+    return 0;
 }
 
-//////////////////////////////////////////         draw          //////////////////////////////////////////
+//////////////////////////////////////////  isPlayerBeingLaunched    //////////////////////////////////////////
+
+bool Spring::isPlayerBeingLaunched(int playerId) const
+{
+    if (launchedPlayer1Id == playerId) return player1LaunchFrames > 0;
+    if (launchedPlayer2Id == playerId) return player2LaunchFrames > 0;
+    return false;
+}
+
+//////////////////////////////////////////    addCompression         //////////////////////////////////////////
+
+void Spring::addCompression(int playerId)
+{
+    int totalCompression = getTotalCompression();
+    if (totalCompression >= maxLength)
+        return;  // Fully compressed
+
+    // Assign player to slot if not already tracking
+    if (compressingPlayer1Id == 0)
+        compressingPlayer1Id = playerId;
+    else if (compressingPlayer2Id == 0 && compressingPlayer1Id != playerId)
+        compressingPlayer2Id = playerId;
+
+    // Increment compression
+    if (compressingPlayer1Id == playerId)
+        player1Compression++;
+    else if (compressingPlayer2Id == playerId)
+        player2Compression++;
+
+    updateVisual();
+}
+
+//////////////////////////////////////////     launchPlayer          //////////////////////////////////////////
+
+void Spring::launchPlayer(int playerId)
+{
+    int compression = getPlayerCompression(playerId);
+    if (compression == 0) return;
+
+    // Set launch state for this player
+    if (compressingPlayer1Id == playerId)
+    {
+        launchedPlayer1Id = playerId;
+        player1LaunchFrames = compression * compression;  // Duration = compression²
+        player1LaunchSpeed = compression;                 // Speed = compression
+
+        // Clear compression
+        compressingPlayer1Id = 0;
+        player1Compression = 0;
+    }
+    else if (compressingPlayer2Id == playerId)
+    {
+        launchedPlayer2Id = playerId;
+        player2LaunchFrames = compression * compression;
+        player2LaunchSpeed = compression;
+
+        compressingPlayer2Id = 0;
+        player2Compression = 0;
+    }
+
+    updateVisual();
+}
+
+//////////////////////////////////////////         reset             //////////////////////////////////////////
+
+void Spring::reset()
+{
+    compressingPlayer1Id = 0;
+    compressingPlayer2Id = 0;
+    player1Compression = 0;
+    player2Compression = 0;
+
+    launchedPlayer1Id = 0;
+    launchedPlayer2Id = 0;
+    player1LaunchFrames = 0;
+    player2LaunchFrames = 0;
+    player1LaunchSpeed = 0;
+    player2LaunchSpeed = 0;
+
+    updateVisual();
+}
+
+//////////////////////////////////////////        update             //////////////////////////////////////////
+
+void Spring::update(Player* player1, Player* player2)
+{
+    // Update player 1 launch
+    if (player1 && launchedPlayer1Id == player1->playerId && player1LaunchFrames > 0)
+    {
+        updateLaunch(player1);
+        player1LaunchFrames--;
+
+        if (player1LaunchFrames == 0)
+        {
+            launchedPlayer1Id = 0;
+            player1LaunchSpeed = 0;
+            player1->pos.diff_x = 0;
+            player1->pos.diff_y = 0;
+        }
+    }
+
+    // Update player 2 launch
+    if (player2 && launchedPlayer2Id == player2->playerId && player2LaunchFrames > 0)
+    {
+        updateLaunch(player2);
+        player2LaunchFrames--;
+
+        if (player2LaunchFrames == 0)
+        {
+            launchedPlayer2Id = 0;
+            player2LaunchSpeed = 0;
+            player2->pos.diff_x = 0;
+            player2->pos.diff_y = 0;
+        }
+    }
+}
+
+//////////////////////////////////////////     updateLaunch          //////////////////////////////////////////
+
+void Spring::updateLaunch(Player* player)
+{
+    if (!player) return;
+
+    int speed = 0;
+    if (launchedPlayer1Id == player->playerId)
+        speed = player1LaunchSpeed;
+    else if (launchedPlayer2Id == player->playerId)
+        speed = player2LaunchSpeed;
+
+    if (speed == 0) return;
+
+    // Set player's velocity to spring direction * speed
+    // Player will handle lateral movement themselves
+    switch (projectionDirection)
+    {
+        case Direction::UP:    player->pos.diff_y = -speed; break;
+        case Direction::DOWN:  player->pos.diff_y = speed; break;
+        case Direction::LEFT:  player->pos.diff_x = -speed; break;
+        case Direction::RIGHT: player->pos.diff_x = speed; break;
+        default: break;
+    }
+}
+
+//////////////////////////////////////////     updateVisual          //////////////////////////////////////////
+
+void Spring::updateVisual()
+{
+    int totalCompression = getTotalCompression();
+    int visibleCells = maxLength - totalCompression;
+
+    // Show cells near wall, hide cells at free end
+    for (int i = 0; i < maxLength; i++)
+    {
+        if (projectionDirection == Direction::RIGHT || projectionDirection == Direction::DOWN)
+        {
+            // Wall at left/top - show first N cells
+            cells[i].visible = (i < visibleCells);
+        }
+        else
+        {
+            // Wall at right/bottom - show last N cells
+            cells[i].visible = (i >= totalCompression);
+        }
+    }
+}
+
+//////////////////////////////////////////         draw              //////////////////////////////////////////
 
 void Spring::draw() const
 {
-        if (!active)
-            return;
+    if (!active) return;
 
-        // Calculate how many characters are visible
-        int visibleCount = length - compressionState;
-
-        // Determine which positions to draw based on projection direction
-        // We keep the chars closest to the wall visible
-        int startIndex = 0;
-        if (projectionDirection == Direction::LEFT || projectionDirection == Direction::UP)
-        {
-            // Wall is on the right/bottom side, keep last N chars
-            startIndex = compressionState;
-        }
-        // else: Wall is on left/top side, keep first N chars (startIndex = 0)
-
-        // Draw visible positions
-        for (int i = 0; i < static_cast<int>(positions.size()); i++)
-        {
-            gotoxy(positions[i].x, positions[i].y);
-            if (i >= startIndex && i < startIndex + visibleCount)
-            {
-                std::cout << sprite << std::flush;
-            }
-            else
-            {
-                std::cout << ' ' << std::flush;
-            }
-        }
+    for (const SpringCell& cell : cells)
+    {
+        gotoxy(cell.position.x, cell.position.y);
+        std::cout << (cell.visible ? sprite : ' ') << std::flush;
     }
+}
