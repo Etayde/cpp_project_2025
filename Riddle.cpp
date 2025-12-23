@@ -10,18 +10,31 @@ using std::cout, std::endl;
 //////////////////////////////////////////         enterRiddle         //////////////////////////////////////////
 
 RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer) {
+    std::cout << "[DEBUG] Riddle::enterRiddle: START" << std::endl;
+    sleep_ms(1000);
+
     // 1. Entry animation (flush input buffer)
     playRiddleAnimation();
 
     // 2. Display UI
+    std::cout << "[DEBUG] Riddle::enterRiddle: Calling displayRiddleQuestion()" << std::endl;
+    sleep_ms(1000);
     displayRiddleQuestion();
 
     // 3. Get player input (blocking)
+    std::cout << "[DEBUG] Riddle::enterRiddle: Waiting for player answer..." << std::endl;
+    sleep_ms(1000);
     int playerAnswer = getPlayerAnswer();
 
+    std::cout << "[DEBUG] Riddle::enterRiddle: Got answer = " << playerAnswer << std::endl;
+    sleep_ms(1000);
+
     // 4. Handle ESC - don't restore screen, keep riddle visible
-    if (playerAnswer == -1)
+    if (playerAnswer == -1) {
+        std::cout << "[DEBUG] Riddle::enterRiddle: ESCAPED" << std::endl;
+        sleep_ms(1000);
         return RiddleResult::ESCAPED;
+    }
 
     // 5. Check answer
     bool correct = checkAnswer(playerAnswer);
