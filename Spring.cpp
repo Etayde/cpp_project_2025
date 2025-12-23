@@ -1,6 +1,18 @@
 #include "Spring.h"
 #include "Player.h"
 #include "Room.h"
+#include <fstream>
+
+// Debug logging
+static void logSpringDebug(const std::string& message)
+{
+    std::ofstream logFile("spring_debug.log", std::ios::app);
+    if (logFile.is_open())
+    {
+        logFile << message << std::endl;
+        logFile.close();
+    }
+}
 
 //////////////////////////////////////////     Constructor           //////////////////////////////////////////
 
@@ -83,6 +95,10 @@ void Spring::addCompression(int playerId)
     else if (compressingPlayer2Id == playerId)
         player2Compression++;
 
+    logSpringDebug("P" + std::to_string(playerId) + " compress: dir=" +
+                   std::to_string((int)projectionDirection) +
+                   " total=" + std::to_string(getTotalCompression()));
+
     updateVisual();
     draw();
 }
@@ -101,6 +117,12 @@ void Spring::launchPlayer(int playerId)
         player1LaunchFrames = compression * compression;  // Duration = compression²
         player1LaunchSpeed = compression;                 // Speed = compression
 
+        logSpringDebug("P" + std::to_string(playerId) + " LAUNCH START: dir=" +
+                       std::to_string((int)projectionDirection) +
+                       " compression=" + std::to_string(compression) +
+                       " frames=" + std::to_string(player1LaunchFrames) +
+                       " speed=" + std::to_string(player1LaunchSpeed));
+
         // Clear compression
         compressingPlayer1Id = 0;
         player1Compression = 0;
@@ -110,6 +132,12 @@ void Spring::launchPlayer(int playerId)
         launchedPlayer2Id = playerId;
         player2LaunchFrames = compression * compression;
         player2LaunchSpeed = compression;
+
+        logSpringDebug("P" + std::to_string(playerId) + " LAUNCH START: dir=" +
+                       std::to_string((int)projectionDirection) +
+                       " compression=" + std::to_string(compression) +
+                       " frames=" + std::to_string(player2LaunchFrames) +
+                       " speed=" + std::to_string(player2LaunchSpeed));
 
         compressingPlayer2Id = 0;
         player2Compression = 0;
@@ -146,40 +174,62 @@ void Spring::update(Player* player1, Player* player2)
     // Update player 1 launch
     if (player1 && launchedPlayer1Id == player1->playerId && player1LaunchFrames > 0)
     {
+        int before_dx = player1->pos.diff_x;
+        int before_dy = player1->pos.diff_y;
+
         updateLaunch(player1);
         player1LaunchFrames--;
 
+        logSpringDebug("P1 update: frames_left=" + std::to_string(player1LaunchFrames) +
+                       " before_vel=(" + std::to_string(before_dx) + "," + std::to_string(before_dy) + ")" +
+                       " after_vel=(" + std::to_string(player1->pos.diff_x) + "," + std::to_string(player1->pos.diff_y) + ")" +
+                       " pos=(" + std::to_string(player1->pos.x) + "," + std::to_string(player1->pos.y) + ")");
+
         if (player1LaunchFrames == 0)
         {
-            // DEBUG: Log spring launch end
-            gotoxy(0, 0);
-            std::cout << "P1 launch END: dir=" << (int)projectionDirection
-                      << " diff_x=" << player1->pos.diff_x
-                      << " diff_y=" << player1->pos.diff_y << "    " << std::flush;
+            logSpringDebug("P1 LAUNCH END: final_vel=(" +
+                           std::to_string(player1->pos.diff_x) + "," +
+                           std::to_string(player1->pos.diff_y) + ")");
 
             launchedPlayer1Id = 0;
             player1LaunchSpeed = 0;
-            // Don't clear velocity - player's input will set it
+            player1->pos.diff_x = 0;
+            player1->pos.diff_y = 0;
+
+            logSpringDebug("P1 LAUNCH END: cleared_vel=(" +
+                           std::to_string(player1->pos.diff_x) + "," +
+                           std::to_string(player1->pos.diff_y) + ")");
         }
     }
 
     // Update player 2 launch
     if (player2 && launchedPlayer2Id == player2->playerId && player2LaunchFrames > 0)
     {
+        int before_dx = player2->pos.diff_x;
+        int before_dy = player2->pos.diff_y;
+
         updateLaunch(player2);
         player2LaunchFrames--;
 
+        logSpringDebug("P2 update: frames_left=" + std::to_string(player2LaunchFrames) +
+                       " before_vel=(" + std::to_string(before_dx) + "," + std::to_string(before_dy) + ")" +
+                       " after_vel=(" + std::to_string(player2->pos.diff_x) + "," + std::to_string(player2->pos.diff_y) + ")" +
+                       " pos=(" + std::to_string(player2->pos.x) + "," + std::to_string(player2->pos.y) + ")");
+
         if (player2LaunchFrames == 0)
         {
-            // DEBUG: Log spring launch end
-            gotoxy(0, 0);
-            std::cout << "P2 launch END: dir=" << (int)projectionDirection
-                      << " diff_x=" << player2->pos.diff_x
-                      << " diff_y=" << player2->pos.diff_y << "    " << std::flush;
+            logSpringDebug("P2 LAUNCH END: final_vel=(" +
+                           std::to_string(player2->pos.diff_x) + "," +
+                           std::to_string(player2->pos.diff_y) + ")");
 
             launchedPlayer2Id = 0;
             player2LaunchSpeed = 0;
-            // Don't clear velocity - player's input will set it
+            player2->pos.diff_x = 0;
+            player2->pos.diff_y = 0;
+
+            logSpringDebug("P2 LAUNCH END: cleared_vel=(" +
+                           std::to_string(player2->pos.diff_x) + "," +
+                           std::to_string(player2->pos.diff_y) + ")");
         }
     }
 }
