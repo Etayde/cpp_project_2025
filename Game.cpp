@@ -3,10 +3,6 @@
 #include "Game.h"
 #include "Layouts.h"
 #include "Riddle.h"
-#include <fstream>
-
-// Debug log file
-std::ofstream debugLog("riddle_debug.log", std::ios::app);
 
 //////////////////////////////////////////     Game Constructor       //////////////////////////////////////////
 
@@ -113,13 +109,9 @@ void Game::gameLoop()
 {
     Room *room = getCurrentRoom();
 
-    debugLog << "[DEBUG] gameLoop: aRiddle.isActive() = " << aRiddle.isActive() << std::endl;
-
     // Check if we're resuming a riddle interaction
     if (aRiddle.isActive())
     {
-        debugLog << "[DEBUG] gameLoop: Resuming riddle, clearing screen..." << std::endl;
-
         // Clear screen and redraw game state before showing riddle
         clrscr();
         if (room)
@@ -131,20 +123,13 @@ void Game::gameLoop()
         player1.updateInventoryDisplay();
         player2.updateInventoryDisplay();
 
-        debugLog << "[DEBUG] gameLoop: Entering riddle while loop" << std::endl;
-
         // Riddle is active - keep showing it until answered or ESC multiple times
         while (aRiddle.isActive() && currentState == GameState::inGame)
         {
-            debugLog << "[DEBUG] gameLoop: Calling enterRiddle()..." << std::endl;
-
             RiddleResult result = aRiddle.riddle->enterRiddle(room, aRiddle.player);
-
-            debugLog << "[DEBUG] gameLoop: enterRiddle() returned result = " << (int)result << std::endl;
 
             if (result == RiddleResult::SOLVED)
             {
-                debugLog << "[DEBUG] gameLoop: Riddle SOLVED" << std::endl;
                 room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
                 aRiddle.reset();  // Clear active riddle
                 // Riddle finished - redraw screen and fall through to normal game
@@ -161,13 +146,11 @@ void Game::gameLoop()
             }
             else if (result == RiddleResult::ESCAPED)
             {
-                debugLog << "[DEBUG] gameLoop: Riddle ESCAPED, setting pause state" << std::endl;
                 currentState = GameState::paused;
                 return;  // Pause - will come back here with aRiddle still set
             }
             else
             {
-                debugLog << "[DEBUG] gameLoop: Riddle FAILED" << std::endl;
                 // Failed - player answered wrong, reset aRiddle
                 aRiddle.reset();
                 // Riddle finished - redraw screen and fall through to normal game
@@ -183,13 +166,9 @@ void Game::gameLoop()
                 break;  // Exit riddle loop, continue to normal game
             }
         }
-
-        debugLog << "[DEBUG] gameLoop: Exited riddle while loop" << std::endl;
     }
     else
     {
-        debugLog << "[DEBUG] gameLoop: No active riddle, normal game start" << std::endl;
-
         // Normal game start - draw room and start game updates
         if (room)
         {
@@ -274,9 +253,6 @@ void Game::update()
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
     {
-        debugLog << "[DEBUG] update: requestPause detected, p1=" << player1.requestPause << " p2=" << player2.requestPause << std::endl;
-        debugLog << "[DEBUG] update: aRiddle.isActive() = " << aRiddle.isActive() << std::endl;
-
         player1.requestPause = false;
         player2.requestPause = false;
         currentState = GameState::paused;

@@ -6,9 +6,6 @@
 #include "Door.h"
 #include "Spring.h"
 #include "Riddle.h"
-#include <fstream>
-
-extern std::ofstream debugLog;
 
 //////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
 
@@ -624,7 +621,6 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** a
             {
                 *activeRiddle = riddle;
                 *activePlayer = this;
-                debugLog << "[DEBUG] Player::checkObjectInteraction: Stored riddle in aRiddle, ptr = " << (void*)riddle << std::endl;
             }
 
             // Enter riddle (blocks game) - pass 'this' to track triggering player
@@ -641,7 +637,6 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** a
             }
             else if (result == RiddleResult::ESCAPED)
             {
-                debugLog << "[DEBUG] Player::checkObjectInteraction: Riddle ESCAPED, aRiddle still set" << std::endl;
                 // Signal pause to game loop (aRiddle stays set for resuming)
                 requestPause = true;
                 return true;  // Block movement

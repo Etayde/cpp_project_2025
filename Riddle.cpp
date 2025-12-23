@@ -5,32 +5,22 @@
 #include "Player.h"
 #include "Room.h"
 #include "Console.h"
-#include <fstream>
 using std::cout, std::endl;
-
-extern std::ofstream debugLog;
 
 //////////////////////////////////////////         enterRiddle         //////////////////////////////////////////
 
 RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer) {
-    debugLog << "[DEBUG] Riddle::enterRiddle: START" << std::endl;
-
     // 1. Entry animation (flush input buffer)
     playRiddleAnimation();
 
     // 2. Display UI
-    debugLog << "[DEBUG] Riddle::enterRiddle: Calling displayRiddleQuestion()" << std::endl;
     displayRiddleQuestion();
 
     // 3. Get player input (blocking)
-    debugLog << "[DEBUG] Riddle::enterRiddle: Waiting for player answer..." << std::endl;
     int playerAnswer = getPlayerAnswer();
-
-    debugLog << "[DEBUG] Riddle::enterRiddle: Got answer = " << playerAnswer << std::endl;
 
     // 4. Handle ESC - don't restore screen, keep riddle visible
     if (playerAnswer == -1) {
-        debugLog << "[DEBUG] Riddle::enterRiddle: ESCAPED" << std::endl;
         return RiddleResult::ESCAPED;
     }
 
