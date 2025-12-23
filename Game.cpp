@@ -112,17 +112,6 @@ void Game::gameLoop()
     // Check if we're resuming a riddle interaction
     if (aRiddle.isActive())
     {
-        // Clear screen and redraw base game state before showing riddle
-        clrscr();
-        if (room)
-        {
-            room->draw();
-        }
-        player1.draw(room);
-        player2.draw(room);
-        player1.updateInventoryDisplay();
-        player2.updateInventoryDisplay();
-
         // Riddle is active - keep showing it until answered or ESC multiple times
         while (aRiddle.isActive() && currentState == GameState::inGame)
         {
@@ -132,6 +121,16 @@ void Game::gameLoop()
             {
                 room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
                 aRiddle.reset();  // Clear active riddle
+                // Riddle finished - redraw screen and fall through to normal game
+                clrscr();
+                if (room)
+                {
+                    room->draw();
+                }
+                player1.draw(room);
+                player2.draw(room);
+                player1.updateInventoryDisplay();
+                player2.updateInventoryDisplay();
                 break;  // Exit riddle loop, continue to normal game
             }
             else if (result == RiddleResult::ESCAPED)
@@ -143,20 +142,32 @@ void Game::gameLoop()
             {
                 // Failed - player answered wrong, reset aRiddle
                 aRiddle.reset();
+                // Riddle finished - redraw screen and fall through to normal game
+                clrscr();
+                if (room)
+                {
+                    room->draw();
+                }
+                player1.draw(room);
+                player2.draw(room);
+                player1.updateInventoryDisplay();
+                player2.updateInventoryDisplay();
                 break;  // Exit riddle loop, continue to normal game
             }
         }
     }
-
-    // Normal game loop - draw room and start game updates
-    if (room)
+    else
     {
-        room->draw();
+        // Normal game start - draw room and start game updates
+        if (room)
+        {
+            room->draw();
+        }
+        player1.draw(room);
+        player2.draw(room);
+        player1.updateInventoryDisplay();
+        player2.updateInventoryDisplay();
     }
-    player1.draw(room);
-    player2.draw(room);
-    player1.updateInventoryDisplay();
-    player2.updateInventoryDisplay();
 
     while (currentState == GameState::inGame)
     {
