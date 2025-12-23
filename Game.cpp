@@ -3,6 +3,10 @@
 #include "Game.h"
 #include "Layouts.h"
 #include "Riddle.h"
+#include <fstream>
+
+// Debug log file
+std::ofstream debugLog("riddle_debug.log", std::ios::app);
 
 //////////////////////////////////////////     Game Constructor       //////////////////////////////////////////
 
@@ -109,14 +113,12 @@ void Game::gameLoop()
 {
     Room *room = getCurrentRoom();
 
-    std::cout << "[DEBUG] gameLoop: aRiddle.isActive() = " << aRiddle.isActive() << std::endl;
-    sleep_ms(1000);
+    debugLog << "[DEBUG] gameLoop: aRiddle.isActive() = " << aRiddle.isActive() << std::endl;
 
     // Check if we're resuming a riddle interaction
     if (aRiddle.isActive())
     {
-        std::cout << "[DEBUG] gameLoop: Resuming riddle, clearing screen..." << std::endl;
-        sleep_ms(1000);
+        debugLog << "[DEBUG] gameLoop: Resuming riddle, clearing screen..." << std::endl;
 
         // Clear screen and redraw game state before showing riddle
         clrscr();
@@ -129,24 +131,20 @@ void Game::gameLoop()
         player1.updateInventoryDisplay();
         player2.updateInventoryDisplay();
 
-        std::cout << "[DEBUG] gameLoop: Entering riddle while loop" << std::endl;
-        sleep_ms(1000);
+        debugLog << "[DEBUG] gameLoop: Entering riddle while loop" << std::endl;
 
         // Riddle is active - keep showing it until answered or ESC multiple times
         while (aRiddle.isActive() && currentState == GameState::inGame)
         {
-            std::cout << "[DEBUG] gameLoop: Calling enterRiddle()..." << std::endl;
-            sleep_ms(1000);
+            debugLog << "[DEBUG] gameLoop: Calling enterRiddle()..." << std::endl;
 
             RiddleResult result = aRiddle.riddle->enterRiddle(room, aRiddle.player);
 
-            std::cout << "[DEBUG] gameLoop: enterRiddle() returned result = " << (int)result << std::endl;
-            sleep_ms(1000);
+            debugLog << "[DEBUG] gameLoop: enterRiddle() returned result = " << (int)result << std::endl;
 
             if (result == RiddleResult::SOLVED)
             {
-                std::cout << "[DEBUG] gameLoop: Riddle SOLVED" << std::endl;
-                sleep_ms(1000);
+                debugLog << "[DEBUG] gameLoop: Riddle SOLVED" << std::endl;
                 room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
                 aRiddle.reset();  // Clear active riddle
                 // Riddle finished - redraw screen and fall through to normal game
@@ -163,15 +161,13 @@ void Game::gameLoop()
             }
             else if (result == RiddleResult::ESCAPED)
             {
-                std::cout << "[DEBUG] gameLoop: Riddle ESCAPED, setting pause state" << std::endl;
-                sleep_ms(1000);
+                debugLog << "[DEBUG] gameLoop: Riddle ESCAPED, setting pause state" << std::endl;
                 currentState = GameState::paused;
                 return;  // Pause - will come back here with aRiddle still set
             }
             else
             {
-                std::cout << "[DEBUG] gameLoop: Riddle FAILED" << std::endl;
-                sleep_ms(1000);
+                debugLog << "[DEBUG] gameLoop: Riddle FAILED" << std::endl;
                 // Failed - player answered wrong, reset aRiddle
                 aRiddle.reset();
                 // Riddle finished - redraw screen and fall through to normal game
@@ -188,13 +184,11 @@ void Game::gameLoop()
             }
         }
 
-        std::cout << "[DEBUG] gameLoop: Exited riddle while loop" << std::endl;
-        sleep_ms(1000);
+        debugLog << "[DEBUG] gameLoop: Exited riddle while loop" << std::endl;
     }
     else
     {
-        std::cout << "[DEBUG] gameLoop: No active riddle, normal game start" << std::endl;
-        sleep_ms(1000);
+        debugLog << "[DEBUG] gameLoop: No active riddle, normal game start" << std::endl;
 
         // Normal game start - draw room and start game updates
         if (room)
@@ -280,19 +274,16 @@ void Game::update()
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
     {
-        std::cout << "[DEBUG] update: requestPause detected, p1=" << player1.requestPause << " p2=" << player2.requestPause << std::endl;
-        sleep_ms(1000);
+        debugLog << "[DEBUG] update: requestPause detected, p1=" << player1.requestPause << " p2=" << player2.requestPause << std::endl;
 
         // Check which player is on a riddle and store it
         if (player1.requestPause)
         {
             GameObject* obj = room->getObjectAt(player1.pos.x, player1.pos.y);
-            std::cout << "[DEBUG] update: player1 at (" << player1.pos.x << "," << player1.pos.y << "), obj=" << (obj ? "EXISTS" : "NULL") << std::endl;
-            sleep_ms(1000);
+            debugLog << "[DEBUG] update: player1 at (" << player1.pos.x << "," << player1.pos.y << "), obj=" << (obj ? "EXISTS" : "NULL") << std::endl;
             if (obj != nullptr && obj->getType() == ObjectType::RIDDLE)
             {
-                std::cout << "[DEBUG] update: Storing riddle for player1 in aRiddle" << std::endl;
-                sleep_ms(1000);
+                debugLog << "[DEBUG] update: Storing riddle for player1 in aRiddle" << std::endl;
                 aRiddle.riddle = dynamic_cast<Riddle*>(obj);
                 aRiddle.player = &player1;
             }
@@ -300,19 +291,16 @@ void Game::update()
         else if (player2.requestPause)
         {
             GameObject* obj = room->getObjectAt(player2.pos.x, player2.pos.y);
-            std::cout << "[DEBUG] update: player2 at (" << player2.pos.x << "," << player2.pos.y << "), obj=" << (obj ? "EXISTS" : "NULL") << std::endl;
-            sleep_ms(1000);
+            debugLog << "[DEBUG] update: player2 at (" << player2.pos.x << "," << player2.pos.y << "), obj=" << (obj ? "EXISTS" : "NULL") << std::endl;
             if (obj != nullptr && obj->getType() == ObjectType::RIDDLE)
             {
-                std::cout << "[DEBUG] update: Storing riddle for player2 in aRiddle" << std::endl;
-                sleep_ms(1000);
+                debugLog << "[DEBUG] update: Storing riddle for player2 in aRiddle" << std::endl;
                 aRiddle.riddle = dynamic_cast<Riddle*>(obj);
                 aRiddle.player = &player2;
             }
         }
 
-        std::cout << "[DEBUG] update: Setting currentState = paused, aRiddle.isActive() = " << aRiddle.isActive() << std::endl;
-        sleep_ms(1000);
+        debugLog << "[DEBUG] update: Setting currentState = paused, aRiddle.isActive() = " << aRiddle.isActive() << std::endl;
 
         player1.requestPause = false;
         player2.requestPause = false;

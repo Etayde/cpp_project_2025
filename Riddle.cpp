@@ -5,34 +5,32 @@
 #include "Player.h"
 #include "Room.h"
 #include "Console.h"
+#include <fstream>
 using std::cout, std::endl;
+
+extern std::ofstream debugLog;
 
 //////////////////////////////////////////         enterRiddle         //////////////////////////////////////////
 
 RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer) {
-    std::cout << "[DEBUG] Riddle::enterRiddle: START" << std::endl;
-    sleep_ms(1000);
+    debugLog << "[DEBUG] Riddle::enterRiddle: START" << std::endl;
 
     // 1. Entry animation (flush input buffer)
     playRiddleAnimation();
 
     // 2. Display UI
-    std::cout << "[DEBUG] Riddle::enterRiddle: Calling displayRiddleQuestion()" << std::endl;
-    sleep_ms(1000);
+    debugLog << "[DEBUG] Riddle::enterRiddle: Calling displayRiddleQuestion()" << std::endl;
     displayRiddleQuestion();
 
     // 3. Get player input (blocking)
-    std::cout << "[DEBUG] Riddle::enterRiddle: Waiting for player answer..." << std::endl;
-    sleep_ms(1000);
+    debugLog << "[DEBUG] Riddle::enterRiddle: Waiting for player answer..." << std::endl;
     int playerAnswer = getPlayerAnswer();
 
-    std::cout << "[DEBUG] Riddle::enterRiddle: Got answer = " << playerAnswer << std::endl;
-    sleep_ms(1000);
+    debugLog << "[DEBUG] Riddle::enterRiddle: Got answer = " << playerAnswer << std::endl;
 
     // 4. Handle ESC - don't restore screen, keep riddle visible
     if (playerAnswer == -1) {
-        std::cout << "[DEBUG] Riddle::enterRiddle: ESCAPED" << std::endl;
-        sleep_ms(1000);
+        debugLog << "[DEBUG] Riddle::enterRiddle: ESCAPED" << std::endl;
         return RiddleResult::ESCAPED;
     }
 
