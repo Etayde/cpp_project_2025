@@ -176,6 +176,8 @@ void Spring::update(Player* player1, Player* player2)
     {
         int before_dx = player1->pos.diff_x;
         int before_dy = player1->pos.diff_y;
+        int before_x = player1->pos.x;
+        int before_y = player1->pos.y;
 
         updateLaunch(player1);
         player1LaunchFrames--;
@@ -185,6 +187,16 @@ void Spring::update(Player* player1, Player* player2)
                        " after_vel=(" + std::to_string(player1->pos.diff_x) + "," + std::to_string(player1->pos.diff_y) + ")" +
                        " pos=(" + std::to_string(player1->pos.x) + "," + std::to_string(player1->pos.y) + ")");
 
+        // Check if player actually moved - if not, they hit an obstacle, end launch
+        bool playerMoved = (player1->pos.x != before_x || player1->pos.y != before_y);
+        bool velocityWasCleared = (before_dx == 0 && before_dy == 0);
+
+        if (!playerMoved && velocityWasCleared && player1LaunchFrames > 0)
+        {
+            logSpringDebug("P1 BLOCKED - ending launch early");
+            player1LaunchFrames = 0;
+        }
+
         if (player1LaunchFrames == 0)
         {
             logSpringDebug("P1 LAUNCH END: final_vel=(" +
@@ -193,8 +205,19 @@ void Spring::update(Player* player1, Player* player2)
 
             launchedPlayer1Id = 0;
             player1LaunchSpeed = 0;
-            player1->pos.diff_x = 0;
-            player1->pos.diff_y = 0;
+
+            // Only clear velocity if it's still the spring velocity
+            // If player has already set a new direction, don't clear it
+            if ((projectionDirection == Direction::LEFT || projectionDirection == Direction::RIGHT) &&
+                player1->pos.diff_y == 0)
+            {
+                player1->pos.diff_x = 0;
+            }
+            else if ((projectionDirection == Direction::UP || projectionDirection == Direction::DOWN) &&
+                     player1->pos.diff_x == 0)
+            {
+                player1->pos.diff_y = 0;
+            }
 
             logSpringDebug("P1 LAUNCH END: cleared_vel=(" +
                            std::to_string(player1->pos.diff_x) + "," +
@@ -207,6 +230,8 @@ void Spring::update(Player* player1, Player* player2)
     {
         int before_dx = player2->pos.diff_x;
         int before_dy = player2->pos.diff_y;
+        int before_x = player2->pos.x;
+        int before_y = player2->pos.y;
 
         updateLaunch(player2);
         player2LaunchFrames--;
@@ -216,6 +241,16 @@ void Spring::update(Player* player1, Player* player2)
                        " after_vel=(" + std::to_string(player2->pos.diff_x) + "," + std::to_string(player2->pos.diff_y) + ")" +
                        " pos=(" + std::to_string(player2->pos.x) + "," + std::to_string(player2->pos.y) + ")");
 
+        // Check if player actually moved - if not, they hit an obstacle, end launch
+        bool playerMoved = (player2->pos.x != before_x || player2->pos.y != before_y);
+        bool velocityWasCleared = (before_dx == 0 && before_dy == 0);
+
+        if (!playerMoved && velocityWasCleared && player2LaunchFrames > 0)
+        {
+            logSpringDebug("P2 BLOCKED - ending launch early");
+            player2LaunchFrames = 0;
+        }
+
         if (player2LaunchFrames == 0)
         {
             logSpringDebug("P2 LAUNCH END: final_vel=(" +
@@ -224,8 +259,19 @@ void Spring::update(Player* player1, Player* player2)
 
             launchedPlayer2Id = 0;
             player2LaunchSpeed = 0;
-            player2->pos.diff_x = 0;
-            player2->pos.diff_y = 0;
+
+            // Only clear velocity if it's still the spring velocity
+            // If player has already set a new direction, don't clear it
+            if ((projectionDirection == Direction::LEFT || projectionDirection == Direction::RIGHT) &&
+                player2->pos.diff_y == 0)
+            {
+                player2->pos.diff_x = 0;
+            }
+            else if ((projectionDirection == Direction::UP || projectionDirection == Direction::DOWN) &&
+                     player2->pos.diff_x == 0)
+            {
+                player2->pos.diff_y = 0;
+            }
 
             logSpringDebug("P2 LAUNCH END: cleared_vel=(" +
                            std::to_string(player2->pos.diff_x) + "," +
