@@ -280,7 +280,9 @@ void Game::update()
         if (player1.requestPause)
         {
             GameObject* obj = room->getObjectAt(player1.pos.x, player1.pos.y);
-            debugLog << "[DEBUG] update: player1 at (" << player1.pos.x << "," << player1.pos.y << "), obj=" << (obj ? "EXISTS" : "NULL") << std::endl;
+            debugLog << "[DEBUG] update: player1 at (" << player1.pos.x << "," << player1.pos.y << "), obj=" << (obj ? "EXISTS" : "NULL");
+            if (obj) debugLog << ", obj pointer = " << (void*)obj;
+            debugLog << std::endl;
             if (obj != nullptr && obj->getType() == ObjectType::RIDDLE)
             {
                 debugLog << "[DEBUG] update: Storing riddle for player1 in aRiddle" << std::endl;

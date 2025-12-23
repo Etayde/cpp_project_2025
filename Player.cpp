@@ -6,6 +6,9 @@
 #include "Door.h"
 #include "Spring.h"
 #include "Riddle.h"
+#include <fstream>
+
+extern std::ofstream debugLog;
 
 //////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
 
@@ -627,6 +630,9 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room)
             }
             else if (result == RiddleResult::ESCAPED)
             {
+                debugLog << "[DEBUG] Player::checkObjectInteraction: Riddle ESCAPED at nextPos(" << nextX << "," << nextY << ")" << std::endl;
+                debugLog << "[DEBUG] Player::checkObjectInteraction: Current player pos = (" << pos.x << "," << pos.y << ")" << std::endl;
+                debugLog << "[DEBUG] Player::checkObjectInteraction: Riddle object pointer = " << (void*)riddle << std::endl;
                 // Signal pause to game loop
                 requestPause = true;
                 return true;  // Block movement
