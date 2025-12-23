@@ -112,26 +112,32 @@ void Game::gameLoop()
     // Check if we're resuming a riddle interaction
     if (aRiddle.isActive())
     {
-        RiddleResult result = aRiddle.riddle->enterRiddle(room, aRiddle.player);
+        // Riddle is active - keep showing it until answered or ESC multiple times
+        while (aRiddle.isActive() && currentState == GameState::inGame)
+        {
+            RiddleResult result = aRiddle.riddle->enterRiddle(room, aRiddle.player);
 
-        if (result == RiddleResult::SOLVED)
-        {
-            room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
-            aRiddle.reset();  // Clear active riddle
-        }
-        else if (result == RiddleResult::ESCAPED)
-        {
-            currentState = GameState::paused;
-            return;  // Will come back here after pause, aRiddle stays set
-        }
-        else
-        {
-            // Failed - player answered wrong, reset aRiddle
-            aRiddle.reset();
+            if (result == RiddleResult::SOLVED)
+            {
+                room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
+                aRiddle.reset();  // Clear active riddle
+                break;  // Exit riddle loop, continue to normal game
+            }
+            else if (result == RiddleResult::ESCAPED)
+            {
+                currentState = GameState::paused;
+                return;  // Pause - will come back here with aRiddle still set
+            }
+            else
+            {
+                // Failed - player answered wrong, reset aRiddle
+                aRiddle.reset();
+                break;  // Exit riddle loop, continue to normal game
+            }
         }
     }
 
-    // Normal game loop (only if no riddle active)
+    // Normal game loop - draw room and start game updates
     if (room)
     {
         room->draw();
