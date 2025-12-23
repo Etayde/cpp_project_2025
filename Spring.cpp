@@ -84,6 +84,7 @@ void Spring::addCompression(int playerId)
         player2Compression++;
 
     updateVisual();
+    draw();
 }
 
 //////////////////////////////////////////     launchPlayer          //////////////////////////////////////////
@@ -115,6 +116,7 @@ void Spring::launchPlayer(int playerId)
     }
 
     updateVisual();
+    draw();
 }
 
 //////////////////////////////////////////         reset             //////////////////////////////////////////
@@ -134,6 +136,7 @@ void Spring::reset()
     player2LaunchSpeed = 0;
 
     updateVisual();
+    draw();
 }
 
 //////////////////////////////////////////        update             //////////////////////////////////////////
@@ -148,10 +151,15 @@ void Spring::update(Player* player1, Player* player2)
 
         if (player1LaunchFrames == 0)
         {
+            // DEBUG: Log spring launch end
+            gotoxy(0, 0);
+            std::cout << "P1 launch END: dir=" << (int)projectionDirection
+                      << " diff_x=" << player1->pos.diff_x
+                      << " diff_y=" << player1->pos.diff_y << "    " << std::flush;
+
             launchedPlayer1Id = 0;
             player1LaunchSpeed = 0;
-            player1->pos.diff_x = 0;
-            player1->pos.diff_y = 0;
+            // Don't clear velocity - player's input will set it
         }
     }
 
@@ -163,10 +171,15 @@ void Spring::update(Player* player1, Player* player2)
 
         if (player2LaunchFrames == 0)
         {
+            // DEBUG: Log spring launch end
+            gotoxy(0, 0);
+            std::cout << "P2 launch END: dir=" << (int)projectionDirection
+                      << " diff_x=" << player2->pos.diff_x
+                      << " diff_y=" << player2->pos.diff_y << "    " << std::flush;
+
             launchedPlayer2Id = 0;
             player2LaunchSpeed = 0;
-            player2->pos.diff_x = 0;
-            player2->pos.diff_y = 0;
+            // Don't clear velocity - player's input will set it
         }
     }
 }
