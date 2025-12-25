@@ -546,6 +546,10 @@ void Player::updateSpringState(Room* room)
     if (spring->isPlayerBeingLaunched(playerId))
         return;
 
+    // Only allow compression if player is at the free end
+    if (!spring->isAtFreeEnd(pos.x, pos.y))
+        return;
+
     Direction projDir = spring->getProjectionDirection();
 
     // Check if moving toward wall (opposite of projection direction)

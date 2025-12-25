@@ -20,6 +20,7 @@ Spring::Spring(const std::vector<Point>& positions, Direction orient,
                Direction projDir, const Point& anchor)
     : StaticObject(positions.empty() ? Point(0, 0) : positions[0], '#', ObjectType::SPRING),
       orientation(orient), projectionDirection(projDir), wallAnchor(anchor),
+      freeEnd(positions.empty() ? Point(0, 0) : positions.back()),
       maxLength(positions.size()),
       compressingPlayer1Id(0), compressingPlayer2Id(0),
       player1Compression(0), player2Compression(0),
@@ -46,6 +47,13 @@ bool Spring::occupiesPosition(int x, int y) const
         if (cell.position.x == x && cell.position.y == y)
             return true;
     return false;
+}
+
+//////////////////////////////////////////      isAtFreeEnd          //////////////////////////////////////////
+
+bool Spring::isAtFreeEnd(int x, int y) const
+{
+    return (x == freeEnd.x && y == freeEnd.y);
 }
 
 //////////////////////////////////////////  isPlayerCompressing      //////////////////////////////////////////
@@ -111,11 +119,13 @@ void Spring::launchPlayer(int playerId)
     if (compression == 0) return;
 
     // Set launch state for this player
+    // Physics: distance = compression³, speed = 1 cell/frame
+    // Therefore: duration = compression³ frames
     if (compressingPlayer1Id == playerId)
     {
         launchedPlayer1Id = playerId;
-        player1LaunchFrames = compression * compression;  // Duration = compression²
-        player1LaunchSpeed = compression;                 // Speed = compression
+        player1LaunchFrames = compression * compression * compression;  // Duration = compression³
+        player1LaunchSpeed = 1;                                          // Speed = 1 cell/frame for object interaction
 
         logSpringDebug("P" + std::to_string(playerId) + " LAUNCH START: dir=" +
                        std::to_string((int)projectionDirection) +
@@ -130,8 +140,8 @@ void Spring::launchPlayer(int playerId)
     else if (compressingPlayer2Id == playerId)
     {
         launchedPlayer2Id = playerId;
-        player2LaunchFrames = compression * compression;
-        player2LaunchSpeed = compression;
+        player2LaunchFrames = compression * compression * compression;
+        player2LaunchSpeed = 1;
 
         logSpringDebug("P" + std::to_string(playerId) + " LAUNCH START: dir=" +
                        std::to_string((int)projectionDirection) +
@@ -294,14 +304,14 @@ void Spring::updateLaunch(Player* player)
 
     if (speed == 0) return;
 
-    // Set player's velocity to spring direction * speed
-    // Player will handle lateral movement themselves
+    // Always set velocity to 1 cell per frame for proper object interaction
+    // Spring duration is already adjusted to cover the total distance
     switch (projectionDirection)
     {
-        case Direction::UP:    player->pos.diff_y = -speed; break;
-        case Direction::DOWN:  player->pos.diff_y = speed; break;
-        case Direction::LEFT:  player->pos.diff_x = -speed; break;
-        case Direction::RIGHT: player->pos.diff_x = speed; break;
+        case Direction::UP:    player->pos.diff_y = -1; break;
+        case Direction::DOWN:  player->pos.diff_y = 1; break;
+        case Direction::LEFT:  player->pos.diff_x = -1; break;
+        case Direction::RIGHT: player->pos.diff_x = 1; break;
         default: break;
     }
 }

@@ -29,6 +29,7 @@ private:
     Direction orientation;                // HORIZONTAL or VERTICAL
     Direction projectionDirection;        // Direction away from wall
     Point wallAnchor;                     // Wall attachment position
+    Point freeEnd;                        // Free end position (opposite of wall anchor)
     int maxLength;                        // Total cells
 
     // Simple compression tracking (player IDs, not pointers!)
@@ -48,7 +49,7 @@ private:
 public:
     // Default constructor (for compatibility)
     Spring() : StaticObject(), orientation(Direction::HORIZONTAL),
-               projectionDirection(Direction::RIGHT), wallAnchor(0, 0),
+               projectionDirection(Direction::RIGHT), wallAnchor(0, 0), freeEnd(0, 0),
                maxLength(1), compressingPlayer1Id(0), compressingPlayer2Id(0),
                player1Compression(0), player2Compression(0),
                launchedPlayer1Id(0), launchedPlayer2Id(0),
@@ -74,10 +75,12 @@ public:
 
     // Position queries
     bool occupiesPosition(int x, int y) const;
+    bool isAtFreeEnd(int x, int y) const;  // Check if position is at free end
 
     // Getters
     int getMaxLength() const { return maxLength; }
     Direction getProjectionDirection() const { return projectionDirection; }
+    Point getFreeEnd() const { return freeEnd; }
 
     // Compression management (called by Player)
     bool isPlayerCompressing(int playerId) const;
