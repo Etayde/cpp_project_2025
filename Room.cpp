@@ -303,13 +303,7 @@ const GameObject *Room::getObjectAt(int x, int y) const
     {
         if (obj != nullptr && obj->isActive())
         {
-            // Check single position for all objects
-            if (obj->getX() == x && obj->getY() == y)
-            {
-                return obj;
-            }
-
-            // Special handling for Springs - check all cells
+            // Special handling for Springs - check all cells FIRST
             if (obj->getType() == ObjectType::SPRING)
             {
                 const Spring* spring = dynamic_cast<const Spring*>(obj);
@@ -322,13 +316,18 @@ const GameObject *Room::getObjectAt(int x, int y) const
                         if (cellPos.x == x && cellPos.y == y)
                         {
                             DebugLog::getStream() << "[GETOBJECT_SPRING] Found spring at (" << x << "," << y
-                                                  << ") | SpringPos: " << spring->getPosition().x << "," << spring->getPosition().y
-                                                  << " | CellIndex: " << i
+                                                  << ") | CellIndex: " << i
                                                   << std::endl;
                             return obj;
                         }
                     }
                 }
+            }
+
+            // Check single position for all other objects
+            if (obj->getX() == x && obj->getY() == y)
+            {
+                return obj;
             }
         }
     }
