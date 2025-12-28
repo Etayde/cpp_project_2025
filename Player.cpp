@@ -535,7 +535,7 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** a
                 spring->compressCell();  // Advance compression
 
                 // Check if fully compressed → launch
-                if (fullyCompressedSpring(*spring))
+                if (fullyCompressedSpring(*spring, nextX, nextY))
                 {
                     spring->launch(this);
                 }
@@ -581,14 +581,15 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** a
 
 //////////////////////////////////////////   fullyCompressedSpring   //////////////////////////////////////////
 
-bool Player::fullyCompressedSpring(const Spring& s) const
+bool Player::fullyCompressedSpring(const Spring& s, int checkX, int checkY) const
 {
-    bool posMatch = (pos == s.getAnchorPosition());
+    Point checkPos(checkX, checkY);
+    bool posMatch = (checkPos == s.getAnchorPosition());
     bool isCompr = s.isCompressed();
     bool result = posMatch && isCompr;
 
     DebugLog::getStream() << "[SPRING_FULL_CHECK] Player:" << playerId
-                          << " at " << pos.x << "," << pos.y
+                          << " at " << checkX << "," << checkY
                           << " | Anchor: " << s.getAnchorPosition().x << "," << s.getAnchorPosition().y
                           << " | PosMatch: " << (posMatch ? "YES" : "NO")
                           << " | Compressed: " << (isCompr ? "YES" : "NO")

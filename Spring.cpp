@@ -110,6 +110,11 @@ void Spring::compressCell() {
                           << std::endl;
 
     compressionState++;
+
+    // Set compressed flag when all cells are compressed
+    if (compressionState >= static_cast<int>(cells.size())) {
+        compressed = true;
+    }
 }
 
 void Spring::reset() {

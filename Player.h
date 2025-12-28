@@ -99,7 +99,7 @@ public:
     GameObject *getInventory() { return inventory; }
     const GameObject *getInventory() const { return inventory; }
     ObjectType getInventoryType() const { return inventory ? inventory->getType() : ObjectType::AIR; }
-    bool fullyCompressedSpring(const Spring& s) const;
+    bool fullyCompressedSpring(const Spring& s, int checkX, int checkY) const;
     bool isLaunched() const { return launchFramesRemaining > 0; }
 
     // Setters

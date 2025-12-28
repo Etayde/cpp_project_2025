@@ -912,7 +912,7 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
     if (orientation == Direction::HORIZONTAL)
     {
         // Check left of first position
-        char leftChar = getCharAt(first.x - 1, first.y);
+        char leftChar = baseLayout->getCharAt(first.x - 1, first.y);
         if (leftChar == 'W' || leftChar == '=')
         {
             result.valid = true;
@@ -922,7 +922,7 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
         }
 
         // Check right of last position
-        char rightChar = getCharAt(last.x + 1, last.y);
+        char rightChar = baseLayout->getCharAt(last.x + 1, last.y);
         if (rightChar == 'W' || rightChar == '=')
         {
             result.valid = true;
@@ -934,7 +934,7 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
     else // VERTICAL
     {
         // Check above first position
-        char topChar = getCharAt(first.x, first.y - 1);
+        char topChar = baseLayout->getCharAt(first.x, first.y - 1);
         if (topChar == 'W' || topChar == '=')
         {
             result.valid = true;
@@ -944,7 +944,7 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
         }
 
         // Check below last position
-        char bottomChar = getCharAt(last.x, last.y + 1);
+        char bottomChar = baseLayout->getCharAt(last.x, last.y + 1);
         if (bottomChar == 'W' || bottomChar == '=')
         {
             result.valid = true;
