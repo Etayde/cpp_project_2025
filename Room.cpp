@@ -1028,6 +1028,7 @@ void Room::scanAndCreateSprings()
                     if (wallCheck.valid)
                     {
                         Spring* spring = new Spring(sorted[0]);
+                        spring->initialize(sorted, wallCheck.anchorPosition, wallCheck.projectionDirection);
                         if (!addObject(spring))
                         {
                             delete spring;

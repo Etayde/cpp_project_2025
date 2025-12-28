@@ -49,6 +49,14 @@ public:
     // Constructor with position
     Spring(const Point& pos) : StaticObject(pos, '#', ObjectType::SPRING) {}
 
+    // Destructor
+    ~Spring();
+
+    // Initialize spring with cells, anchor, and projection direction
+    void initialize(const std::vector<Point>& springCells,
+                    const Point& anchor,
+                    Direction projectionDir);
+
     // GameObject inherited interface - must be implemented
     GameObject* clone() const override;
     const char* getName() const override { return "Spring"; }

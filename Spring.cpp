@@ -1,6 +1,51 @@
 #include "Spring.h"
 #include "Player.h"
 
+//////////////////////////////////////////      Destructor          //////////////////////////////////////////
+
+Spring::~Spring()
+{
+    if (anchorPosition != nullptr) {
+        delete anchorPosition;
+        anchorPosition = nullptr;
+    }
+}
+
+//////////////////////////////////////////      Initialize          //////////////////////////////////////////
+
+void Spring::initialize(const std::vector<Point>& springCells,
+                       const Point& anchor,
+                       Direction projectionDir)
+{
+    // Set anchor position
+    if (anchorPosition == nullptr) {
+        anchorPosition = new Point(anchor);
+    } else {
+        *anchorPosition = anchor;
+    }
+
+    // Set compression direction
+    compressionDir = projectionDir;
+
+    // Populate cells vector
+    cells.clear();
+    for (const Point& cellPos : springCells) {
+        SpringCell cell;
+        cell.pos = cellPos;
+        cell.compressed = false;
+        cells.push_back(cell);
+    }
+
+    // Set starting cell (first cell in the spring)
+    if (!cells.empty()) {
+        startingCell = &cells[0];
+    }
+
+    // Reset compression state
+    compressionState = 0;
+    compressed = false;
+}
+
 //////////////////////////////////////////        clone              //////////////////////////////////////////
 
 GameObject* Spring::clone() const

@@ -12,7 +12,7 @@
 Player::Player()
     : inventory(nullptr), playerId(0), sprite(' '), prevChar(' '),
       atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
-      waitingAtDoor(false), requestPause(false)
+      waitingAtDoor(false), requestPause(false), launchFramesRemaining(0)
 {
     pos = Point(1, 1, 0, 0, ' ');
 }
@@ -20,7 +20,7 @@ Player::Player()
 Player::Player(int id, int startX, int startY, char playerSprite)
     : inventory(nullptr), playerId(id), sprite(playerSprite), prevChar(' '),
       atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
-      waitingAtDoor(false), requestPause(false)
+      waitingAtDoor(false), requestPause(false), launchFramesRemaining(0)
 {
     pos = Point(startX, startY, 0, 0, playerSprite);
 }
@@ -39,7 +39,7 @@ Player::Player(const Player &other)
       sprite(other.sprite), prevChar(other.prevChar), atDoor(other.atDoor),
       doorId(other.doorId), alive(other.alive), keyCount(other.keyCount),
       lives(other.lives), waitingAtDoor(other.waitingAtDoor),
-      requestPause(other.requestPause)
+      requestPause(other.requestPause), launchFramesRemaining(other.launchFramesRemaining)
 {
     copyInventoryFrom(other);
 }
@@ -63,6 +63,7 @@ Player &Player::operator=(const Player &other)
         lives = other.lives;
         waitingAtDoor = other.waitingAtDoor;
         requestPause = other.requestPause;
+        launchFramesRemaining = other.launchFramesRemaining;
 
         copyInventoryFrom(other);
     }
