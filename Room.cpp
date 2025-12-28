@@ -1027,7 +1027,15 @@ void Room::scanAndCreateSprings()
                     WallCheckResult wallCheck = checkWallAdjacency(sorted, orientation);
                     if (wallCheck.valid)
                     {
-                        Spring* spring = new Spring(sorted[0]);
+                        // Ensure sorted array has START cell first, ANCHOR cell last
+                        // If anchor is at the beginning (sorted[0]), reverse the array
+                        bool anchorIsFirst = (wallCheck.anchorPosition == sorted[0]);
+                        if (anchorIsFirst)
+                        {
+                            std::reverse(sorted.begin(), sorted.end());
+                        }
+
+                        Spring* spring = new Spring(sorted[0]);  // Now sorted[0] is START cell
                         spring->initialize(sorted, wallCheck.anchorPosition, wallCheck.projectionDirection);
                         if (!addObject(spring))
                         {
