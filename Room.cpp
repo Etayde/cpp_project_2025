@@ -8,6 +8,7 @@
 #include "StaticObjects.h"
 #include "Bomb.h"
 #include "Spring.h"
+#include "DebugLog.h"
 #include <cmath>
 #include <algorithm>
 
@@ -320,6 +321,10 @@ const GameObject *Room::getObjectAt(int x, int y) const
                         Point cellPos = spring->getCellPosition(i);
                         if (cellPos.x == x && cellPos.y == y)
                         {
+                            DebugLog::getStream() << "[GETOBJECT_SPRING] Found spring at (" << x << "," << y
+                                                  << ") | SpringPos: " << spring->getPosition().x << "," << spring->getPosition().y
+                                                  << " | CellIndex: " << i
+                                                  << std::endl;
                             return obj;
                         }
                     }
