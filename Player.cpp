@@ -89,7 +89,7 @@ void Player::copyInventoryFrom(const Player &other)
 //////////////////////////////////////////           move             //////////////////////////////////////////
 
 // Move player in current direction, handle collisions and interactions
-bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer)
+bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Player* otherPlayer)
 {
     if (room == nullptr)
         return false;
@@ -101,8 +101,38 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer)
         return false;
     }
 
+    // Collision prediction during launch
+    if (launchFramesRemaining > 0)
+    {
+        int stopX, stopY;
+        if (predictCollisionAlongTrajectory(room, stopX, stopY))
+        {
+            stopAtPosition(stopX, stopY);
+            draw(room);
+            return false;
+        }
+    }
+
     int nextX = pos.x + pos.diff_x;
     int nextY = pos.y + pos.diff_y;
+
+    // Check player collision ONLY when launched
+    if (launchFramesRemaining > 0 &&
+        otherPlayer != nullptr && otherPlayer->isAlive() &&
+        otherPlayer->pos.x == nextX && otherPlayer->pos.y == nextY)
+    {
+        // Transfer momentum to other player
+        otherPlayer->pos.diff_x = pos.diff_x;
+        otherPlayer->pos.diff_y = pos.diff_y;
+        otherPlayer->launchFramesRemaining = launchFramesRemaining;
+
+        // Stop this player
+        pos.diff_x = 0;
+        pos.diff_y = 0;
+        launchFramesRemaining = 0;
+        draw(room);
+        return false;
+    }
 
     // Check absolute screen bounds
     if (nextX < 0 || nextX >= MAX_X || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
@@ -168,9 +198,6 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer)
     pos.x = nextX;
     pos.y = nextY;
     draw(room);
-
-    // Update spring state
-    updateSpringState(room);
 
     return true;
 }
@@ -290,30 +317,25 @@ Point Player::dropItem(Room *room)
 
 void Player::performAction(Action action, Room* room)
 {
-    // Check if player is compressing a spring and tries to change direction or stay
-    if (room)
+    // Check if currently launched
+    if (launchFramesRemaining > 0)
     {
-        GameObject* obj = room->getObjectAt(pos.x, pos.y);
-        if (obj && obj->getType() == ObjectType::SPRING)
-        {
-            Spring* spring = static_cast<Spring*>(obj);
-            if (spring->isPlayerCompressing(playerId))
-            {
-                Direction currentDir = getCurrentDirection();
-                Direction newDir = actionToDirection(action);
+        Direction inputDir = actionToDirection(action);
 
-                // Release conditions: STAY action or direction change attempt
-                if (action == Action::STAY ||
-                    (newDir != Direction::STAY && newDir != currentDir))
-                {
-                    spring->launchPlayer(playerId);
-                    pos.setDirection(Direction::STAY);
-                    return;
-                }
-            }
+        // Block invalid inputs (opposite direction or STAY)
+        if (!canApplyInputDuringLaunch(inputDir))
+            return;  // Ignore this input
+
+        // Allow perpendicular movement
+        Direction launchDir = getLaunchDirection();
+        if (isPerpendicularToLaunch(inputDir, launchDir))
+        {
+            applyPerpendicularVelocity(inputDir);
         }
+        return;
     }
 
+    // Normal movement (not launched)
     switch (action)
     {
     case Action::MOVE_UP:
@@ -492,6 +514,27 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** a
         return true; // Blocks movement
     }
 
+    // Spring compression and launch
+    if (objType == ObjectType::SPRING)
+    {
+        Spring* spring = dynamic_cast<Spring*>(obj);
+        if (spring != nullptr)
+        {
+            // Check if player is compressing the spring
+            if (spring->isCompressing(*this))
+            {
+                spring->compressCell();  // Advance compression
+
+                // Check if fully compressed → launch
+                if (fullyCompressedSpring(*spring))
+                {
+                    spring->launch(this);
+                }
+            }
+        }
+        return false;  // Springs are non-blocking (allow movement through)
+    }
+
     // Blocking objects
     if (obj->isBlocking())
     {
@@ -527,46 +570,215 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** a
     return false; // Doesn't block movement
 }
 
-//////////////////////////////////////////    updateSpringState    //////////////////////////////////////////
+//////////////////////////////////////////   fullyCompressedSpring   //////////////////////////////////////////
 
-// Manage spring compression state after player has moved
-void Player::updateSpringState(Room* room)
+bool Player::fullyCompressedSpring(const Spring& s) const
 {
-    if (room == nullptr)
-        return;
+    return pos == s.getAnchorPosition() && s.isCompressed();
+}
 
-    // Check if standing on a spring
-    GameObject* obj = room->getObjectAt(pos.x, pos.y);
-    if (obj == nullptr || obj->getType() != ObjectType::SPRING)
-        return;
+//////////////////////////////////////////   getLaunchDirection   //////////////////////////////////////////
 
-    Spring* spring = static_cast<Spring*>(obj);
-
-    // Skip if already being launched by this spring
-    if (spring->isPlayerBeingLaunched(playerId))
-        return;
-
-    // Only allow compression if player is at the free end
-    if (!spring->isAtFreeEnd(pos.x, pos.y))
-        return;
-
-    Direction projDir = spring->getProjectionDirection();
-
-    // Check if moving toward wall (opposite of projection direction)
-    bool movingTowardWall = false;
-    if (projDir == Direction::UP && pos.diff_y > 0) movingTowardWall = true;
-    if (projDir == Direction::DOWN && pos.diff_y < 0) movingTowardWall = true;
-    if (projDir == Direction::LEFT && pos.diff_x > 0) movingTowardWall = true;
-    if (projDir == Direction::RIGHT && pos.diff_x < 0) movingTowardWall = true;
-
-    if (movingTowardWall)
+Direction Player::getLaunchDirection() const
+{
+    // During launch, the dominant velocity component indicates direction
+    if (abs(pos.diff_x) >= abs(pos.diff_y))
     {
-        spring->addCompression(playerId);
-
-        // Check if fully compressed - auto launch
-        if (spring->getTotalCompression() >= spring->getMaxLength())
-        {
-            spring->launchPlayer(playerId);
-        }
+        return (pos.diff_x > 0) ? Direction::RIGHT : Direction::LEFT;
+    }
+    else
+    {
+        return (pos.diff_y > 0) ? Direction::DOWN : Direction::UP;
     }
 }
+
+//////////////////////////////////////////   isPerpendicularToLaunch   //////////////////////////////////////////
+
+bool Player::isPerpendicularToLaunch(Direction inputDir, Direction launchDir) const
+{
+    // Horizontal launches: perpendicular is UP/DOWN
+    if (launchDir == Direction::LEFT || launchDir == Direction::RIGHT)
+    {
+        return (inputDir == Direction::UP || inputDir == Direction::DOWN);
+    }
+
+    // Vertical launches: perpendicular is LEFT/RIGHT
+    if (launchDir == Direction::UP || launchDir == Direction::DOWN)
+    {
+        return (inputDir == Direction::LEFT || inputDir == Direction::RIGHT);
+    }
+
+    return false;
+}
+
+//////////////////////////////////////////   isCellBlocking   //////////////////////////////////////////
+
+bool Player::isCellBlocking(int x, int y, Room* room) const
+{
+    if (room == nullptr)
+        return true;
+
+    // Check bounds
+    if (x < 0 || x >= MAX_X || y < 1 || y >= MAX_Y_INGAME - 1)
+        return true;
+
+    // Check wall collision
+    char cellChar = room->getCharAt(x, y);
+    if (cellChar == 'W' || cellChar == '=')
+        return true;
+
+    // Check blocking objects
+    GameObject* obj = room->getObjectAt(x, y);
+    if (obj != nullptr && obj->isActive() && obj->isBlocking())
+        return true;
+
+    return false;
+}
+
+//////////////////////////////////////////   canApplyInputDuringLaunch   //////////////////////////////////////////
+
+bool Player::canApplyInputDuringLaunch(Direction inputDir) const
+{
+    Direction launchDir = getLaunchDirection();
+
+    // Always block STAY command during launch
+    if (inputDir == Direction::STAY)
+        return false;
+
+    // Get opposite direction of launch
+    Direction oppositeDir;
+    switch (launchDir)
+    {
+        case Direction::UP:    oppositeDir = Direction::DOWN; break;
+        case Direction::DOWN:  oppositeDir = Direction::UP; break;
+        case Direction::LEFT:  oppositeDir = Direction::RIGHT; break;
+        case Direction::RIGHT: oppositeDir = Direction::LEFT; break;
+        default: return false;
+    }
+
+    // Block if input is opposite to launch direction
+    if (inputDir == oppositeDir)
+        return false;
+
+    // Block if input is same as launch direction (redundant)
+    if (inputDir == launchDir)
+        return false;
+
+    // Allow perpendicular directions
+    return true;
+}
+
+//////////////////////////////////////////   applyPerpendicularVelocity   //////////////////////////////////////////
+
+void Player::applyPerpendicularVelocity(Direction perpendicularDir)
+{
+    // Set perpendicular component to speed 1
+    // Keep launch component unchanged
+
+    Direction launchDir = getLaunchDirection();
+
+    // If launch is horizontal (LEFT/RIGHT)
+    if (launchDir == Direction::LEFT || launchDir == Direction::RIGHT)
+    {
+        // Launch velocity in diff_x stays same
+        // Apply perpendicular in diff_y
+        if (perpendicularDir == Direction::UP)
+            pos.diff_y = -1;
+        else if (perpendicularDir == Direction::DOWN)
+            pos.diff_y = 1;
+    }
+    // If launch is vertical (UP/DOWN)
+    else if (launchDir == Direction::UP || launchDir == Direction::DOWN)
+    {
+        // Launch velocity in diff_y stays same
+        // Apply perpendicular in diff_x
+        if (perpendicularDir == Direction::LEFT)
+            pos.diff_x = -1;
+        else if (perpendicularDir == Direction::RIGHT)
+            pos.diff_x = 1;
+    }
+}
+
+//////////////////////////////////////////   predictCollisionAlongTrajectory   //////////////////////////////////////////
+
+bool Player::predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY) const
+{
+    // Bresenham-style line traversal from current position to next position
+    int currentX = pos.x;
+    int currentY = pos.y;
+    int targetX = pos.x + pos.diff_x;
+    int targetY = pos.y + pos.diff_y;
+
+    int dx = abs(targetX - currentX);
+    int dy = abs(targetY - currentY);
+    int sx = (currentX < targetX) ? 1 : -1;
+    int sy = (currentY < targetY) ? 1 : -1;
+
+    int err = dx - dy;
+    int checkX = currentX;
+    int checkY = currentY;
+
+    // Store last valid position
+    stopX = currentX;
+    stopY = currentY;
+
+    while (true)
+    {
+        // Check next step
+        int e2 = 2 * err;
+        int nextCheckX = checkX;
+        int nextCheckY = checkY;
+
+        if (e2 > -dy)
+        {
+            err -= dy;
+            nextCheckX += sx;
+        }
+        if (e2 < dx)
+        {
+            err += dx;
+            nextCheckY += sy;
+        }
+
+        // Reached target without collision
+        if (nextCheckX == targetX && nextCheckY == targetY)
+        {
+            // Check if target itself is blocking
+            if (isCellBlocking(targetX, targetY, room))
+            {
+                return true;  // Collision at target
+            }
+            return false;  // No collision
+        }
+
+        // Check if this cell is blocking
+        if (isCellBlocking(nextCheckX, nextCheckY, room))
+        {
+            return true;  // Collision detected, stopX/stopY has last safe position
+        }
+
+        // Update last safe position
+        stopX = nextCheckX;
+        stopY = nextCheckY;
+        checkX = nextCheckX;
+        checkY = nextCheckY;
+    }
+}
+
+//////////////////////////////////////////   stopAtPosition   //////////////////////////////////////////
+
+void Player::stopAtPosition(int x, int y)
+{
+    // Update position to safe cell
+    pos.x = x;
+    pos.y = y;
+
+    // CRITICAL: Reset velocity to zero
+    pos.diff_x = 0;
+    pos.diff_y = 0;
+
+    // Reset launch state
+    launchFramesRemaining = 0;
+}
+
+

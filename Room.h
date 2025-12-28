@@ -217,4 +217,5 @@ private:
     Direction detectOrientation(const std::vector<Point>& positions);
     std::vector<Point> sortPositions(const std::vector<Point>& positions, Direction orientation);
     WallCheckResult checkWallAdjacency(const std::vector<Point>& sorted, Direction orientation);
+    void scanAndCreateSprings();
 };

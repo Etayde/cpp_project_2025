@@ -42,7 +42,7 @@ public:
     void move();
 
     // Set movement direction
-    void setDirection(Direction dir);
+    void setDirection(Direction dir, int speed = 1);
 
     // Getters
     int getX() const { return x; }

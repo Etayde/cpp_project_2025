@@ -248,18 +248,15 @@ void Game::update()
         return;
 
     // Handle player movement - pass pointers to aRiddle so it gets set immediately
-    player1.move(room, &aRiddle.riddle, &aRiddle.player);
-    player2.move(room, &aRiddle.riddle, &aRiddle.player);
+    player1.move(room, &aRiddle.riddle, &aRiddle.player, &player2);
+    player2.move(room, &aRiddle.riddle, &aRiddle.player, &player1);
 
-    // Update all springs (manage launch state and set player velocities)
-    for (GameObject* obj : room->objects)
-    {
-        if (obj && obj->getType() == ObjectType::SPRING)
-        {
-            Spring* spring = static_cast<Spring*>(obj);
-            spring->update(&player1, &player2);
-        }
-    }
+    // Decrement launch timers
+    if (player1.launchFramesRemaining > 0)
+        player1.launchFramesRemaining--;
+
+    if (player2.launchFramesRemaining > 0)
+        player2.launchFramesRemaining--;
 
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
@@ -527,13 +524,7 @@ void Game::initializeRooms()
     rooms[0].nextRoomId = 1;
     rooms[0].prevRoomId = -1;
     rooms[0].setDoorRequirements(1, 0, 2); // Door 1: 0 keys, 2 switches
-    rooms[0].addSpring({Point(73, 9), Point(74, 9), Point(75, 9), Point(76, 9), Point(77, 9)}, 5); //spring 1
-    rooms[0].addSpring({Point(51, 1), Point(51, 2), Point(51, 3), Point(51, 4)}, 4); //spring 2
-    rooms[0].addSpring({Point(1, 10), Point(2, 10), Point(3, 10)}, 3); //spring 3
-    rooms[0].addSpring({Point(62, 18), Point(62, 19)}, 2); //spring 4
-    // Example: Add a 3-character horizontal spring at positions (10,10), (11,10), (12,10)
-    // Make sure there's a wall at (9,10) - the spring will project right
-    // rooms[0].addSpring({Point(10, 10), Point(11, 10), Point(12, 10)}, 3);
+    // Springs are now auto-detected from '#' characters in layout
 
     // Room 1
     rooms[1] = Room(1);
@@ -578,20 +569,6 @@ void Game::changeRoom(int newRoomId, bool goingForward)
     player2.pos.diff_y = 0;
     player1.atDoor = false;
     player2.atDoor = false;
-
-    // Reset spring states when changing rooms
-    Room* currentRoom = getCurrentRoom();
-    if (currentRoom)
-    {
-        for (GameObject* obj : currentRoom->objects)
-        {
-            if (obj && obj->getType() == ObjectType::SPRING)
-            {
-                Spring* spring = static_cast<Spring*>(obj);
-                spring->reset();
-            }
-        }
-    }
 
     player1.prevChar = ' ';
     player2.prevChar = ' ';

@@ -19,24 +19,24 @@ void Point::move()
 //////////////////////////////////////////       setDirection         //////////////////////////////////////////
 
 // Set movement direction
-void Point::setDirection(Direction dir)
+void Point::setDirection(Direction dir, int speed)
 {
     switch (dir)
     {
     case Direction::UP:
         diff_x = 0;
-        diff_y = -1;
+        diff_y = -speed;
         break;
     case Direction::DOWN:
         diff_x = 0;
-        diff_y = 1;
+        diff_y = speed;
         break;
     case Direction::RIGHT:
-        diff_x = 1;
+        diff_x = speed;
         diff_y = 0;
         break;
     case Direction::LEFT:
-        diff_x = -1;
+        diff_x = -speed;
         diff_y = 0;
         break;
     case Direction::STAY:

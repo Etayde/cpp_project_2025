@@ -169,6 +169,9 @@ void Room::loadObjects()
             }
         }
     }
+
+    // Auto-scan and create springs
+    scanAndCreateSprings();
 }
 
 //////////////////////////////////////////    setDoorRequirements      //////////////////////////////////////////
@@ -283,17 +286,8 @@ GameObject *Room::getObjectAt(int x, int y)
     {
         if (obj != nullptr && obj->isActive())
         {
-            // For springs, check all positions
-            if (obj->getType() == ObjectType::SPRING)
-            {
-                Spring* spring = dynamic_cast<Spring*>(obj);
-                if (spring != nullptr && spring->occupiesPosition(x, y))
-                {
-                    return obj;
-                }
-            }
-            // For other objects, check single position
-            else if (obj->getX() == x && obj->getY() == y)
+            // Check single position for all objects
+            if (obj->getX() == x && obj->getY() == y)
             {
                 return obj;
             }
@@ -308,17 +302,8 @@ const GameObject *Room::getObjectAt(int x, int y) const
     {
         if (obj != nullptr && obj->isActive())
         {
-            // For springs, check all positions
-            if (obj->getType() == ObjectType::SPRING)
-            {
-                const Spring* spring = dynamic_cast<const Spring*>(obj);
-                if (spring != nullptr && spring->occupiesPosition(x, y))
-                {
-                    return obj;
-                }
-            }
-            // For other objects, check single position
-            else if (obj->getX() == x && obj->getY() == y)
+            // Check single position for all objects
+            if (obj->getX() == x && obj->getY() == y)
             {
                 return obj;
             }
@@ -826,13 +811,8 @@ void Room::addSpring(const std::vector<Point>& positions, int expectedLength)
         return; // No wall found at either end
     }
 
-    // Step 5: Create Spring object
-    Spring* spring = new Spring(
-        sorted,
-        orientation,
-        wallCheck.projectionDirection,
-        wallCheck.anchorPosition
-    );
+    // Step 5: Create Spring object (simplified - just use first position)
+    Spring* spring = new Spring(sorted.empty() ? Point(0, 0) : sorted[0]);
 
     // Step 6: Add to objects vector
     if (addObject(spring))
@@ -975,4 +955,86 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
     }
 
     return result;
+}
+
+//////////////////////////////////////////   scanAndCreateSprings   //////////////////////////////////////////
+
+void Room::scanAndCreateSprings()
+{
+    if (baseLayout == nullptr)
+        return;
+
+    // Step 1: Collect all '#' positions
+    std::vector<Point> allSpringCells;
+    for (int y = 0; y < MAX_Y_INGAME; y++)
+    {
+        for (int x = 0; x < MAX_X; x++)
+        {
+            if (baseLayout->getCharAt(x, y) == '#')
+            {
+                allSpringCells.push_back(Point(x, y));
+            }
+        }
+    }
+
+    // Step 2: Group adjacent cells into springs
+    bool processed[MAX_Y_INGAME][MAX_X] = {false};
+
+    for (const Point& p : allSpringCells)
+    {
+        if (processed[p.y][p.x])
+            continue;
+
+        // Start new spring group
+        std::vector<Point> group;
+        group.push_back(p);
+        processed[p.y][p.x] = true;
+
+        // Collect all adjacent cells (horizontal or vertical)
+        for (size_t i = 0; i < group.size(); i++)
+        {
+            int x = group[i].x;
+            int y = group[i].y;
+
+            // Check 4 neighbors
+            Point neighbors[] = {
+                Point(x + 1, y), Point(x - 1, y),
+                Point(x, y + 1), Point(x, y - 1)
+            };
+
+            for (const Point& neighbor : neighbors)
+            {
+                if (neighbor.x >= 0 && neighbor.x < MAX_X &&
+                    neighbor.y >= 0 && neighbor.y < MAX_Y_INGAME &&
+                    !processed[neighbor.y][neighbor.x] &&
+                    baseLayout->getCharAt(neighbor.x, neighbor.y) == '#')
+                {
+                    group.push_back(neighbor);
+                    processed[neighbor.y][neighbor.x] = true;
+                }
+            }
+        }
+
+        // Step 3: Validate and create spring
+        if (group.size() > 1)
+        {
+            Direction orientation = detectOrientation(group);
+            if (orientation != Direction::STAY)
+            {
+                std::vector<Point> sorted = sortPositions(group, orientation);
+                if (!sorted.empty())
+                {
+                    WallCheckResult wallCheck = checkWallAdjacency(sorted, orientation);
+                    if (wallCheck.valid)
+                    {
+                        Spring* spring = new Spring(sorted[0]);
+                        if (!addObject(spring))
+                        {
+                            delete spring;
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

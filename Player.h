@@ -70,6 +70,7 @@ public:
     int lives;    // Player's remaining lives (for riddles and future features)
     bool waitingAtDoor; // True if player has crossed through door and is waiting
     bool requestPause; // Set when ESC pressed during riddle
+    int launchFramesRemaining; // Frames remaining for spring launch animation
 
 public:
     // Constructors & Destructor
@@ -98,6 +99,8 @@ public:
     GameObject *getInventory() { return inventory; }
     const GameObject *getInventory() const { return inventory; }
     ObjectType getInventoryType() const { return inventory ? inventory->getType() : ObjectType::AIR; }
+    bool fullyCompressedSpring(const Spring& s) const;
+    bool isLaunched() const { return launchFramesRemaining > 0; }
 
     // Setters
     void setPosition(int x, int y)
@@ -105,7 +108,7 @@ public:
         pos.x = x;
         pos.y = y;
     }
-    void setDirection(Direction dir) { pos.setDirection(dir); }
+    void setDirection(Direction dir, int speed = 1) { pos.setDirection(dir, speed); }
     void kill()
     {
         alive = false;
@@ -128,7 +131,7 @@ public:
     void updateInventoryDisplay();
 
     // Movement & interaction
-    bool move(Room *room, class Riddle** activeRiddle = nullptr, Player** activePlayer = nullptr);
+    bool move(Room *room, class Riddle** activeRiddle = nullptr, Player** activePlayer = nullptr, Player* otherPlayer = nullptr);
     bool pickupItem(GameObject *item);
     Point dropItem(Room *room);
     void performAction(Action action, Room* room = nullptr);
@@ -142,5 +145,15 @@ public:
 private:
     void clearInventory();
     void copyInventoryFrom(const Player &other);
-    void updateSpringState(Room* room);
+
+    // Launch control helpers
+    bool canApplyInputDuringLaunch(Direction inputDir) const;
+    Direction getLaunchDirection() const;
+    bool isPerpendicularToLaunch(Direction inputDir, Direction launchDir) const;
+    void applyPerpendicularVelocity(Direction perpendicularDir);
+
+    // Collision prediction helpers
+    bool predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY) const;
+    bool isCellBlocking(int x, int y, Room* room) const;
+    void stopAtPosition(int x, int y);
 };
