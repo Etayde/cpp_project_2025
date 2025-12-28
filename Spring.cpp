@@ -101,17 +101,18 @@ bool Spring::isCompressing(const Player& p, int checkX, int checkY) const{
 }
 
 void Spring::compressCell() {
-    this->cells[compressionState].compressed = true;
+    this->cells[compressionState].collapsed = true;
 
     DebugLog::getStream() << "[SPRING_COMPRESS] Spring@" << position.x << "," << position.y
                           << " | Cell: " << compressionState << "/" << cells.size()
                           << " | CellPos: " << cells[compressionState].pos.x << "," << cells[compressionState].pos.y
                           << " | NewState: " << (compressionState + 1)
+                          << " | Collapsed: YES"
                           << std::endl;
 
     compressionState++;
 
-    // Set compressed flag when all cells are compressed
+    // Set compressed flag when all cells are collapsed
     if (compressionState >= static_cast<int>(cells.size())) {
         compressed = true;
     }
@@ -119,7 +120,7 @@ void Spring::compressCell() {
 
 void Spring::reset() {
     for (auto& cell : cells) {
-        cell.compressed = false;
+        cell.collapsed = false;
     }
     compressionState = 0;
     compressed = false;

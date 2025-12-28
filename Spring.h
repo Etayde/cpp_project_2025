@@ -14,12 +14,12 @@ struct SpringCell
 {
     Point pos;
     Direction projectionDirection;
-    bool compressed;
+    bool collapsed;  // Set to true when player steps on this cell
     bool startPoint;
     bool anchor;
 
     SpringCell() : pos(Point(-1, -1)), projectionDirection(Direction::STAY),
-                   compressed(false), startPoint(false), anchor(false) {}
+                   collapsed(false), startPoint(false), anchor(false) {}
 };
 
 //////////////////////////////////////////          Spring            //////////////////////////////////////////
@@ -74,6 +74,12 @@ public:
     // Debug getters
     int getCompressionState() const { return compressionState; }
     int getCellCount() const { return cells.size(); }
+    Point getCellPosition(int index) const {
+        if (index >= 0 && index < static_cast<int>(cells.size())) {
+            return cells[index].pos;
+        }
+        return Point(-1, -1);
+    }
 
     bool isCompressing(const Player& p, int checkX, int checkY) const ;
 

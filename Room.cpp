@@ -307,6 +307,24 @@ const GameObject *Room::getObjectAt(int x, int y) const
             {
                 return obj;
             }
+
+            // Special handling for Springs - check all cells
+            if (obj->getType() == ObjectType::SPRING)
+            {
+                const Spring* spring = dynamic_cast<const Spring*>(obj);
+                if (spring != nullptr)
+                {
+                    // Check if (x,y) is on any spring cell
+                    for (int i = 0; i < spring->getCellCount(); i++)
+                    {
+                        Point cellPos = spring->getCellPosition(i);
+                        if (cellPos.x == x && cellPos.y == y)
+                        {
+                            return obj;
+                        }
+                    }
+                }
+            }
         }
     }
     return nullptr;
