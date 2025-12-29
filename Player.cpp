@@ -97,6 +97,14 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Play
     if (room == nullptr)
         return false;
 
+    // Debug: Log velocity at start of move
+    if (launchFramesRemaining > 0)
+    {
+        DebugLog::getStream() << "[MOVE_START] Player " << playerId
+                              << " launchFrames: " << launchFramesRemaining
+                              << " | vel(" << pos.diff_x << "," << pos.diff_y << ")" << std::endl;
+    }
+
     // Not moving - just redraw
     if (pos.diff_x == 0 && pos.diff_y == 0)
     {
