@@ -402,6 +402,7 @@ void Player::performAction(Action action, Room* room)
                               << ") | Action: " << static_cast<int>(action) << std::endl;
 
         Direction inputDir = actionToDirection(action);
+        DebugLog::getStream() << "[DIRECTION_INPUT] " << static_cast<int>(inputDir) << std::endl;
 
         // Block invalid inputs (opposite direction or STAY)
         if (!canApplyInputDuringLaunch(inputDir))
