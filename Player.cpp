@@ -89,111 +89,104 @@ void Player::copyInventoryFrom(const Player &other)
     }
 }
 
-//////////////////////////////////////////           move             //////////////////////////////////////////
+//////////////////////////////////////////     Movement Helpers      //////////////////////////////////////////
 
-// Move player in current direction, handle collisions and interactions
-bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Player* otherPlayer)
+// Check if player has no velocity (not moving)
+bool Player::isStationary() const
 {
-    if (room == nullptr)
-        return false;
+    return (pos.diff_x == 0 && pos.diff_y == 0);
+}
 
-    // Debug: Log velocity at start of move
+// Check if position is within absolute screen boundaries
+bool Player::isWithinAbsoluteBounds(int x, int y) const
+{
+    return (x >= 0 && x < MAX_X && y >= 1 && y < MAX_Y_INGAME - 1);
+}
+
+// Check if movement to edge columns (x=0 or x=79) is allowed (only if door exists)
+bool Player::canMoveToBoundaryPosition(int x, int y, Room* room) const
+{
+    // Check if position is in the special boundary columns (0 or 79)
+    bool atBoundaryColumn = (x < 1 || x >= MAX_X - 1);
+
+    if (!atBoundaryColumn)
+        return true; // Not at boundary, always allowed
+
+    // At boundary - only allow if there's a door
+    GameObject* obj = room->getObjectAt(x, y);
+    return (obj != nullptr && obj->getType() == ObjectType::DOOR);
+}
+
+// Stop all movement and redraw player
+void Player::haltAndRedraw(Room* room)
+{
+    pos.diff_x = 0;
+    pos.diff_y = 0;
+    draw(room);
+}
+
+// Log debug information during launch
+void Player::logLaunchState() const
+{
     if (launchFramesRemaining > 0)
     {
         DebugLog::getStream() << "[MOVE_START] Player " << playerId
                               << " launchFrames: " << launchFramesRemaining
                               << " | vel(" << pos.diff_x << "," << pos.diff_y << ")" << std::endl;
     }
+}
 
-    // Not moving - just redraw
-    if (pos.diff_x == 0 && pos.diff_y == 0)
-    {
-        draw(room);
+// Detect and handle player-to-player collision during launch
+bool Player::handlePlayerCollision(int nextX, int nextY, Player* otherPlayer, Room* room)
+{
+    // Only during launch
+    if (launchFramesRemaining <= 0)
         return false;
-    }
 
-    // Collision prediction during launch
-    if (launchFramesRemaining > 0)
-    {
-        int stopX, stopY;
-        if (predictCollisionAlongTrajectory(room, stopX, stopY))
-        {
-            stopAtPosition(stopX, stopY);
-            draw(room);
-            return false;
-        }
-    }
-
-    int nextX = pos.x + pos.diff_x;
-    int nextY = pos.y + pos.diff_y;
-
-    // Check player collision ONLY when launched
-    if (launchFramesRemaining > 0 &&
-        otherPlayer != nullptr && otherPlayer->isAlive() &&
-        otherPlayer->pos.x == nextX && otherPlayer->pos.y == nextY)
-    {
-        // Transfer momentum to other player
-        otherPlayer->pos.diff_x = pos.diff_x;
-        otherPlayer->pos.diff_y = pos.diff_y;
-        otherPlayer->launchFramesRemaining = launchFramesRemaining;
-
-        // Stop this player
-        pos.diff_x = 0;
-        pos.diff_y = 0;
-        launchFramesRemaining = 0;
-        draw(room);
+    // Check if other player exists and is at next position
+    if (otherPlayer == nullptr || !otherPlayer->isAlive())
         return false;
-    }
 
-    // Check absolute screen bounds
-    if (nextX < 0 || nextX >= MAX_X || nextY < 1 || nextY >= MAX_Y_INGAME - 1)
-    {
-        pos.diff_x = 0;
-        pos.diff_y = 0;
-        draw(room);
+    if (otherPlayer->pos.x != nextX || otherPlayer->pos.y != nextY)
         return false;
-    }
 
-    // Check if outside normal playable bounds (1-78)
-    bool outsideNormalBounds = (nextX < 1 || nextX >= MAX_X - 1);
+    // Transfer momentum to other player
+    otherPlayer->pos.diff_x = pos.diff_x;
+    otherPlayer->pos.diff_y = pos.diff_y;
+    otherPlayer->launchFramesRemaining = launchFramesRemaining;
 
-    if (outsideNormalBounds)
+    // Stop this player
+    launchFramesRemaining = 0;
+    haltAndRedraw(room);
+    return true;
+}
+
+// During launch, predict and handle collision along trajectory
+bool Player::handleLaunchCollisionPrediction(Room* room)
+{
+    if (launchFramesRemaining <= 0)
+        return false; // Not launching
+
+    int stopX, stopY;
+    if (predictCollisionAlongTrajectory(room, stopX, stopY))
     {
-        // Only allow if there's a door at this position
-        GameObject *obj = room->getObjectAt(nextX, nextY);
-        if (obj == nullptr || obj->getType() != ObjectType::DOOR)
-        {
-            pos.diff_x = 0;
-            pos.diff_y = 0;
-            draw(room);
-            return false;
-        }
-    }
-
-    // Check wall collision
-    if (checkWallCollision(nextX, nextY, room))
-    {
-        pos.diff_x = 0;
-        pos.diff_y = 0;
+        stopAtPosition(stopX, stopY);
         draw(room);
-        return false;
+        return true; // Collision predicted, stopped
     }
 
-    // Check object interaction
-    if (checkObjectInteraction(nextX, nextY, room, activeRiddle, activePlayer))
-    {
-        pos.diff_x = 0;
-        pos.diff_y = 0;
-        draw(room);
-        return false;
-    }
+    return false; // No collision predicted
+}
 
+// Handle all rendering and position update logic
+void Player::updatePosition(int nextX, int nextY, Room* room)
+{
     // Erase from current position
     gotoxy(pos.x, pos.y);
     std::cout << prevChar << std::flush;
 
     // Store character at new position
-    GameObject *obj = room->getObjectAt(nextX, nextY);
+    GameObject* obj = room->getObjectAt(nextX, nextY);
     char nextChar = room->getCharAt(nextX, nextY);
 
     if (obj != nullptr && obj->getType() == ObjectType::DOOR)
@@ -205,12 +198,75 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Play
         prevChar = (nextChar == ' ' || nextChar == sprite) ? ' ' : nextChar;
     }
 
-    // Update position and draw
+    // Update position
     pos.x = nextX;
     pos.y = nextY;
 
+    // Draw at new position
     draw(room);
+}
 
+//////////////////////////////////////////           move             //////////////////////////////////////////
+
+// Move player in current direction, handle collisions and interactions
+bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Player* otherPlayer)
+{
+    // 1. Early validation
+    if (room == nullptr)
+        return false;
+
+    // 2. Debug logging
+    logLaunchState();
+
+    // 3. Handle stationary player
+    if (isStationary())
+    {
+        draw(room);
+        return false;
+    }
+
+    // 4. Launch collision prediction
+    if (handleLaunchCollisionPrediction(room))
+        return false;
+
+    // 5. Calculate next position
+    int nextX = pos.x + pos.diff_x;
+    int nextY = pos.y + pos.diff_y;
+
+    // 6. Player-to-player collision (launch only)
+    if (handlePlayerCollision(nextX, nextY, otherPlayer, room))
+        return false;
+
+    // 7. Absolute boundary check
+    if (!isWithinAbsoluteBounds(nextX, nextY))
+    {
+        haltAndRedraw(room);
+        return false;
+    }
+
+    // 8. Special boundary (door) check
+    if (!canMoveToBoundaryPosition(nextX, nextY, room))
+    {
+        haltAndRedraw(room);
+        return false;
+    }
+
+    // 9. Wall collision check
+    if (checkWallCollision(nextX, nextY, room))
+    {
+        haltAndRedraw(room);
+        return false;
+    }
+
+    // 10. Object interaction check
+    if (checkObjectInteraction(nextX, nextY, room, activeRiddle, activePlayer))
+    {
+        haltAndRedraw(room);
+        return false;
+    }
+
+    // 11. All checks passed - move to new position
+    updatePosition(nextX, nextY, room);
     return true;
 }
 
@@ -876,5 +932,6 @@ void Player::stopAtPosition(int x, int y)
     // Reset launch state
     launchFramesRemaining = 0;
 }
+
 
 

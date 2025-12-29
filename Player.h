@@ -156,4 +156,18 @@ private:
     bool predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY) const;
     bool isCellBlocking(int x, int y, Room* room) const;
     void stopAtPosition(int x, int y);
+
+    // Movement validation helpers
+    bool isStationary() const;
+    bool isWithinAbsoluteBounds(int x, int y) const;
+    bool canMoveToBoundaryPosition(int x, int y, Room* room) const;
+
+    // Movement action helpers
+    void haltAndRedraw(Room* room);
+    void updatePosition(int nextX, int nextY, Room* room);
+    bool handlePlayerCollision(int nextX, int nextY, Player* otherPlayer, Room* room);
+    bool handleLaunchCollisionPrediction(Room* room);
+
+    // Debug helpers
+    void logLaunchState() const;
 };
