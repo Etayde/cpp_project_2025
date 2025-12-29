@@ -123,18 +123,18 @@ Spring::LaunchData Spring::calculateLaunch() const
     {
         case Direction::UP:
             launch.velocityX = 0;
-            launch.velocityY = 1;  // Launch DOWN
+            launch.velocityY = compressedCount;  // Launch DOWN
             break;
         case Direction::DOWN:
             launch.velocityX = 0;
-            launch.velocityY = -1;  // Launch UP
+            launch.velocityY = -compressedCount;  // Launch UP
             break;
         case Direction::LEFT:
-            launch.velocityX = 1;  // Launch RIGHT
+            launch.velocityX = compressedCount;  // Launch RIGHT
             launch.velocityY = 0;
             break;
         case Direction::RIGHT:
-            launch.velocityX = -1;  // Launch LEFT
+            launch.velocityX = -compressedCount;  // Launch LEFT
             launch.velocityY = 0;
             break;
         default:
