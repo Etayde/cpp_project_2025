@@ -321,6 +321,11 @@ Point Player::dropItem(Room *room)
 
 void Player::performAction(Action action, Room* room)
 {
+    // Debug: Log launchFramesRemaining at start of performAction
+    DebugLog::getStream() << "[PERFORM_ACTION_START] Player " << playerId
+                          << " launchFrames: " << launchFramesRemaining
+                          << " | Action: " << static_cast<int>(action) << std::endl;
+
     // Check if currently launched
     if (launchFramesRemaining > 0)
     {

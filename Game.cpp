@@ -4,6 +4,7 @@
 #include "Layouts.h"
 #include "Riddle.h"
 #include "Spring.h"
+#include "DebugLog.h"
 
 //////////////////////////////////////////     Game Constructor       //////////////////////////////////////////
 
@@ -247,6 +248,10 @@ void Game::update()
     if (room == nullptr)
         return;
 
+    // Debug: Track launch frames at start of update
+    DebugLog::getStream() << "[UPDATE_START] P1 launchFrames: " << player1.launchFramesRemaining
+                          << " | P2 launchFrames: " << player2.launchFramesRemaining << std::endl;
+
     // Handle player movement - pass pointers to aRiddle so it gets set immediately
     player1.move(room, &aRiddle.riddle, &aRiddle.player, &player2);
     player2.move(room, &aRiddle.riddle, &aRiddle.player, &player1);
@@ -257,6 +262,10 @@ void Game::update()
 
     if (player2.launchFramesRemaining > 0)
         player2.launchFramesRemaining--;
+
+    // Debug: Track launch frames after decrement
+    DebugLog::getStream() << "[UPDATE_END] P1 launchFrames: " << player1.launchFramesRemaining
+                          << " | P2 launchFrames: " << player2.launchFramesRemaining << std::endl;
 
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
