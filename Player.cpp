@@ -199,6 +199,49 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Play
     // Update position and draw
     pos.x = nextX;
     pos.y = nextY;
+
+    // Check if we landed on a spring cell (compression happens AFTER movement)
+    GameObject* landedObj = room->getObjectAt(pos.x, pos.y);
+    if (landedObj != nullptr && landedObj->getType() == ObjectType::SPRING)
+    {
+        Spring* spring = dynamic_cast<Spring*>(landedObj);
+        if (spring != nullptr)
+        {
+            Direction moveDir = getCurrentDirection();
+
+            // Try to compress spring at our CURRENT position (where we just moved to)
+            bool compressed = spring->tryCompress(pos.x, pos.y, moveDir);
+
+            if (compressed)
+            {
+                spring->updateVisuals(room);
+
+                // Check launch triggers
+                bool shouldLaunch = (moveDir == Direction::STAY && spring->getCompressionLevel() > 0)
+                                 || spring->isFullyCompressed();
+
+                if (shouldLaunch)
+                {
+                    Spring::LaunchData launch = spring->calculateLaunch();
+                    if (launch.shouldLaunch)
+                    {
+                        pos.diff_x = launch.velocityX;
+                        pos.diff_y = launch.velocityY;
+                        launchFramesRemaining = launch.frames;
+
+                        spring->resetCompression();
+                        spring->updateVisuals(room);
+
+                        DebugLog::getStream() << "[SPRING_LAUNCH] Player " << playerId
+                                              << " launched: vel(" << launch.velocityX
+                                              << "," << launch.velocityY
+                                              << ") frames:" << launch.frames << std::endl;
+                    }
+                }
+            }
+        }
+    }
+
     draw(room);
 
     return true;
@@ -519,61 +562,7 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** a
     // Spring compression and launch
     if (objType == ObjectType::SPRING)
     {
-        Spring* spring = dynamic_cast<Spring*>(obj);
-        if (spring != nullptr)
-        {
-            Direction moveDir = getCurrentDirection();
-
-            // Try to compress spring
-            bool compressed = spring->tryCompress(nextX, nextY, moveDir);
-
-            if (compressed)
-            {
-                // Update visuals immediately
-                spring->updateVisuals(room);
-
-                // Check launch triggers
-                bool shouldLaunch = false;
-
-                // Trigger 1: Player pressed STAY while compressing
-                if (moveDir == Direction::STAY && spring->getCompressionLevel() > 0)
-                {
-                    shouldLaunch = true;
-                }
-
-                // Trigger 2: Spring fully compressed (at anchor)
-                if (spring->isFullyCompressed())
-                {
-                    shouldLaunch = true;
-                }
-
-                if (shouldLaunch)
-                {
-                    // Calculate launch parameters
-                    Spring::LaunchData launch = spring->calculateLaunch();
-
-                    if (launch.shouldLaunch)
-                    {
-                        // Set player launch state
-                        pos.diff_x = launch.velocityX;
-                        pos.diff_y = launch.velocityY;
-                        launchFramesRemaining = launch.frames;
-
-                        // Reset spring IMMEDIATELY after launch
-                        spring->resetCompression();
-                        spring->updateVisuals(room);
-
-                        // Debug logging
-                        DebugLog::getStream() << "[SPRING_LAUNCH] Player " << playerId
-                                              << " launched: vel(" << launch.velocityX
-                                              << "," << launch.velocityY
-                                              << ") frames:" << launch.frames << std::endl;
-                    }
-                }
-            }
-        }
-
-        return false;  // Springs are non-blocking (allow movement through)
+        return false;  // Springs are non-blocking - compression handled after movement
     }
 
     // Blocking objects
