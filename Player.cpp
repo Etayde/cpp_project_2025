@@ -160,42 +160,49 @@ void Player::logLaunchState() const
     }
 }
 
-// Detect and handle player-to-player collision during launch
-bool Player::handlePlayerCollision(int nextX, int nextY, Player* otherPlayer, Room* room)
-{
-    // Only during launch
-    if (launchFramesRemaining <= 0)
-        return false;
+//////////////////////////////////////////   handleLaunchCollisionPrediction   //////////////////////////////////////////
 
-    // Check if other player exists and is at next position
-    if (otherPlayer == nullptr || !otherPlayer->isAlive())
-        return false;
-
-    if (otherPlayer->pos.x != nextX || otherPlayer->pos.y != nextY)
-        return false;
-
-    // Transfer momentum to other player
-    otherPlayer->pos.diff_x = pos.diff_x;
-    otherPlayer->pos.diff_y = pos.diff_y;
-    otherPlayer->launchFramesRemaining = launchFramesRemaining;
-    otherPlayer->launchDir = launchDir;
-
-    // Stop this player
-    launchFramesRemaining = 0;
-    launchDir = Direction::STAY;
-    haltAndRedraw(room);
-    return true;
-}
-
-// During launch, predict and handle collision along trajectory
-bool Player::handleLaunchCollisionPrediction(Room* room)
+// During launch, predict and handle collision along trajectory (players, walls, objects)
+bool Player::handleLaunchCollisionPrediction(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer)
 {
     if (launchFramesRemaining <= 0)
         return false; // Not launching
 
     int stopX, stopY;
-    if (predictCollisionAlongTrajectory(room, stopX, stopY))
+    if (predictCollisionAlongTrajectory(room, stopX, stopY, otherPlayer, activeRiddle, activePlayer))
     {
+        // Check if we stopped because of player collision
+        if (otherPlayer != nullptr && otherPlayer->isAlive() &&
+            otherPlayer->pos.x == pos.x + pos.diff_x && otherPlayer->pos.y == pos.y + pos.diff_y)
+        {
+            // This is NOT a player collision in the path - it's at the destination
+            // Just stop normally
+            stopAtPosition(stopX, stopY);
+            draw(room);
+            return true;
+        }
+
+        // Check if collision was with other player along the path
+        // Calculate what the next position would have been
+        int nextCheckX = stopX + ((pos.diff_x > 0) ? 1 : (pos.diff_x < 0 ? -1 : 0));
+        int nextCheckY = stopY + ((pos.diff_y > 0) ? 1 : (pos.diff_y < 0 ? -1 : 0));
+
+        if (otherPlayer != nullptr && otherPlayer->isAlive() &&
+            otherPlayer->pos.x == nextCheckX && otherPlayer->pos.y == nextCheckY)
+        {
+            // Player collision detected - transfer momentum
+            otherPlayer->pos.diff_x = pos.diff_x;
+            otherPlayer->pos.diff_y = pos.diff_y;
+            otherPlayer->launchFramesRemaining = launchFramesRemaining;
+            otherPlayer->launchDir = launchDir;
+
+            // Stop this player at safe position
+            stopAtPosition(stopX, stopY);
+            draw(room);
+            return true;
+        }
+
+        // Regular wall/object collision
         stopAtPosition(stopX, stopY);
         draw(room);
         return true; // Collision predicted, stopped
@@ -237,17 +244,13 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Play
         return false;
     }
 
-    // 4. Launch collision prediction
-    if (handleLaunchCollisionPrediction(room))
+    // 4. Launch collision prediction (handles player, wall, and object collisions during launch)
+    if (handleLaunchCollisionPrediction(room, otherPlayer, activeRiddle, activePlayer))
         return false;
 
     // 5. Calculate next position
     int nextX = pos.x + pos.diff_x;
     int nextY = pos.y + pos.diff_y;
-
-    // 6. Player-to-player collision (launch only)
-    if (handlePlayerCollision(nextX, nextY, otherPlayer, room))
-        return false;
 
     // 7. Absolute boundary check
     if (!isWithinAbsoluteBounds(nextX, nextY))
@@ -836,7 +839,7 @@ void Player::applyPerpendicularVelocity(Direction perpendicularDir)
 
 //////////////////////////////////////////   predictCollisionAlongTrajectory   //////////////////////////////////////////
 
-bool Player::predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY) const
+bool Player::predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const
 {
     // Bresenham-style line traversal from current position to next position
     int currentX = pos.x;
@@ -886,7 +889,15 @@ bool Player::predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY)
             return false;  // No collision
         }
 
-        // Check if this cell is blocking
+        // Priority 1: Check for player collision FIRST
+        if (otherPlayer != nullptr && otherPlayer->isAlive() &&
+            otherPlayer->pos.x == nextCheckX && otherPlayer->pos.y == nextCheckY)
+        {
+            // Found other player - stop at last safe position (before collision)
+            return true;  // stopX/stopY already at last safe position
+        }
+
+        // Priority 2: Check if this cell is blocking (walls and blocking objects)
         if (isCellBlocking(nextCheckX, nextCheckY, room))
         {
             return true;  // Collision detected, stopX/stopY has last safe position

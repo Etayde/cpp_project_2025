@@ -117,7 +117,7 @@ Spring::LaunchData Spring::calculateLaunch() const
 {
     LaunchData launch;
     launch.shouldLaunch = (compressedCount > 0);
-    launch.frames = compressedCount;
+    launch.frames = compressedCount * compressedCount;
 
     // Launch OPPOSITE of compression direction
     switch (compressionDir)

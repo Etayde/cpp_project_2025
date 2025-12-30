@@ -156,7 +156,7 @@ private:
     void applyPerpendicularVelocity(Direction perpendicularDir);
 
     // Collision prediction helpers
-    bool predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY) const;
+    bool predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const;
     bool isCellBlocking(int x, int y, Room* room) const;
     void stopAtPosition(int x, int y);
 
@@ -168,8 +168,7 @@ private:
     // Movement action helpers
     void haltAndRedraw(Room* room);
     void updatePosition(int nextX, int nextY, Room* room);
-    bool handlePlayerCollision(int nextX, int nextY, Player* otherPlayer, Room* room);
-    bool handleLaunchCollisionPrediction(Room* room);
+    bool handleLaunchCollisionPrediction(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer);
 
     // Debug helpers
     void logLaunchState() const;
