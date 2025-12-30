@@ -29,6 +29,7 @@ public:
         int velocityY;
         int frames;
         Direction direction;
+
     };
 
     // Player interaction result

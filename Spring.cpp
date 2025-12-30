@@ -151,7 +151,8 @@ Spring::LaunchData Spring::calculateLaunch() const
     }
 
     DebugLog::getStream() << "[SPRING_CALC_LAUNCH] Velocity:(" << launch.velocityX
-                          << "," << launch.velocityY << ") Frames:" << launch.frames << std::endl;
+                          << "," << launch.velocityY << ") Frames:" << launch.frames 
+                          <<  " Dir:" << static_cast<int>(launch.direction) << std::endl;
 
     return launch;
 }
@@ -240,6 +241,5 @@ Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Play
     resetCompression(room);
 
     // Return launch data for Player to apply
-    return {true, true, launch.velocityX, launch.velocityY, launch.frames};
+    return {true, true, launch.velocityX, launch.velocityY, launch.frames, launch.direction};
 }
-
