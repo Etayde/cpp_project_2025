@@ -47,3 +47,16 @@ void Point::setDirection(Direction dir, int speed)
         break;
     }
 }
+
+Point& Point::operator=(const Point &other)
+    {
+        if (this != &other)
+        {
+            x = other.x;
+            y = other.y;
+            diff_x = other.diff_x;
+            diff_y = other.diff_y;
+            sprite = other.sprite;
+        }
+        return *this;
+    }

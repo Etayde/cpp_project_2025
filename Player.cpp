@@ -8,6 +8,7 @@
 #include "SpringLink.h"
 #include "Riddle.h"
 #include "DebugLog.h"
+#include <vector>
 
 //////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
 
@@ -245,7 +246,7 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Play
     }
 
     // 4. Launch collision prediction (handles player, wall, and object collisions during launch)
-    if (handleLaunchCollisionPrediction(room, otherPlayer, activeRiddle, activePlayer))
+    if (handleLaunchCollisionPredictionNEW(room, otherPlayer, activeRiddle, activePlayer))
         return false;
 
     // 5. Calculate next position
@@ -925,4 +926,107 @@ void Player::stopAtPosition(int x, int y)
 
     // Reset launch state
     launchFramesRemaining = 0;
+}
+
+bool Player::predictCollisionAlongTrajectoryNEW(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const
+{
+    int currentX = pos.x; //5
+    int currentY = pos.y; //3
+    int targetX = pos.x + pos.diff_x; //5-2=3
+    int targetY = pos.y + pos.diff_y; //3+4=7
+
+    int dx = abs(pos.diff_x); //2
+    int dy = abs(pos.diff_y); //4
+
+    bool otherPlayerAlive = (otherPlayer != nullptr && otherPlayer->isAlive());
+
+    int checkX = currentX;
+    int checkY = currentY;
+
+    for (int y_step = 0; y_step <= dy; y_step++) // 0,1,2,3,4
+    {
+        int checkNextY = currentY + ((pos.diff_y > 0) ? y_step : -y_step);
+
+        for (int x_step = 0; x_step <= dx; x_step++) // 0,1,2
+        {
+            int checkNextX = currentX + ((pos.diff_x > 0) ? x_step : -x_step);
+
+            // Check for player collision
+            if ( otherPlayerAlive && otherPlayer->pos.x == checkNextX && otherPlayer->pos.y == checkNextY)
+            {
+                return true;  // Collision detected
+            }
+
+            // Check for wall/object collision
+            if (isCellBlocking(checkNextX, checkNextY, room))
+            {
+                return true;  // Collision detected
+            }
+
+            // Update last safe position
+            stopX = checkX;
+            stopY = checkY;
+
+            checkX = checkNextX;
+            checkY = checkNextY;
+        }
+    }
+
+    return false; // No collision detected
+}
+
+bool Player::handleLaunchCollisionPredictionNEW(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer)
+{
+    if (launchFramesRemaining <= 0)
+        return false; // Not launching
+
+    int stopX, stopY;
+    if (predictCollisionAlongTrajectoryNEW(room, stopX, stopY, otherPlayer, activeRiddle, activePlayer))
+    {
+        bool otherPlayerAlive = (otherPlayer != nullptr && otherPlayer->isAlive());
+
+        // Check if collision was with other player along the path
+        // Calculate what the next position would have been
+        int nextCheckX = stopX + ((pos.diff_x > 0) ? 1 : (pos.diff_x < 0 ? -1 : 0));
+        int nextCheckY = stopY + ((pos.diff_y > 0) ? 1 : (pos.diff_y < 0 ? -1 : 0));
+
+        if (otherPlayerAlive && otherPlayer->pos.x == nextCheckX && otherPlayer->pos.y == nextCheckY)
+        {
+            // Player collision detected - transfer momentum
+            transferMomentumTo(otherPlayer);
+        }
+
+        // Regular wall/object collision
+        stopAtPosition(stopX, stopY);
+        draw(room);
+        return true; // Collision predicted, stopped
+    }
+
+    return false; // No collision predicted
+}
+
+// Handle all rendering and position update logic
+void Player::updatePosition(int nextX, int nextY, Room* room)
+{
+    // Erase from current position (queries room state)
+    erase(room);
+
+    // Update position
+    pos.x = nextX;
+    pos.y = nextY;
+
+    // Draw at new position
+    draw(room);
+
+}
+
+void Player::transferMomentumTo(Player* otherPlayer)
+{
+    if (otherPlayer == nullptr || !otherPlayer->isAlive())
+        return;
+
+    otherPlayer->pos.diff_x = pos.diff_x;
+    otherPlayer->pos.diff_y = pos.diff_y;
+    otherPlayer->launchFramesRemaining = launchFramesRemaining;
+    otherPlayer->launchDir = launchDir;
 }

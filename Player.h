@@ -159,6 +159,8 @@ private:
     bool predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const;
     bool isCellBlocking(int x, int y, Room* room) const;
     void stopAtPosition(int x, int y);
+    bool predictCollisionAlongTrajectoryNEW(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const;
+    void Player::transferMomentumTo(Player* otherPlayer);
 
     // Movement validation helpers
     bool isStationary() const;
@@ -169,6 +171,7 @@ private:
     void haltAndRedraw(Room* room);
     void updatePosition(int nextX, int nextY, Room* room);
     bool handleLaunchCollisionPrediction(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer);
+    bool handleLaunchCollisionPredictionNEW(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer);
 
     // Debug helpers
     void logLaunchState() const;
