@@ -62,7 +62,6 @@ public:
     GameObject *inventory; // Polymorphic pointer to held item
     int playerId;
     char sprite;
-    char prevChar; // Character at position before player moved there
     bool atDoor;
     int doorId;
     bool alive;
@@ -122,13 +121,7 @@ public:
     void loseLife() { if (lives > 0) lives--; }
 
     void draw(Room *room = nullptr);
-
-    void erase()
-    {
-        gotoxy(pos.x, pos.y);
-        std::cout << prevChar << std::flush;
-    }
-
+    void erase(Room* room);
     void updateInventoryDisplay();
 
     // Movement & interaction

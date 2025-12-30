@@ -593,9 +593,6 @@ void Game::changeRoom(int newRoomId, bool goingForward)
     player1.atDoor = false;
     player2.atDoor = false;
 
-    player1.prevChar = ' ';
-    player2.prevChar = ' ';
-
     clrscr();
     if (getCurrentRoom())
     {

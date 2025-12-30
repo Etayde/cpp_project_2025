@@ -12,7 +12,7 @@
 //////////////////////////////////////////     Player Constructors     //////////////////////////////////////////
 
 Player::Player()
-    : inventory(nullptr), playerId(0), sprite(' '), prevChar(' '),
+    : inventory(nullptr), playerId(0), sprite(' '),
       atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
       waitingAtDoor(false), requestPause(false), launchFramesRemaining(0), launchDir(Direction::STAY)
 {
@@ -20,7 +20,7 @@ Player::Player()
 }
 
 Player::Player(int id, int startX, int startY, char playerSprite)
-    : inventory(nullptr), playerId(id), sprite(playerSprite), prevChar(' '),
+    : inventory(nullptr), playerId(id), sprite(playerSprite),
       atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
       waitingAtDoor(false), requestPause(false), launchFramesRemaining(0), launchDir(Direction::STAY)
 {
@@ -38,7 +38,7 @@ Player::~Player()
 
 Player::Player(const Player &other)
     : pos(other.pos), inventory(nullptr), playerId(other.playerId),
-      sprite(other.sprite), prevChar(other.prevChar), atDoor(other.atDoor),
+      sprite(other.sprite), atDoor(other.atDoor),
       doorId(other.doorId), alive(other.alive), keyCount(other.keyCount),
       lives(other.lives), waitingAtDoor(other.waitingAtDoor),
       requestPause(other.requestPause), launchFramesRemaining(other.launchFramesRemaining), launchDir(other.launchDir)
@@ -57,7 +57,6 @@ Player &Player::operator=(const Player &other)
         pos = other.pos;
         playerId = other.playerId;
         sprite = other.sprite;
-        prevChar = other.prevChar;
         atDoor = other.atDoor;
         doorId = other.doorId;
         alive = other.alive;
@@ -126,6 +125,30 @@ void Player::haltAndRedraw(Room* room)
     draw(room);
 }
 
+// Erase player from current position by querying room state
+void Player::erase(Room* room)
+{
+    if (room == nullptr) {
+        gotoxy(pos.x, pos.y);
+        std::cout << ' ' << std::flush;
+        return;
+    }
+
+    // Query current state at player position
+    char currentChar = room->getCharAt(pos.x, pos.y);
+    GameObject* obj = room->getObjectAt(pos.x, pos.y);
+
+    char restoreChar;
+    if (obj != nullptr && obj->getType() == ObjectType::DOOR) {
+        restoreChar = obj->getSprite();
+    } else {
+        restoreChar = (currentChar == ' ' || currentChar == sprite) ? ' ' : currentChar;
+    }
+
+    gotoxy(pos.x, pos.y);
+    std::cout << restoreChar << std::flush;
+}
+
 // Log debug information during launch
 void Player::logLaunchState() const
 {
@@ -184,22 +207,8 @@ bool Player::handleLaunchCollisionPrediction(Room* room)
 // Handle all rendering and position update logic
 void Player::updatePosition(int nextX, int nextY, Room* room)
 {
-    // Erase from current position
-    gotoxy(pos.x, pos.y);
-    std::cout << prevChar << std::flush;
-
-    // Store character at new position
-    GameObject* obj = room->getObjectAt(nextX, nextY);
-    char nextChar = room->getCharAt(nextX, nextY);
-
-    if (obj != nullptr && obj->getType() == ObjectType::DOOR)
-    {
-        prevChar = obj->getSprite();
-    }
-    else
-    {
-        prevChar = (nextChar == ' ' || nextChar == sprite) ? ' ' : nextChar;
-    }
+    // Erase from current position (queries room state)
+    erase(room);
 
     // Update position
     pos.x = nextX;
@@ -283,7 +292,7 @@ void Player::draw(Room *room)
     // Don't draw if waiting at door (player has "crossed through")
     if (waitingAtDoor)
     {
-        std::cout << prevChar << std::flush;
+        erase(room);
         return;
     }
 
