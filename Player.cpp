@@ -1005,20 +1005,7 @@ bool Player::handleLaunchCollisionPredictionNEW(Room* room, Player* otherPlayer,
     return false; // No collision predicted
 }
 
-// Handle all rendering and position update logic
-void Player::updatePosition(int nextX, int nextY, Room* room)
-{
-    // Erase from current position (queries room state)
-    erase(room);
 
-    // Update position
-    pos.x = nextX;
-    pos.y = nextY;
-
-    // Draw at new position
-    draw(room);
-
-}
 
 void Player::transferMomentumTo(Player* otherPlayer)
 {

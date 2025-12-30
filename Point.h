@@ -51,7 +51,6 @@ public:
 
     // Setters
     void setSprite(char c) { sprite = c; }
-    Point &operator=(const Point &other);
 
     // Comparison operators
     bool operator==(const Point &other) const { return x == other.x && y == other.y; }
