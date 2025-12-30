@@ -988,10 +988,19 @@ bool Player::handleLaunchCollisionPredictionNEW(Room* room, Player* otherPlayer,
         {
             // Player collision detected - transfer momentum
             transferMomentumTo(otherPlayer);
+            stopAtPosition(stopX, stopY);
+        }
+        
+        else if (checkObjectInteraction(nextCheckX, nextCheckY, room, activeRiddle, activePlayer))
+        {
+            stopAtPosition(stopX, stopY);
+        }
+        
+        else if (isCellBlocking(nextCheckX, nextCheckY, room))
+        {
+            stopAtPosition(stopX, stopY);
         }
 
-        // Regular wall/object collision
-        stopAtPosition(stopX, stopY);
         draw(room);
         return true; // Collision predicted, stopped
     }
