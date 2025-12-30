@@ -774,7 +774,7 @@ bool Player::canApplyInputDuringLaunch(Direction inputDir) const
         default: return false;
     }
 
-    DebugLog::getStream() << "[DIRECTION_HANDLE_PAPI2] oppositeDir = " << static_cast<int>(oppositeDir) << std::endl;
+    DebugLog::getStream() << "[DIRECTION_HANDLE_PAPI2] oppositeDir = " << static_cast<int>(oppositeDir) << " | launchDir = " << static_cast<int>(launchDir) << std::endl;
 
     // Block if input is opposite to launch direction
     if (inputDir == oppositeDir)
