@@ -940,25 +940,22 @@ bool Player::predictCollisionAlongTrajectoryNEW(Room* room, int& stopX, int& sto
 
     bool otherPlayerAlive = (otherPlayer != nullptr && otherPlayer->isAlive());
 
-    int checkX = currentX;
-    int checkY = currentY;
-
     for (int y_step = 0; y_step <= dy; y_step++) // 0,1,2,3,4
     {
-        int checkNextY = currentY + ((pos.diff_y > 0) ? y_step : -y_step);
+        int checkY = currentY + ((pos.diff_y > 0) ? y_step : -y_step);
 
         for (int x_step = 0; x_step <= dx; x_step++) // 0,1,2
         {
-            int checkNextX = currentX + ((pos.diff_x > 0) ? x_step : -x_step);
+            int checkX = currentX + ((pos.diff_x > 0) ? x_step : -x_step);
 
             // Check for player collision
-            if ( otherPlayerAlive && otherPlayer->pos.x == checkNextX && otherPlayer->pos.y == checkNextY)
+            if ( otherPlayerAlive && otherPlayer->pos.x == checkX && otherPlayer->pos.y == checkY)
             {
                 return true;  // Collision detected
             }
 
             // Check for wall/object collision
-            if (isCellBlocking(checkNextX, checkNextY, room))
+            if (isCellBlocking(checkX, checkY, room))
             {
                 return true;  // Collision detected
             }
@@ -966,9 +963,6 @@ bool Player::predictCollisionAlongTrajectoryNEW(Room* room, int& stopX, int& sto
             // Update last safe position
             stopX = checkX;
             stopY = checkY;
-
-            checkX = checkNextX;
-            checkY = checkNextY;
         }
     }
 
