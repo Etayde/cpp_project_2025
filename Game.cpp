@@ -228,7 +228,7 @@ void Game::handleInput()
                 if (keyBindings[i].action == Action::DROP_ITEM)
                 {
                     if (getCurrentRoom())
-                        getCurrentRoom()->handleBombDrop(player);
+                        player.dropItem(getCurrentRoom()); // Unified drop handling
                 }
                 else
                 {
@@ -248,38 +248,18 @@ void Game::update()
     if (room == nullptr)
         return;
 
-    // Debug: Track launch frames at start of update
-    DebugLog::getStream() << "[UPDATE_START] P1 launchFrames: " << player1.launchFramesRemaining
-                          << " | P2 launchFrames: " << player2.launchFramesRemaining << std::endl;
+    // Debug: Track launch state at start of update
+    DebugLog::getStream() << "[UPDATE_START] P1 launched: " << (player1.isLaunched() ? "YES" : "NO")
+                          << " | P2 launched: " << (player2.isLaunched() ? "YES" : "NO") << std::endl;
 
     // Handle player movement - pass pointers to aRiddle so it gets set immediately
+    // NOTE: Launch frame decrement is now handled inside move() method during Bresenham traversal
     player1.move(room, &aRiddle.riddle, &aRiddle.player, &player2);
     player2.move(room, &aRiddle.riddle, &aRiddle.player, &player1);
 
-    // Decrement launch timers and stop players if launch ends
-    if (player1.isLaunched())
-    {
-        player1.launchFramesRemaining--;
-        if (!player1.isLaunched())
-        {
-            player1.setDirection(Direction::STAY);
-            player1.launchDir = Direction::STAY;
-        }
-    }
-
-    if (player2.isLaunched())
-    {
-        player2.launchFramesRemaining--;
-        if (!player2.isLaunched())
-        {
-            player2.setDirection(Direction::STAY);
-            player2.launchDir = Direction::STAY;
-        }
-    }
-
-    // Debug: Track launch frames after decrement
-    DebugLog::getStream() << "[UPDATE_END] P1 launchFrames: " << player1.launchFramesRemaining
-                          << " | P2 launchFrames: " << player2.launchFramesRemaining << std::endl;
+    // Debug: Track launch state after move
+    DebugLog::getStream() << "[UPDATE_END] P1 launched: " << (player1.isLaunched() ? "YES" : "NO")
+                          << " | P2 launched: " << (player2.isLaunched() ? "YES" : "NO") << std::endl;
 
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
@@ -290,9 +270,13 @@ void Game::update()
         return;
     }
 
-    // Update bomb
-    bool causedGameOver = room->updateBomb(&player1, &player2);
-    if (causedGameOver)
+    // Update all objects (bombs explode themselves)
+    room->updateAllObjects(&player1, &player2);
+
+    // Collect explosion results from all bombs
+    ExplosionResult explosionResult = room->collectBombResults();
+    if (explosionResult.player1Hit || explosionResult.player2Hit ||
+        explosionResult.keyDestroyed)
     {
         currentState = GameState::gameOver;
         return;

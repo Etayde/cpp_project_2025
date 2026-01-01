@@ -71,7 +71,7 @@ enum class ObjectType
 {
     AIR = ' ',
     WALL = 'W',
-    BREAKABLE_WALL = '=',
+    BREAKABLE_WALL = 'w',
     SPRING = '#',
     SPRING_LINK = '#',  // Individual spring link (same sprite as SPRING)
     OBSTACLE = '*',
@@ -85,14 +85,7 @@ enum class ObjectType
     SWITCH_WALL = 'Z'
 };
 
-//////////////////////////////////////////       BOMB CONSTANTS        //////////////////////////////////////////
-
-namespace BombConfig
-{
-    constexpr int FUSE_TIME = 50; // ~5 seconds at 10 FPS
-    constexpr int RADIUS = 5;
-    constexpr int BLINK_RATE = 10;
-}
+// Bomb constants moved to Bomb class for better encapsulation
 
 //////////////////////////////////////////       LIGHT CONSTANTS       //////////////////////////////////////////
 

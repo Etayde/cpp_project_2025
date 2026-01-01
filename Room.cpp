@@ -54,7 +54,7 @@ Room::Room(const Room &other)
       activeSwitches(other.activeSwitches), totalSwitches(other.totalSwitches),
       doorReqs(other.doorReqs), nextRoomId(other.nextRoomId), prevRoomId(other.prevRoomId),
       spawnPoint(other.spawnPoint), spawnPointFromNext(other.spawnPointFromNext),
-      bombs(other.bombs), darkZones(other.darkZones)
+      darkZones(other.darkZones)
 {
     for (int y = 0; y < MAX_Y; y++)
         for (int x = 0; x < MAX_X; x++)
@@ -84,7 +84,6 @@ Room &Room::operator=(const Room &other)
         prevRoomId = other.prevRoomId;
         spawnPoint = other.spawnPoint;
         spawnPointFromNext = other.spawnPointFromNext;
-        bombs = other.bombs;
         darkZones = other.darkZones;
         doorReqs = other.doorReqs;
 
@@ -412,7 +411,7 @@ std::vector<Switch *> Room::getSwitches()
 bool Room::isBlocked(int x, int y)
 {
     char c = getCharAt(x, y);
-    if (c == 'W' || c == '=')
+    if (c == 'W' || c == 'w')
         return true;
 
     GameObject *obj = getObjectAt(x, y);
@@ -643,155 +642,50 @@ bool Room::isVisible(int x, int y) const
     return visibilityMap[y][x];
 }
 
-//////////////////////////////////////////        explodeBomb          //////////////////////////////////////////
+//////////////////////////////////////////     updateAllObjects       //////////////////////////////////////////
 
-// Process bomb explosion - destroy objects, check player hits - MADE WITH AI'S HELP
-ExplosionResult Room::explodeBomb(int centerX, int centerY, int radius, Player *p1, Player *p2)
+void Room::updateAllObjects(Player *p1, Player *p2)
 {
-    ExplosionResult result;
-
-    for (int dy = -radius; dy <= radius; dy++)
+    for (GameObject *obj : objects)
     {
-        for (int dx = -radius; dx <= radius; dx++)
+        if (obj && obj->isActive())
         {
-            int x = centerX + dx;
-            int y = centerY + dy;
-
-            if (x < 0 || x >= MAX_X || y < 0 || y >= MAX_Y_INGAME)
-                continue;
-
-            double distance = sqrt(dx * dx + dy * dy);
-            if (distance > radius)
-                continue;
-            if (!hasLineOfSight(centerX, centerY, x, y))
-                continue;
-
-            char c = getCharAt(x, y);
-            if (c == 'W' || (c >= '0' && c <= '9'))
-                continue; // Skip walls and doors
-
-            // Check player hits
-            if (p1 && p1->getX() == x && p1->getY() == y)
-                result.player1Hit = true;
-            if (p2 && p2->getX() == x && p2->getY() == y)
-                result.player2Hit = true;
-
-            // Process objects using polymorphic onExplosion()
-            GameObject *obj = getObjectAt(x, y);
-            if (obj != nullptr && obj->isActive())
+            if (obj->getType() == ObjectType::BOMB)
             {
-                if (obj->getType() == ObjectType::KEY)
-                    result.keyDestroyed = true;
-
-                if (obj->onExplosion())
-                {
-                    setCharAt(x, y, ' ');
-                    gotoxy(x, y);
-                    std::cout << ' ';
-                    obj->setActive(false);
-                    result.objectsDestroyed++;
-                }
+                // Bombs need player references for explosion
+                Bomb *bomb = static_cast<Bomb *>(obj);
+                bomb->update(p1, p2); // Calls overloaded version
             }
-            else if (c == '=')
+            else
             {
-                setCharAt(x, y, ' ');
-                gotoxy(x, y);
-                std::cout << ' ';
-                result.objectsDestroyed++;
-            }
-            else if (c != ' ' && c != 'W' && !(c >= '0' && c <= '9'))
-            {
-                setCharAt(x, y, ' ');
-                gotoxy(x, y);
-                std::cout << ' ';
-                result.objectsDestroyed++;
+                obj->update(); // Standard update
             }
         }
     }
-
-    std::cout.flush();
-    return result;
 }
 
-//////////////////////////////////////////       handleBombDrop       //////////////////////////////////////////
+//////////////////////////////////////////    collectBombResults     //////////////////////////////////////////
 
-void Room::handleBombDrop(Player &player)
+ExplosionResult Room::collectBombResults()
 {
-    if (!player.hasBomb())
+    ExplosionResult totalResult;
+
+    for (GameObject *obj : objects)
     {
-        player.dropItem(this);
-        return;
-    }
-
-    // No limit check - allow unlimited bombs
-    Point dropPos = player.dropItem(this);
-
-    if (dropPos.x >= 0 && dropPos.y >= 0)
-    {
-        RoomBomb newBomb;
-        newBomb.x = dropPos.x;
-        newBomb.y = dropPos.y;
-        newBomb.fuseTimer = BombConfig::FUSE_TIME;
-        newBomb.active = true;
-        bombs.push_back(newBomb);
-    }
-}
-
-//////////////////////////////////////////        updateBomb          //////////////////////////////////////////
-
-bool Room::updateBomb(Player *p1, Player *p2)
-{
-    if (bombs.empty())
-    {
-        return false;
-    }
-
-    bool anyPlayerHit = false;
-
-    // Update all bombs (iterate backwards to safely remove)
-    for (int i = bombs.size() - 1; i >= 0; i--)
-    {
-        RoomBomb &bomb = bombs[i];
-
-        if (!bomb.active)
-            continue;
-
-        bomb.decrementFuse();
-
-        // Blink effect
-        gotoxy(bomb.x, bomb.y);
-        if (bomb.fuseTimer % BombConfig::BLINK_RATE < 5)
-            std::cout << '@';
-        else
-            std::cout << '*';
-        std::cout.flush();
-
-        // Explode
-        if (bomb.isReadyToExplode())
+        if (obj && obj->getType() == ObjectType::BOMB)
         {
-            removeObjectAt(bomb.x, bomb.y);
-            setCharAt(bomb.x, bomb.y, ' ');
-            gotoxy(bomb.x, bomb.y);
-            std::cout << ' ' << std::flush;
+            Bomb *bomb = static_cast<Bomb *>(obj);
+            ExplosionResult bombResult = bomb->getExplosionResult();
 
-            ExplosionResult result = explodeBomb(
-                bomb.x, bomb.y, BombConfig::RADIUS,
-                p1, p2);
-
-            // Remove this bomb from vector
-            bombs.erase(bombs.begin() + i);
-
-            p1->draw();
-            p2->draw();
-
-            if (result.keyDestroyed || result.player1Hit || result.player2Hit)
-            {
-                anyPlayerHit = true;
-            }
+            // Accumulate all bomb explosion results
+            totalResult.keyDestroyed |= bombResult.keyDestroyed;
+            totalResult.player1Hit |= bombResult.player1Hit;
+            totalResult.player2Hit |= bombResult.player2Hit;
+            totalResult.objectsDestroyed += bombResult.objectsDestroyed;
         }
     }
 
-    return anyPlayerHit;
+    return totalResult;
 }
 
 //////////////////////////////////////////      addSpring        //////////////////////////////////////////
@@ -950,7 +844,7 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
     {
         // Check left of first position
         char leftChar = baseLayout->getCharAt(first.x - 1, first.y);
-        if (leftChar == 'W' || leftChar == '=')
+        if (leftChar == 'W' || leftChar == 'w')
         {
             result.valid = true;
             result.projectionDirection = Direction::LEFT;  // Compress TOWARD wall (left)
@@ -960,7 +854,7 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
 
         // Check right of last position
         char rightChar = baseLayout->getCharAt(last.x + 1, last.y);
-        if (rightChar == 'W' || rightChar == '=')
+        if (rightChar == 'W' || rightChar == 'w')
         {
             result.valid = true;
             result.projectionDirection = Direction::RIGHT;  // Compress TOWARD wall (right)
@@ -972,7 +866,7 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
     {
         // Check above first position
         char topChar = baseLayout->getCharAt(first.x, first.y - 1);
-        if (topChar == 'W' || topChar == '=')
+        if (topChar == 'W' || topChar == 'w')
         {
             result.valid = true;
             result.projectionDirection = Direction::UP;  // Compress TOWARD wall (up)
@@ -982,7 +876,7 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point>& sorted,
 
         // Check below last position
         char bottomChar = baseLayout->getCharAt(last.x, last.y + 1);
-        if (bottomChar == 'W' || bottomChar == '=')
+        if (bottomChar == 'W' || bottomChar == 'w')
         {
             result.valid = true;
             result.projectionDirection = Direction::DOWN;  // Compress TOWARD wall (down)

@@ -157,6 +157,43 @@ Spring::LaunchData Spring::calculateLaunch() const
     return launch;
 }
 
+//////////////////////////////////////////  calculateLaunchMomentum //////////////////////////////////////////
+
+Momentum Spring::calculateLaunchMomentum() const
+{
+    Momentum momentum;
+    momentum.setActive(true);
+    momentum.setLaunchFramesRemaining(compressedCount * compressedCount);
+
+    // Launch OPPOSITE of compression direction
+    switch (compressionDir)
+    {
+        case Direction::UP:
+            momentum.setDY(compressedCount);  // Launch DOWN
+            momentum.setLaunchDir(Direction::DOWN);
+            break;
+        case Direction::DOWN:
+            momentum.setDY(-compressedCount);  // Launch UP
+            momentum.setLaunchDir(Direction::UP);
+            break;
+        case Direction::LEFT:
+            momentum.setDX(compressedCount);  // Launch RIGHT
+            momentum.setLaunchDir(Direction::RIGHT);
+            break;
+        case Direction::RIGHT:
+            momentum.setDX(-compressedCount);  // Launch LEFT
+            momentum.setLaunchDir(Direction::LEFT);
+            break;
+        default:
+            break;
+    }
+
+    DebugLog::getStream() << "[SPRING_CALC_LAUNCH_MOMENTUM] Momentum:(" << momentum.getDX()
+                          << "," << momentum.getDY() << ")" << std::endl;
+
+    return momentum;
+}
+
 //////////////////////////////////////////  resetCompression        //////////////////////////////////////////
 
 void Spring::resetCompression(Room* room)
@@ -177,7 +214,7 @@ Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Play
     if (link == nullptr || player == nullptr)
     {
         DebugLog::getStream() << "[PLAYER_SPRING] ERROR: Null link or player!" << std::endl;
-        return {false, false, 0, 0, 0};
+        return {false, false, Momentum() };
     }
 
     DebugLog::getStream() << "[PLAYER_SPRING] Player " << player->getId()
@@ -194,7 +231,7 @@ Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Play
     if (!canCompressLink(link->getLinkIndex(), moveDir))
     {
         DebugLog::getStream() << "[PLAYER_SPRING] Compression not valid - passing through" << std::endl;
-        return {false, false, 0, 0, 0};
+        return {false, false, Momentum() };
     }
 
     DebugLog::getStream() << "[PLAYER_SPRING] Compression valid - compressing link" << std::endl;
@@ -217,29 +254,30 @@ Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Play
     if (!fullyCompressed && !stayPressed)
     {
         // Compressed but not ready to launch
-        return {true, false, 0, 0, 0};
+        return {true, false, Momentum()};
     }
 
     // Launch triggered!
     DebugLog::getStream() << "[PLAYER_SPRING] Launch triggered!" << std::endl;
 
-    LaunchData launch = calculateLaunch();
+    Momentum launch = calculateLaunchMomentum();
+    bool shouldLaunch = compressedCount > 0;
 
-    if (!launch.shouldLaunch)
+    if (!shouldLaunch)
     {
         DebugLog::getStream() << "[PLAYER_SPRING] WARNING: shouldLaunch=false" << std::endl;
-        return {true, false, 0, 0, 0};
+        return {true, false, Momentum() };
     }
 
     DebugLog::getStream() << "[SPRING_LAUNCH] Player " << player->getId()
-                          << " launched: vel(" << launch.velocityX
-                          << "," << launch.velocityY
-                          << ") frames:" << launch.frames << std::endl;
+                          << " launched: vel(" << launch.getDX()
+                          << "," << launch.getDY()
+                          << ") frames:" << launch.getLaunchFramesRemaining() << std::endl;
 
     // Reset spring IMMEDIATELY after launch
     DebugLog::getStream() << "[PLAYER_SPRING] Resetting spring..." << std::endl;
     resetCompression(room);
 
     // Return launch data for Player to apply
-    return {true, true, launch.velocityX, launch.velocityY, launch.frames, launch.direction};
+    return {true, true, launch};
 }

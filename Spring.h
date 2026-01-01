@@ -4,6 +4,7 @@
 
 #include "Point.h"
 #include "Constants.h"
+#include "Momentum.h"
 #include <vector>
 
 class SpringLink;
@@ -35,11 +36,8 @@ public:
     // Player interaction result
     struct InteractionResult {
         bool compressed;      // Was compression performed?
-        bool launched;        // Was player launched?
-        int velocityX;        // Launch velocity X
-        int velocityY;        // Launch velocity Y
-        int launchFrames;     // Frames to remain in launch state
-        Direction launchDirection;
+        bool launched;        // Was a launch triggered?
+        Momentum momentum; // Momentum data if launch occurred
     };
 
     // Constructor/Destructor
@@ -64,6 +62,7 @@ public:
 
     // Launch mechanics
     LaunchData calculateLaunch() const;
+    Momentum calculateLaunchMomentum() const;
     void resetCompression(Room* room);
 
     // Player interaction - encapsulates compression and launch logic

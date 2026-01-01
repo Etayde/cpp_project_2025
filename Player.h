@@ -6,6 +6,7 @@
 #include "Constants.h"
 #include "Point.h"
 #include "GameObject.h"
+#include "Momentum.h"
 
 class Room;
 class Spring;
@@ -69,8 +70,7 @@ public:
     int lives;    // Player's remaining lives (for riddles and future features)
     bool waitingAtDoor; // True if player has crossed through door and is waiting
     bool requestPause; // Set when ESC pressed during riddle
-    int launchFramesRemaining; // Frames remaining for spring launch animation
-    Direction launchDir; // Direction of current launch
+    Momentum springMomentum;
 
 public:
     // Constructors & Destructor
@@ -100,7 +100,7 @@ public:
     GameObject *getInventory() { return inventory; }
     const GameObject *getInventory() const { return inventory; }
     ObjectType getInventoryType() const { return inventory ? inventory->getType() : ObjectType::AIR; }
-    bool isLaunched() const { return launchFramesRemaining > 0; }
+    bool isLaunched() const { return springMomentum.isActive(); }
 
     // Setters
     void setPosition(int x, int y)
@@ -155,11 +155,18 @@ private:
     bool isPerpendicularToLaunch(Direction inputDir, Direction launchDir) const;
     void applyPerpendicularVelocity(Direction perpendicularDir);
 
+    // Bresenham algorithm helper
+    void calculateNextBresenhamPoint(int& x, int& y, int& err, int absDX, int absDY, int sx, int sy) const;
+
+    // Multi-step movement helper
+    bool moveMultiStep(Room* room, Riddle** activeRiddle, Player** activePlayer, Player* otherPlayer);
+
+    // Single-step movement helper
+    bool singleStep(int nextX, int nextY, Room* room, Riddle** activeRiddle, Player** activePlayer, Player* otherPlayer);
+
     // Collision prediction helpers
-    bool predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const;
     bool isCellBlocking(int x, int y, Room* room) const;
     void stopAtPosition(int x, int y);
-    bool predictCollisionAlongTrajectoryNEW(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const;
     void transferMomentumTo(Player* otherPlayer);
 
     // Movement validation helpers
@@ -170,8 +177,6 @@ private:
     // Movement action helpers
     void haltAndRedraw(Room* room);
     void updatePosition(int nextX, int nextY, Room* room);
-    bool handleLaunchCollisionPrediction(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer);
-    bool handleLaunchCollisionPredictionNEW(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer);
 
     // Debug helpers
     void logLaunchState() const;

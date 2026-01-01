@@ -2,6 +2,7 @@
 
 #include "Player.h"
 #include "Room.h"
+#include "Bomb.h"
 #include "Switch.h"
 #include "Door.h"
 #include "Spring.h"
@@ -15,7 +16,7 @@
 Player::Player()
     : inventory(nullptr), playerId(0), sprite(' '),
       atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
-      waitingAtDoor(false), requestPause(false), launchFramesRemaining(0), launchDir(Direction::STAY)
+      waitingAtDoor(false), requestPause(false), springMomentum(Momentum())
 {
     pos = Point(1, 1, 0, 0, ' ');
 }
@@ -23,7 +24,7 @@ Player::Player()
 Player::Player(int id, int startX, int startY, char playerSprite)
     : inventory(nullptr), playerId(id), sprite(playerSprite),
       atDoor(false), doorId(-1), alive(true), keyCount(0), lives(3),
-      waitingAtDoor(false), requestPause(false), launchFramesRemaining(0), launchDir(Direction::STAY)
+      waitingAtDoor(false), requestPause(false), springMomentum(Momentum())
 {
     pos = Point(startX, startY, 0, 0, playerSprite);
 }
@@ -42,7 +43,7 @@ Player::Player(const Player &other)
       sprite(other.sprite), atDoor(other.atDoor),
       doorId(other.doorId), alive(other.alive), keyCount(other.keyCount),
       lives(other.lives), waitingAtDoor(other.waitingAtDoor),
-      requestPause(other.requestPause), launchFramesRemaining(other.launchFramesRemaining), launchDir(other.launchDir)
+      requestPause(other.requestPause), springMomentum(other.springMomentum)
 {
     copyInventoryFrom(other);
 }
@@ -65,8 +66,7 @@ Player &Player::operator=(const Player &other)
         lives = other.lives;
         waitingAtDoor = other.waitingAtDoor;
         requestPause = other.requestPause;
-        launchFramesRemaining = other.launchFramesRemaining;
-        launchDir = other.launchDir;
+        springMomentum = other.springMomentum;
 
         copyInventoryFrom(other);
     }
@@ -153,63 +153,13 @@ void Player::erase(Room* room)
 // Log debug information during launch
 void Player::logLaunchState() const
 {
-    if (launchFramesRemaining > 0)
+    int frames = springMomentum.getLaunchFramesRemaining();
+    if (frames > 0)
     {
         DebugLog::getStream() << "[MOVE_START] Player " << playerId
-                              << " launchFrames: " << launchFramesRemaining
+                              << " launchFrames: " << frames
                               << " | vel(" << pos.diff_x << "," << pos.diff_y << ")" << std::endl;
     }
-}
-
-//////////////////////////////////////////   handleLaunchCollisionPrediction   //////////////////////////////////////////
-
-// During launch, predict and handle collision along trajectory (players, walls, objects)
-bool Player::handleLaunchCollisionPrediction(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer)
-{
-    if (launchFramesRemaining <= 0)
-        return false; // Not launching
-
-    int stopX, stopY;
-    if (predictCollisionAlongTrajectory(room, stopX, stopY, otherPlayer, activeRiddle, activePlayer))
-    {
-        // Check if we stopped because of player collision
-        if (otherPlayer != nullptr && otherPlayer->isAlive() &&
-            otherPlayer->pos.x == pos.x + pos.diff_x && otherPlayer->pos.y == pos.y + pos.diff_y)
-        {
-            // This is NOT a player collision in the path - it's at the destination
-            // Just stop normally
-            stopAtPosition(stopX, stopY);
-            draw(room);
-            return true;
-        }
-
-        // Check if collision was with other player along the path
-        // Calculate what the next position would have been
-        int nextCheckX = stopX + ((pos.diff_x > 0) ? 1 : (pos.diff_x < 0 ? -1 : 0));
-        int nextCheckY = stopY + ((pos.diff_y > 0) ? 1 : (pos.diff_y < 0 ? -1 : 0));
-
-        if (otherPlayer != nullptr && otherPlayer->isAlive() &&
-            otherPlayer->pos.x == nextCheckX && otherPlayer->pos.y == nextCheckY)
-        {
-            // Player collision detected - transfer momentum
-            otherPlayer->pos.diff_x = pos.diff_x;
-            otherPlayer->pos.diff_y = pos.diff_y;
-            otherPlayer->launchFramesRemaining = launchFramesRemaining;
-            otherPlayer->launchDir = launchDir;
-
-            // Stop this player at safe position
-            stopAtPosition(stopX, stopY);
-            draw(room);
-            return true;
-        }
-
-        // Regular wall/object collision
-        stopAtPosition(stopX, stopY);
-        draw(room);
-        return true; // Collision predicted, stopped
-    }
-
-    return false; // No collision predicted
 }
 
 // Handle all rendering and position update logic
@@ -245,45 +195,21 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Play
         return false;
     }
 
-    // 4. Launch collision prediction (handles player, wall, and object collisions during launch)
-    if (handleLaunchCollisionPredictionNEW(room, otherPlayer, activeRiddle, activePlayer))
-        return false;
-
-    // 5. Calculate next position
-    int nextX = pos.x + pos.diff_x;
-    int nextY = pos.y + pos.diff_y;
-
-    // 7. Absolute boundary check
-    if (!isWithinAbsoluteBounds(nextX, nextY))
+    // 4. Check if launched using springMomentum.isActive()
+    if (!springMomentum.isActive())
     {
-        haltAndRedraw(room);
-        return false;
+        // Normal single-step movement
+        int nextX = pos.x + pos.diff_x;
+        int nextY = pos.y + pos.diff_y;
+
+        erase(room);
+        bool success = singleStep(nextX, nextY, room, activeRiddle, activePlayer, otherPlayer);
+        draw(room);
+        return success;
     }
 
-    // 8. Special boundary (door) check
-    if (!canMoveToBoundaryPosition(nextX, nextY, room))
-    {
-        haltAndRedraw(room);
-        return false;
-    }
-
-    // 9. Wall collision check
-    if (checkWallCollision(nextX, nextY, room))
-    {
-        haltAndRedraw(room);
-        return false;
-    }
-
-    // 10. Object interaction check
-    if (checkObjectInteraction(nextX, nextY, room, activeRiddle, activePlayer))
-    {
-        haltAndRedraw(room);
-        return false;
-    }
-
-    // 11. All checks passed - move to new position
-    updatePosition(nextX, nextY, room);
-    return true;
+    // 5. Multi-step launched movement - delegate to helper
+    return moveMultiStep(room, activeRiddle, activePlayer, otherPlayer);
 }
 
 //////////////////////////////////////////           draw               //////////////////////////////////////////
@@ -375,6 +301,13 @@ Point Player::dropItem(Room *room)
     droppedItem->setPosition(dropX, dropY);
     droppedItem->setActive(true);
 
+    // Special handling for bombs - activate when dropped
+    if (droppedItem->getType() == ObjectType::BOMB)
+    {
+        Bomb *bomb = static_cast<Bomb *>(droppedItem);
+        bomb->activate(room); // Start countdown
+    }
+
     if (room->addObject(droppedItem))
     {
         dropPos.x = dropX;
@@ -401,31 +334,25 @@ Point Player::dropItem(Room *room)
 
 void Player::performAction(Action action, Room* room)
 {
+    int frames = springMomentum.getLaunchFramesRemaining();
     // Debug: Log launchFramesRemaining at start of performAction
     DebugLog::getStream() << "[PERFORM_ACTION_START] Player " << playerId
-                          << " launchFrames: " << launchFramesRemaining
+                          << " launchFrames: " << frames
                           << " | Action: " << static_cast<int>(action) << std::endl;
 
     // Check if currently launched
-    if (launchFramesRemaining > 0)
+    if (frames > 0)
     {
         DebugLog::getStream() << "[PLAYER_PERFORM_ACTION] Player " << playerId
-                              << " is launched (frames:" << launchFramesRemaining
+                              << " is launched (frames:" << frames
                               << " vel:" << pos.diff_x << "," << pos.diff_y
                               << ") | Action: " << static_cast<int>(action) << std::endl;
 
         Direction inputDir = actionToDirection(action);
         DebugLog::getStream() << "[DIRECTION_INPUT] " << static_cast<int>(inputDir) << std::endl;
 
-        // Block invalid inputs (opposite direction or STAY)
-        if (!canApplyInputDuringLaunch(inputDir))
-        {
-            DebugLog::getStream() << "[PLAYER_PERFORM_ACTION] Input blocked during launch" << std::endl;
-            return;  // Ignore this input
-        }
-
-        // Allow perpendicular movement
-        if (isPerpendicularToLaunch(inputDir, launchDir))
+        // Allow perpendicular movement (blocks STAY, opposite, and same direction)
+        if (canApplyInputDuringLaunch(inputDir))
         {
             DebugLog::getStream() << "[PLAYER_PERFORM_ACTION] Applying perpendicular velocity" << std::endl;
             applyPerpendicularVelocity(inputDir);
@@ -534,7 +461,7 @@ bool Player::checkWallCollision(int nextX, int nextY, Room* room)
         return false;
 
     char nextChar = room->getCharAt(nextX, nextY);
-    if (nextChar != 'W' && nextChar != '=')
+    if (nextChar != 'W' && nextChar != 'w')
         return false; // No wall
 
     // Wall blocks movement
@@ -689,10 +616,8 @@ bool Player::handleSpringInteraction(SpringLink* link, Room* room)
     // Apply launch velocity if launched
     if (result.launched)
     {
-        pos.diff_x = result.velocityX;
-        pos.diff_y = result.velocityY;
-        launchFramesRemaining = result.launchFrames;
-        launchDir = result.launchDirection;
+        this->springMomentum = result.momentum;
+        this->springMomentum.setActive(true);  // Activate the momentum
     }
 
     return false;  // SpringLinks are non-blocking
@@ -753,7 +678,7 @@ bool Player::isCellBlocking(int x, int y, Room* room) const
 
     // Check wall collision
     char cellChar = room->getCharAt(x, y);
-    if (cellChar == 'W' || cellChar == '=')
+    if (cellChar == 'W' || cellChar == 'w')
         return true;
 
     // Check blocking objects
@@ -777,6 +702,7 @@ bool Player::canApplyInputDuringLaunch(Direction inputDir) const
 
     // Get opposite direction of launch
     Direction oppositeDir;
+    Direction launchDir = springMomentum.getLaunchDir();
 
     switch (launchDir)
     {
@@ -816,6 +742,8 @@ void Player::applyPerpendicularVelocity(Direction perpendicularDir)
     // Increase perpendicular component speed by 1
     // Keep launch component unchanged
 
+    Direction launchDir = springMomentum.getLaunchDir();
+
     // If launch is horizontal (LEFT/RIGHT)
     if (launchDir == Direction::LEFT || launchDir == Direction::RIGHT)
     {
@@ -838,78 +766,122 @@ void Player::applyPerpendicularVelocity(Direction perpendicularDir)
     }
 }
 
-//////////////////////////////////////////   predictCollisionAlongTrajectory   //////////////////////////////////////////
+//////////////////////////////////////////   calculateNextBresenhamPoint   //////////////////////////////////////////
 
-bool Player::predictCollisionAlongTrajectory(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const
+void Player::calculateNextBresenhamPoint(int& x, int& y, int& err, int absDX, int absDY, int sx, int sy) const
 {
-    // Bresenham-style line traversal from current position to next position
+    int e2 = 2 * err;
+
+    if (e2 > -absDY)
+    {
+        err -= absDY;
+        x += sx;
+    }
+    if (e2 < absDX)
+    {
+        err += absDX;
+        y += sy;
+    }
+}
+
+//////////////////////////////////////////   moveMultiStep   //////////////////////////////////////////
+
+bool Player::moveMultiStep(Room* room, Riddle** activeRiddle, Player** activePlayer, Player* otherPlayer)
+{
+    // Get velocity from springMomentum
+    int dx = springMomentum.getDX();
+    int dy = springMomentum.getDY();
+
+    if (dx == 0 && dy == 0)
+        return false;
+
+    int targetX = pos.x + dx;
+    int targetY = pos.y + dy;
+
+    // Bresenham's Line Algorithm setup
+    int absDX = abs(dx);
+    int absDY = abs(dy);
+    int sx = (dx > 0) ? 1 : -1;
+    int sy = (dy > 0) ? 1 : -1;
+    int err = absDX - absDY;
+
     int currentX = pos.x;
     int currentY = pos.y;
-    int targetX = pos.x + pos.diff_x;
-    int targetY = pos.y + pos.diff_y;
 
-    int dx = abs(targetX - currentX);
-    int dy = abs(targetY - currentY);
-    int sx = (currentX < targetX) ? 1 : -1;
-    int sy = (currentY < targetY) ? 1 : -1;
+    // Erase player from starting position ONCE
+    erase(room);
 
-    int err = dx - dy;
-    int checkX = currentX;
-    int checkY = currentY;
-
-    // Store last valid position
-    stopX = currentX;
-    stopY = currentY;
-
-    while (true)
+    // Traverse line from current position to target
+    while (springMomentum.getLaunchFramesRemaining() > 0)
     {
-        // Check next step
-        int e2 = 2 * err;
-        int nextCheckX = checkX;
-        int nextCheckY = checkY;
+        // Calculate next Bresenham point
+        int nextX = currentX;
+        int nextY = currentY;
+        calculateNextBresenhamPoint(nextX, nextY, err, absDX, absDY, sx, sy);
 
-        if (e2 > -dy)
-        {
-            err -= dy;
-            nextCheckX += sx;
-        }
-        if (e2 < dx)
-        {
-            err += dx;
-            nextCheckY += sy;
-        }
+        // Try to move one step
+        bool moveSucceeded = singleStep(nextX, nextY, room, activeRiddle, activePlayer, otherPlayer);
 
-        // Reached target without collision
-        if (nextCheckX == targetX && nextCheckY == targetY)
+        if (!moveSucceeded)
         {
-            // Check if target itself is blocking
-            if (isCellBlocking(targetX, targetY, room))
-            {
-                return true;  // Collision at target
-            }
-            return false;  // No collision
+            // Movement blocked - abort launch
+            springMomentum.setLaunchFramesRemaining(0);
+            break;
         }
 
-        // Priority 1: Check for player collision FIRST
-        if (otherPlayer != nullptr && otherPlayer->isAlive() &&
-            otherPlayer->pos.x == nextCheckX && otherPlayer->pos.y == nextCheckY)
-        {
-            // Found other player - stop at last safe position (before collision)
-            return true;  // stopX/stopY already at last safe position
-        }
+        // Update current position for next iteration
+        currentX = nextX;
+        currentY = nextY;
 
-        // Priority 2: Check if this cell is blocking (walls and blocking objects)
-        if (isCellBlocking(nextCheckX, nextCheckY, room))
-        {
-            return true;  // Collision detected, stopX/stopY has last safe position
-        }
-
-        // Update last safe position
-        stopX = nextCheckX;
-        stopY = nextCheckY;
-        checkX = nextCheckX;
-        checkY = nextCheckY;
+        // Decrement launch frames
+        int remaining = springMomentum.getLaunchFramesRemaining() - 1;
+        springMomentum.setLaunchFramesRemaining(remaining);
     }
+
+    // Reset momentum after launch completes
+    springMomentum.resetMomentum();
+
+    // Redraw room ONCE at the end (single frame for entire movement)
+    draw(room);
+    return true;
+}
+
+//////////////////////////////////////////   singleStep   //////////////////////////////////////////
+
+bool Player::singleStep(int nextX, int nextY, Room* room, Riddle** activeRiddle, Player** activePlayer, Player* otherPlayer)
+{
+    // 1. Absolute boundary check
+    if (!isWithinAbsoluteBounds(nextX, nextY))
+        return false;
+
+    // 2. Special boundary (door) check
+    if (!canMoveToBoundaryPosition(nextX, nextY, room))
+        return false;
+
+    // 3. Wall collision check
+    if (checkWallCollision(nextX, nextY, room))
+        return false;
+
+    // 4. Player-to-player collision check (ONLY if launched)
+    if (springMomentum.isActive())
+    {
+        if (otherPlayer != nullptr && otherPlayer->isAlive() &&
+            otherPlayer->pos.x == nextX && otherPlayer->pos.y == nextY)
+        {
+            // Transfer momentum and stop
+            transferMomentumTo(otherPlayer);
+            return false;
+        }
+    }
+
+    // 5. Object interaction check
+    if (checkObjectInteraction(nextX, nextY, room, activeRiddle, activePlayer))
+        return false;
+
+    // 6. All checks passed - update position directly
+    pos.x = nextX;
+    pos.y = nextY;
+    return true;
 }
 
 //////////////////////////////////////////   stopAtPosition   //////////////////////////////////////////
@@ -925,131 +897,18 @@ void Player::stopAtPosition(int x, int y)
     pos.diff_y = 0;
 
     // Reset launch state
-    launchFramesRemaining = 0;
+    springMomentum.setLaunchFramesRemaining(0);
 }
-
-bool Player::predictCollisionAlongTrajectoryNEW(Room* room, int& stopX, int& stopY, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer) const
-{
-    int currentX = pos.x; //5
-    int currentY = pos.y; //3
-    int targetX = pos.x + pos.diff_x; //5-2=3
-    int targetY = pos.y + pos.diff_y; //3+4=7
-
-    int dx = abs(pos.diff_x); //2
-    int dy = abs(pos.diff_y); //4
-
-    bool otherPlayerAlive = (otherPlayer != nullptr && otherPlayer->isAlive());
-
-    for (int y_step = 0; y_step <= dy; y_step++) // 0,1,2,3,4
-    {
-        int checkY = currentY + ((pos.diff_y > 0) ? y_step : -y_step);
-
-        for (int x_step = 0; x_step <= dx; x_step++) // 0,1,2
-        {
-            int checkX = currentX + ((pos.diff_x > 0) ? x_step : -x_step);
-
-            // Check for player collision
-            if ( otherPlayerAlive && otherPlayer->pos.x == checkX && otherPlayer->pos.y == checkY)
-            {
-                return true;  // Collision detected
-            }
-
-            // Check for wall/blocking object collision
-            if (isCellBlocking(checkX, checkY, room))
-            {
-                return true;  // Collision detected
-            }
-
-            // FIX BUG 2: Check for ANY object (not just blocking ones)
-            if (room != nullptr)
-            {
-                GameObject* obj = room->getObjectAt(checkX, checkY);
-                if (obj != nullptr && obj->isActive())
-                {
-                    ObjectType objType = obj->getType();
-
-                    // Doors: players can move through doors for room transitions
-                    if (objType == ObjectType::DOOR)
-                    {
-                        // Skip doors - don't detect as collision
-                    }
-                    // SpringLinks: only detect if NOT collapsed (collapsed springs are passable)
-                    else if (objType == ObjectType::SPRING_LINK)
-                    {
-                        SpringLink* link = dynamic_cast<SpringLink*>(obj);
-                        if (link != nullptr && !link->isCollapsed())
-                        {
-                            return true;  // Uncollapsed spring link detected
-                        }
-                    }
-                    // All other objects: detect them
-                    else
-                    {
-                        return true;  // Object detected
-                    }
-                }
-            }
-
-            // Update last safe position
-            stopX = checkX;
-            stopY = checkY;
-        }
-    }
-
-    return false; // No collision detected
-}
-
-bool Player::handleLaunchCollisionPredictionNEW(Room* room, Player* otherPlayer, Riddle** activeRiddle, Player** activePlayer)
-{
-    if (launchFramesRemaining <= 0)
-        return false; // Not launching
-
-    int stopX, stopY;
-    if (predictCollisionAlongTrajectoryNEW(room, stopX, stopY, otherPlayer, activeRiddle, activePlayer))
-    {
-        bool otherPlayerAlive = (otherPlayer != nullptr && otherPlayer->isAlive());
-
-        // FIX BUG 1: Erase player from current position BEFORE updating to collision stop position
-        erase(room);
-
-        // Check if collision was with other player along the path
-        // Calculate what the next position would have been
-        int nextCheckX = stopX + ((pos.diff_x > 0) ? 1 : (pos.diff_x < 0 ? -1 : 0));
-        int nextCheckY = stopY + ((pos.diff_y > 0) ? 1 : (pos.diff_y < 0 ? -1 : 0));
-
-        if (otherPlayerAlive && otherPlayer->pos.x == nextCheckX && otherPlayer->pos.y == nextCheckY)
-        {
-            // Player collision detected - transfer momentum
-            transferMomentumTo(otherPlayer);
-            stopAtPosition(stopX, stopY);
-        }
-        
-        else if (checkObjectInteraction(nextCheckX, nextCheckY, room, activeRiddle, activePlayer))
-        {
-            stopAtPosition(stopX, stopY);
-        }
-        
-        else if (isCellBlocking(nextCheckX, nextCheckY, room))
-        {
-            stopAtPosition(stopX, stopY);
-        }
-
-        draw(room);
-        return true; // Collision predicted, stopped
-    }
-
-    return false; // No collision predicted
-}
-
-
 
 void Player::transferMomentumTo(Player* otherPlayer)
 {
     if (otherPlayer == nullptr || !otherPlayer->isAlive())
         return;
 
+    // Transfer entire momentum state
+    otherPlayer->springMomentum = this->springMomentum;
+
+    // Also transfer current velocity for consistency
     otherPlayer->pos.diff_x = pos.diff_x;
     otherPlayer->pos.diff_y = pos.diff_y;
-    otherPlayer->launchFramesRemaining = launchFramesRemaining;
-    otherPlayer->launchDir = launchDir;
 }

@@ -40,38 +40,6 @@ struct DarkZone
     }
 };
 
-//////////////////////////////////////////         RoomBomb           //////////////////////////////////////////
-
-// Tracks an active bomb in the room
-struct RoomBomb
-{
-    int x;
-    int y;
-    int fuseTimer;
-    bool active;
-
-    RoomBomb() : x(-1), y(-1), fuseTimer(0), active(false) {}
-
-    void reset()
-    {
-        x = -1;
-        y = -1;
-        fuseTimer = 0;
-        active = false;
-    }
-
-    void decrementFuse()
-    {
-        if (fuseTimer > 0)
-            fuseTimer--;
-    }
-
-    bool isReadyToExplode() const
-    {
-        return active && fuseTimer <= 0;
-    }
-};
-
 //////////////////////////////////////////      ExplosionResult       //////////////////////////////////////////
 
 struct ExplosionResult
@@ -135,9 +103,6 @@ public:
     Point spawnPoint;
     Point spawnPointFromNext;
 
-    // Bomb system
-    std::vector<RoomBomb> bombs;
-
     // Dark zones
     std::vector<DarkZone> darkZones;
     bool visibilityMap[MAX_Y][MAX_X];
@@ -173,8 +138,8 @@ public:
     void removeObjectAt(int x, int y);
     std::vector<Door *> getDoors();
     std::vector<Switch *> getSwitches();
-    bool updateBomb(Player *p1, Player *p2);
-    void handleBombDrop(Player &player);
+    void updateAllObjects(Player *p1, Player *p2);
+    ExplosionResult collectBombResults();
 
     // Collision & movement
     bool isBlocked(int x, int y);
@@ -195,10 +160,6 @@ public:
     void updateVisibility(Player *p1, Player *p2);
     void lightRadius(int centerX, int centerY, int radius);
     bool isVisible(int x, int y) const;
-
-    // Bomb system
-    ExplosionResult explodeBomb(int centerX, int centerY, int radius,
-                                Player *p1, Player *p2);
 
 private:
     void copyObjectsFrom(const Room &other);

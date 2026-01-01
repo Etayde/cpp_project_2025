@@ -62,7 +62,7 @@ GameObject *createObjectFromChar(char ch, int x, int y)
     case '9':
         return new Door(pos, ch - '0');
     // 'W' removed - walls are part of static layout, not game objects
-    case '=':
+    case 'w':
         return new BreakableWall(pos);
     case 'Z':
         return new SwitchWall(pos);

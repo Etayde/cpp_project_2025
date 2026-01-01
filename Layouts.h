@@ -177,7 +177,7 @@ const char *room0Data[MAX_Y] = {
      "W###                                                                          W",  // 10
      "W                                                                             W",  // 11
      "WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW                             W",  // 12
-     "W                                               W                            W",  // 13
+     "W                                               W                             W",  // 13
      "W        WWWWWWWWWWWWWWWWWWWWW                  W                             W",  // 14
      "W        W                   W                  W                             W",  // 15
      "W        W     WWWWWWWW      W                  W                             W",  // 16
@@ -206,10 +206,10 @@ const char *room1Data[MAX_Y] = {
      "W                  W                           W             W            W   W",  // 8
      "W                  W                           W             WWWWWWWWWWWWWW   W",  // 9
      "W                  WWWWWWW  WWWWWWWWWWWWWWWWWWWW                              W",  // 10
-     "W                  W                           =                              W",  // 11
-     "W                  W                           =                              W",  // 12
-     "W                  W                           =                              W",  // 13
-     "W                  W\\                          =                              W", // 14
+     "W                  W                           w                              W",  // 11
+     "W                  W                           w                              W",  // 12
+     "W                  W                           w                              W",  // 13
+     "W                  W\\                          w                              W", // 14
      "W                  WWWWWWWWWWWWWWWWWWWWWWWWWWWWW                              W",  // 15
      "W                                                                    WZZZZZZZZW",  // 16
      "W                  !                                                 W        W",  // 17

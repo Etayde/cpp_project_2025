@@ -46,11 +46,11 @@ class BreakableWall : public StaticObject
 public:
     BreakableWall() : StaticObject()
     {
-        sprite = '=';
+        sprite = 'w';
         type = ObjectType::BREAKABLE_WALL;
     }
 
-    BreakableWall(const Point &pos) : StaticObject(pos, '=', ObjectType::BREAKABLE_WALL) {}
+    BreakableWall(const Point &pos) : StaticObject(pos, 'w', ObjectType::BREAKABLE_WALL) {}
 
     GameObject *clone() const override { return new BreakableWall(*this); }
     const char *getName() const override { return "Breakable Wall"; }
