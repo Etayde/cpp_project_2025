@@ -152,7 +152,6 @@ private:
     // Launch control helpers
     bool canApplyInputDuringLaunch(Direction inputDir) const;
     Direction getLaunchDirection() const;
-    bool isPerpendicularToLaunch(Direction inputDir, Direction launchDir) const;
     void applyPerpendicularVelocity(Direction perpendicularDir);
 
     // Bresenham algorithm helper

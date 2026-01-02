@@ -646,25 +646,6 @@ void Player::handleDoorInteraction(Door* door)
     doorId = door->getDoorId();
 }
 
-//////////////////////////////////////////   isPerpendicularToLaunch   //////////////////////////////////////////
-
-bool Player::isPerpendicularToLaunch(Direction inputDir, Direction launchDir) const
-{
-    // Horizontal launches: perpendicular is UP/DOWN
-    if (launchDir == Direction::LEFT || launchDir == Direction::RIGHT)
-    {
-        return (inputDir == Direction::UP || inputDir == Direction::DOWN);
-    }
-
-    // Vertical launches: perpendicular is LEFT/RIGHT
-    if (launchDir == Direction::UP || launchDir == Direction::DOWN)
-    {
-        return (inputDir == Direction::LEFT || inputDir == Direction::RIGHT);
-    }
-
-    return false;
-}
-
 //////////////////////////////////////////   isCellBlocking   //////////////////////////////////////////
 
 bool Player::isCellBlocking(int x, int y, Room* room) const
@@ -840,6 +821,8 @@ bool Player::moveMultiStep(Room* room, Riddle** activeRiddle, Player** activePla
 
     // Reset momentum after launch completes
     springMomentum.resetMomentum();
+    pos.diff_x = 0;
+    pos.diff_y = 0;
 
     // Redraw room ONCE at the end (single frame for entire movement)
     draw(room);

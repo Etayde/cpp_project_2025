@@ -21,6 +21,7 @@ private:
     Point anchorPosition;
     Direction compressionDir;
     int compressedCount;
+    Player* currCompressor;
 
 public:
     // Launch calculation result
@@ -59,6 +60,7 @@ public:
     bool isFullyCompressed() const;
     int getCompressionLevel() const { return compressedCount; }
     int getLinkCount() const { return static_cast<int>(links.size()); }
+    bool playerSTAYcheck(Player& p, SpringLink& link) const;
 
     // Launch mechanics
     LaunchData calculateLaunch() const;
@@ -70,4 +72,5 @@ public:
 
     // Getters
     Direction getCompressionDir() const { return compressionDir; }
+
 };
