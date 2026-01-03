@@ -991,18 +991,17 @@ void Room::createMultiCellObject(const std::vector<Point>& allObjCells)
                     !processed[neighbor.y][neighbor.x])
                 {
                     if (baseLayout->getCharAt(neighbor.x, neighbor.y) != ch)
-                        switch (ch)
-                        {
-                            case '*':
-                                edges[group[i]].push_back(neighbor);
-                                break;
-                            default:
-                                continue;
-                        }
-                
-                    group.push_back(neighbor);
-                    processed[neighbor.y][neighbor.x] = true;
-                
+                    {
+                        // Neighbor is different - only track edges for obstacles
+                        if (ch == '*')
+                            edges[group[i]].push_back(neighbor);
+                    }
+                    else
+                    {
+                        // Neighbor is SAME character - add to group
+                        group.push_back(neighbor);
+                        processed[neighbor.y][neighbor.x] = true;
+                    }
                 }
             }
         }
