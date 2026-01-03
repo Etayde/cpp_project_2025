@@ -219,10 +219,10 @@ Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Play
 
     // Check if compression is valid
     if (!canCompressLink(link->getLinkIndex(), moveDir))
-   
-    DebugLog::getStream() << "[PLAYER_SPRING] Can't compress link" << std::endl;
 
     {
+        DebugLog::getStream() << "[PLAYER_SPRING] Can't compress link" << std::endl;
+        
         if (isCompressed()) 
         {            
             DebugLog::getStream() << "[SPRING_STATE] Current compression: " << compressedCount << std::endl;
