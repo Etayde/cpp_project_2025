@@ -167,13 +167,6 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Play
     // 2. Debug logging
     logLaunchState();
 
-    // 3. Handle stationary player
-    if (isStationary())
-    {
-        draw(room);
-        return false;
-    }
-
     erase(room);
 
     // Check for direction change while on compressed spring
@@ -207,6 +200,13 @@ bool Player::move(Room *room, Riddle** activeRiddle, Player** activePlayer, Play
     }
 
     bool success;
+
+    // 3. Handle stationary player
+    if (isStationary())
+    {
+        draw(room);
+        return false;
+    }
 
     // 4. Check if launched using springMomentum.isActive()
     if (!springMomentum.isActive())
