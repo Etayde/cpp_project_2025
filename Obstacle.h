@@ -4,6 +4,7 @@
 
 #include "StaticObjects.h"
 #include <vector>
+#include <unordered_map>
 
 class Room;
 class Player;
