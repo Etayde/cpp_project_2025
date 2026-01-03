@@ -236,12 +236,16 @@ Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Play
         } 
         else
         {
+            DebugLog::getStream() << "[PLAYER_SPRING] Spring not compressed - player moved" << std::endl;
+
             return {false, false, Momentum() };
         }
     }
 
     // Compress this link
     compressLink(link->getLinkIndex(), room);
+
+    DebugLog::getStream() << "[PLAYER_SPRING] Spring compressed" << std::endl;
 
     // Check if should launch
     bool fullyCompressed = isFullyCompressed();
