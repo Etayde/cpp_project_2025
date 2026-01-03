@@ -990,11 +990,12 @@ void Room::createMultiCellObject(const std::vector<Point>& allObjCells)
                     neighbor.y >= 0 && neighbor.y < MAX_Y_INGAME &&
                     !processed[neighbor.y][neighbor.x])
                 {
-                    if (!baseLayout->getCharAt(neighbor.x, neighbor.y) == ch) 
+                    if (baseLayout->getCharAt(neighbor.x, neighbor.y) != ch)
                         switch (ch)
                         {
                             case '*':
                                 edges[group[i]].push_back(neighbor);
+                                break;
                             default:
                                 continue;
                         }
