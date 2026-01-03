@@ -17,11 +17,11 @@ class ObstacleBlock : public StaticObject
 private:
     Obstacle* parentObstacle;
     int blockIndex;
-    bool isEdge;
+    bool is_edge;
 public:
-    ObstacleBlock(const Point &pos, Obstacle* parent, std::vector<Direction> d = {})
+    ObstacleBlock(const Point &pos, Obstacle* parent)
         : StaticObject(pos, '*', ObjectType::OBSTACLE_BLOCK),
-         parentObstacle(parent), blockIndex(-1), isEdge(false) {}
+         parentObstacle(parent), blockIndex(-1), is_edge(false) {}
 
     GameObject* clone() const override { return new ObstacleBlock(*this); }
     const char* getName() const override { return "ObstacleBloack"; }
@@ -30,7 +30,7 @@ public:
     int getBlockIndex() const { return blockIndex; }
 
     void setBlockIndex(int index) { blockIndex = index; }
-    bool isEdge() const { return isEdge; }
+    bool isEdge() const { return is_edge; }
     std::vector<Direction> neighborsToEdgeDirections(std::unordered_map<Point, std::vector<Point>>& neighbors);
 };
 
