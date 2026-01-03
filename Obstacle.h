@@ -43,8 +43,14 @@ private:
     std::vector<ObstacleBlock *> blocks;
     std::unordered_map<Direction, std::vector<ObstacleBlock*>> edges;
     int weight = blocks.size(); // Weight based on number of blocks
+
+    // Push state tracking (per frame)
+    int accumulatedForce;           // Total force applied this frame
+    Direction pushDirection;        // Direction being pushed this frame
+    std::vector<Player*> pushers;   // Players who contributed to the push
+
 public:
-    Obstacle(): blocks()
+    Obstacle(): blocks(), accumulatedForce(0), pushDirection(Direction::STAY)
     {
         edges = {
             {Direction::UP, {}},
@@ -52,14 +58,19 @@ public:
             {Direction::LEFT, {}},
             {Direction::RIGHT, {}}
         };
+        pushers.reserve(2);  // Max 2 players
     };
 
-    void initialize(const std::vector<ObstacleBlock *>& obstacleBlocks, 
+    void initialize(const std::vector<ObstacleBlock *>& obstacleBlocks,
                             std::unordered_map<Point, std::vector<Point>>& neighbors);
 
     int getWeight() const { return weight; }
     const std::vector<ObstacleBlock *>& getBlocks() const { return blocks; }
     bool canBeMoved(int force) const { return force >= weight; }
-    bool move(Direction dir, Room* room);
+    bool move(Direction dir, Room* room, int force);
     void initEdges(std::unordered_map<Point, std::vector<Point>>& neighbors);
+
+    // Push state management
+    void resetPushState();
+    bool tryPush(Direction dir, int force, Room* room, Player* pusher);
 };

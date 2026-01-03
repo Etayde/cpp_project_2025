@@ -2,6 +2,7 @@
 #include "GameObject.h"
 #include "PickableObject.h"
 #include "Room.h"
+#include "Player.h"
 
 
 void Obstacle::initialize(const std::vector<ObstacleBlock*>& obstacleBlocks, 
@@ -16,55 +17,47 @@ void Obstacle::initialize(const std::vector<ObstacleBlock*>& obstacleBlocks,
     initEdges(neighbors);
 }
 
-bool Obstacle::move(Direction dir, Room* room)
+bool Obstacle::move(Direction dir, Room* room, int force)
 {
-    // Calculate new positions for all blocks
-    std::vector<Point> newPositions;
-    // std::vector<PickableObject*> PickableObjectInTheWay; 
-    
+    // Validate force requirement
+    if (force < weight)
+        return false;  // Insufficient force
+
+    // Calculate offset based on direction
+    int dx = 0, dy = 0;
+    switch (dir)
+    {
+    case Direction::UP:
+        dy = -1;
+        break;
+    case Direction::DOWN:
+        dy = 1;
+        break;
+    case Direction::LEFT:
+        dx = -1;
+        break;
+    case Direction::RIGHT:
+        dx = 1;
+        break;
+    default:
+        break;
+    }
+
+    // Check collision: only edge blocks matter for obstacle boundary
     for (ObstacleBlock* block : edges[dir])
     {
         Point pos = block->getPosition();
-        switch (dir)
-        {
-        case Direction::UP:
-            if (room)
-            pos.y -= 1;
-            break;
-        case Direction::DOWN:
-            pos.y += 1;
-            break;
-        case Direction::LEFT:
-            pos.x -= 1;
-            break;
-        case Direction::RIGHT:
-            pos.x += 1;
-            break;
-        default:
-            break;
-        }
-        newPositions.push_back(pos);
-    }
-
-    // Check if all new positions are free
-    for (const Point& pos : newPositions)
-    {
-        if (room->isBlocked(pos.x, pos.y))
+        if (room->isBlocked(pos.x + dx, pos.y + dy))
         {
             return false; // Movement blocked
-        // }
-        // GameObject* obj = room->getObjectAt(newPositions[0].x, newPositions[0].y);
-        // if (obj != nullptr && obj->isPickable())
-        // {
-        //     PickableObjectInTheWay.push_back(static_cast<PickableObject*>(obj));
-        // }
         }
     }
 
-    // Move all blocks to new positions
-    for (size_t i = 0; i < blocks.size(); i++)
+    // Move ALL blocks by the same offset
+    for (ObstacleBlock* block : blocks)
     {
-        blocks[i]->setPosition(newPositions[i]);
+        Point pos = block->getPosition();
+        block->setPosition(Point(pos.x + dx, pos.y + dy));
     }
 
     return true; // Movement successful
@@ -98,16 +91,72 @@ std::vector<Direction> ObstacleBlock::neighborsToEdgeDirections(std::unordered_m
 }
 
 void Obstacle::initEdges(std::unordered_map<Point, std::vector<Point>>& neighbors)
+{
+    for (auto& block : blocks)
     {
-        for (auto& block : blocks) 
-        { 
-            if (neighbors.find(block->getPosition()) != neighbors.end()) 
+        if (neighbors.find(block->getPosition()) != neighbors.end())
+        {
+            std::vector<Direction> blockEdges = block->neighborsToEdgeDirections(neighbors);
+            for (const Direction& dir : blockEdges)
             {
-                std::vector<Direction> blockEdges = block->neighborsToEdgeDirections(neighbors);
-                for (const Direction& dir : blockEdges) 
-                {
-                    edges[dir].push_back(block);
-                }
-            }    
+                edges[dir].push_back(block);
+            }
         }
     }
+}
+
+void Obstacle::resetPushState()
+{
+    accumulatedForce = 0;
+    pushDirection = Direction::STAY;
+    pushers.clear();
+}
+
+bool Obstacle::tryPush(Direction dir, int force, Room* room, Player* pusher)
+{
+    // First push this frame - initialize direction
+    if (pushers.empty())
+    {
+        pushDirection = dir;
+        accumulatedForce = force;
+        pushers.push_back(pusher);
+
+        // Check if this force alone is enough
+        if (accumulatedForce >= weight)
+            return move(dir, room, accumulatedForce);
+
+        return false;  // Not enough force yet
+    }
+
+    // Subsequent push - must be same direction
+    if (dir == pushDirection)
+    {
+        accumulatedForce += force;
+        pushers.push_back(pusher);
+
+        // Check if combined force is now enough
+        if (accumulatedForce >= weight)
+        {
+            bool moved = move(dir, room, accumulatedForce);
+            if (moved)
+            {
+                // Move all contributing players through the obstacle
+                for (Player* p : pushers)
+                {
+                    // Move player one step in push direction
+                    switch (dir)
+                    {
+                        case Direction::UP:    p->pos.y--; break;
+                        case Direction::DOWN:  p->pos.y++; break;
+                        case Direction::LEFT:  p->pos.x--; break;
+                        case Direction::RIGHT: p->pos.x++; break;
+                        default: break;
+                    }
+                }
+            }
+            return moved;
+        }
+    }
+
+    return false;  // Either wrong direction or still not enough force
+}

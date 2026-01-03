@@ -5,6 +5,7 @@
 #include "Riddle.h"
 #include "Spring.h"
 #include "DebugLog.h"
+#include "Obstacle.h"
 
 class Constants;
 
@@ -240,6 +241,12 @@ void Game::update()
     Room *room = getCurrentRoom();
     if (room == nullptr)
         return;
+
+    // Reset obstacle push state for all obstacles each frame
+    for (Obstacle* obstacle : room->obstacles)
+    {
+        obstacle->resetPushState();
+    }
 
     // Debug: Track launch state at start of update
     DebugLog::getStream() << "[UPDATE_START] P1 launched: " << (player1.isLaunched() ? "YES" : "NO")

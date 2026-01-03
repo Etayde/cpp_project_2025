@@ -922,13 +922,9 @@ void Player::transferMomentumTo(Player* otherPlayer)
     otherPlayer->pos.diff_y = pos.diff_y;
 }
 
-////////////////////////////////////////////   handleObstacleInteraction   //////////////////////////////////////////
-bool Player::handleObstacleInteraction(class ObstacleBlock* block, Room* room)
+////////////////////////////////////////////   calculateForce   //////////////////////////////////////////
+int Player::calculateForce() const
 {
-    Obstacle* obstacle = block->getParent();
-    if (obstacle == nullptr)
-        return false;
-    
     int dx, dy;
     if (springMomentum.isActive())
     {
@@ -940,13 +936,22 @@ bool Player::handleObstacleInteraction(class ObstacleBlock* block, Room* room)
         dx = abs(pos.diff_x);
         dy = abs(pos.diff_y);
     }
+    return dx > dy ? dx : dy;
+}
 
-    int force = dx > dy ? dx : dy;
+////////////////////////////////////////////   handleObstacleInteraction   //////////////////////////////////////////
+bool Player::handleObstacleInteraction(class ObstacleBlock* block, Room* room)
+{
+    Obstacle* obstacle = block->getParent();
+    if (obstacle == nullptr)
+        return false;
 
+    // Calculate force and direction
+    int force = calculateForce();
     Direction pushDir = getCurrentDirection();
 
-    bool obstacleMoved = obstacle->move(pushDir, room);
+    // Try to push obstacle (Obstacle handles collaboration and movement internally)
+    bool obstacleMoved = obstacle->tryPush(pushDir, force, room, this);
 
-    return (!obstacleMoved);
-
+    return !obstacleMoved;  // Return true to block player if obstacle didn't move
 }

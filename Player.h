@@ -137,6 +137,7 @@ public:
     // Movement helpers
     Direction getCurrentDirection() const;
     Direction actionToDirection(Action action) const;
+    int calculateForce() const;
 
 private:
     void clearInventory();
