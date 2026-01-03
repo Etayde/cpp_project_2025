@@ -39,15 +39,9 @@ void Spring::initialize(const std::vector<SpringLink*>& springLinks,
 
 bool Spring::canCompressLink(int linkIndex, Direction playerDir) const
 {
-    DebugLog::getStream() << "[SPRING_CAN_COMPRESS] Checking link " << linkIndex
-                          << " | PlayerDir: " << static_cast<int>(playerDir)
-                          << " | CompressionDir: " << static_cast<int>(compressionDir) << std::endl;
-
     // Must be valid index
     if (linkIndex < 0 || linkIndex >= static_cast<int>(links.size()))
     {
-        DebugLog::getStream() << "[SPRING_CAN_COMPRESS] FAIL: Invalid link index " << linkIndex
-                              << " (size: " << links.size() << ")" << std::endl;
         return false;
     }
 
@@ -72,8 +66,6 @@ bool Spring::canCompressLink(int linkIndex, Direction playerDir) const
     {
         if (!links[i]->isCollapsed())
         {
-            DebugLog::getStream() << "[SPRING_CAN_COMPRESS] FAIL: Link " << i
-                                  << " not compressed (gap in sequence)" << std::endl;
             return false;  // Gap in compression sequence
         }
     }
@@ -81,8 +73,6 @@ bool Spring::canCompressLink(int linkIndex, Direction playerDir) const
     // Link itself must not already be collapsed
     if (links[linkIndex]->isCollapsed())
     {
-        DebugLog::getStream() << "[SPRING_CAN_COMPRESS] FAIL: Link " << linkIndex
-                              << " already collapsed" << std::endl;
         return false;
     }
 
@@ -214,7 +204,6 @@ Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Play
 {
     if (link == nullptr || player == nullptr)
     {
-        DebugLog::getStream() << "[PLAYER_SPRING] ERROR: Null link or player!" << std::endl;
         return {false, false, Momentum() };
     }
 
@@ -230,43 +219,32 @@ Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Play
 
     // Check if compression is valid
     if (!canCompressLink(link->getLinkIndex(), moveDir))
+   
+    DebugLog::getStream() << "[PLAYER_SPRING] Can't compress link" << std::endl;
+
     {
         if (isCompressed()) 
-        {
-            DebugLog::getStream() << "[PLAYER_SPRING] Launch triggered!" << std::endl;
-            
+        {            
+            DebugLog::getStream() << "[SPRING_STATE] Current compression: " << compressedCount << std::endl;
+
             Momentum launch = calculateLaunchMomentum();
 
-            DebugLog::getStream() << "[SPRING_LAUNCH] Player " << player->getId()
-                          << " launched: vel(" << launch.getDX()
-                          << "," << launch.getDY()
-                          << ") frames:" << launch.getLaunchFramesRemaining() << std::endl;
+            DebugLog::getStream() << "[SPRING_STAE] Momentum calculated" << std::endl;
 
             resetCompression(room);
-            return {false, true, launch };
+            return {true, true, launch };
         } 
         else
         {
-            DebugLog::getStream() << "[PLAYER_SPRING] Compression not valid - passing through" << std::endl;
             return {false, false, Momentum() };
         }
     }
 
-    DebugLog::getStream() << "[PLAYER_SPRING] Compression valid - compressing link" << std::endl;
-
     // Compress this link
     compressLink(link->getLinkIndex(), room);
 
-    DebugLog::getStream() << "[PLAYER_SPRING] After compression - Level: "
-                          << getCompressionLevel() << "/"
-                          << getLinkCount() << std::endl;
-
     // Check if should launch
     bool fullyCompressed = isFullyCompressed();
-
-    DebugLog::getStream() << "[PLAYER_SPRING] Launch check - FullyCompressed: "
-                          << (fullyCompressed ? "YES" : "NO")
-                          << " | Player changed direction: " << (moveDir == compressionDir ? "NO" : "YES") << std::endl;
 
     if (!fullyCompressed && moveDir == compressionDir)
     {
