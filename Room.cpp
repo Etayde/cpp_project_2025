@@ -157,6 +157,8 @@ void Room::loadObjects()
     keysCollected = 0;
     activeSwitches = 0;
     totalSwitches = 0;
+    std::vector<Point> springPositions;
+    std::vector<Point> obstaclePositions;
 
     if (baseLayout == nullptr)
         return;
@@ -166,6 +168,18 @@ void Room::loadObjects()
         for (int x = 0; x < MAX_X; x++)
         {
             char ch = baseLayout->getCharAt(x, y);
+
+            if (ch == '#') 
+            {
+                springPositions.push_back(Point(x, y));
+                continue;
+            }
+            if (ch == '*')
+            {
+                obstaclePositions.push_back(Point(x, y));
+                continue;
+            }
+
             GameObject *obj = createObjectFromChar(ch, x, y);
 
             if (obj != nullptr)
@@ -186,8 +200,9 @@ void Room::loadObjects()
         }
     }
 
-    // Auto-scan and create springs
-    scanAndCreateSprings();
+    // create springs and obstacles from grouped positions
+    createMultiCellObject(springPositions);
+    createMultiCellObject(obstaclePositions);
 }
 
 //////////////////////////////////////////    setDoorRequirements      //////////////////////////////////////////
@@ -933,23 +948,15 @@ void Room::scanAndCreateSprings()
 
 ///////////////////////////////////////////     createMultiCellObject   //////////////////////////////////////////
 
-void Room::createMultiCellObject(char ch)
+void Room::createMultiCellObject(const std::vector<Point>& allObjCells)
 {
     if (baseLayout == nullptr)
         return;
-
-    // Step 1: Collect all ch positions
-    std::vector<Point> allObjCells;
-    for (int y = 0; y < MAX_Y_INGAME; y++)
-    {
-        for (int x = 0; x < MAX_X; x++)
-        {
-            if (baseLayout->getCharAt(x, y) == ch)
-            {
-                allObjCells.push_back(Point(x, y));
-            }
-        }
-    }
+    
+    if (allObjCells.empty())
+        return;
+    
+    char ch = baseLayout->getCharAt(allObjCells[0].x, allObjCells[0].y);
 
     // Step 2: Group adjacent cells into springs
     bool processed[MAX_Y_INGAME][MAX_X] = {false};
@@ -1101,6 +1108,7 @@ void Room::createObstacleFromGroup(const std::vector<Point>& group,std::unordere
     {
         ObstacleBlock* block = new ObstacleBlock(pos, obstacle);
         blocks.push_back(block);
+        
         if (!addObject(block))
         {
             delete block;
@@ -1113,40 +1121,11 @@ void Room::createObstacleFromGroup(const std::vector<Point>& group,std::unordere
     if (!addFailed)
     {
         obstacle->initialize(blocks);
+        obstacle->initEdges(neighbors);
         obstacles.push_back(obstacle);
     }
     else
     {
         delete obstacle;
     }
-}
-
-
-void Room::neighborsToEdgeDirections(ObstacleBlock* block, 
-    std::unordered_map<Point, std::vector<Point>>& neighbors) const
-{
-    int x = block->getX();
-    int y = block->getY();
-
-    std::vector<Direction> edgeDirections;
-    std::vector<Point> neighborPositions = neighbors[Point(x, y)];
-
-    if (neighborPositions.empty())
-        return;
-
-    for (const Point& np : neighborPositions)
-    {
-        if (np.x == x && np.y == y - 1)
-            edgeDirections.push_back(Direction::UP);
-        else if (np.x == x && np.y == y + 1)
-            edgeDirections.push_back(Direction::DOWN);
-        else if (np.x == x - 1 && np.y == y)
-            edgeDirections.push_back(Direction::LEFT);
-        else if (np.x == x + 1 && np.y == y)
-            edgeDirections.push_back(Direction::RIGHT);
-    }
-
-    block->setEdgeDirections(edgeDirections);
-
-    return;
 }

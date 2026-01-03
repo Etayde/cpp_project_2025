@@ -54,4 +54,8 @@ public:
     const std::vector<ObstacleBlock *>& getBlocks() const { return blocks; }
     bool canBeMoved(int force) const { return force >= weight; }
     bool move(Direction dir, Room* room);
+    void initEdges(std::unordered_map<Point, std::vector<Point>>& neighbors)
+    {
+        for (auto& block : blocks) { block->neighborsToEdgeDirections(neighbors); }
+    }
 };

@@ -184,10 +184,8 @@ private:
     std::vector<Point> sortPositions(const std::vector<Point>& positions, Direction orientation);
     WallCheckResult checkWallAdjacency(const std::vector<Point>& sorted, Direction orientation);
     void scanAndCreateSprings();
-    void createMultiCellObject(char ch);
+    void createMultiCellObject(const std::vector<Point>& allObjCells);
     void createSpringFromGroup(const std::vector<Point>& group);
     void createObstacleFromGroup(const std::vector<Point>& group, 
         std::unordered_map<Point, std::vector<Point>>& neighbors);
-    void neighborsToEdgeDirections(ObstacleBlock* block, 
-        std::unordered_map<Point, std::vector<Point>>& neighbors) const;
 };
