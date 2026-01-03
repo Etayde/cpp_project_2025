@@ -56,3 +56,13 @@ public:
     bool operator==(const Point &other) const { return x == other.x && y == other.y; }
     bool operator!=(const Point &other) const { return !(*this == other); }
 };
+
+// Hash function for Point to use in unordered_map
+namespace std {
+    template<>
+    struct hash<Point> {
+        size_t operator()(const Point& p) const {
+            return hash<int>()(p.x) ^ (hash<int>()(p.y) << 1);
+        }
+    };
+}

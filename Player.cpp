@@ -518,7 +518,7 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room* room, Riddle** a
         {
             ObstacleBlock* obstacle = dynamic_cast<ObstacleBlock*>(obj);
             if (obstacle != nullptr)
-                return handleObstacleInteraction(block, room); // Blocks movement
+                return handleObstacleInteraction(obstacle, room); // Blocks movement
         }
 
         default:

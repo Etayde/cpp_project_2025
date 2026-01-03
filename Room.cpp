@@ -11,6 +11,8 @@
 #include "SpringLink.h"
 #include "Obstacle.h"
 #include "DebugLog.h"
+#include <vector>
+#include <unordered_map>
 #include <cmath>
 #include <algorithm>
 
@@ -936,7 +938,7 @@ void Room::createMultiCellObject(char ch)
     if (baseLayout == nullptr)
         return;
 
-    // Step 1: Collect all '#' positions
+    // Step 1: Collect all ch positions
     std::vector<Point> allObjCells;
     for (int y = 0; y < MAX_Y_INGAME; y++)
     {
@@ -959,6 +961,7 @@ void Room::createMultiCellObject(char ch)
 
         // Start new spring group
         std::vector<Point> group;
+        std::unordered_map<Point, std::vector<Point>> edges;  // To store edge positions for obstacles
         group.push_back(p);
         processed[p.y][p.x] = true;
 
@@ -978,14 +981,24 @@ void Room::createMultiCellObject(char ch)
             {
                 if (neighbor.x >= 0 && neighbor.x < MAX_X &&
                     neighbor.y >= 0 && neighbor.y < MAX_Y_INGAME &&
-                    !processed[neighbor.y][neighbor.x] &&
-                    baseLayout->getCharAt(neighbor.x, neighbor.y) == ch)
+                    !processed[neighbor.y][neighbor.x])
                 {
+                    if (!baseLayout->getCharAt(neighbor.x, neighbor.y) == ch) 
+                        switch (ch)
+                        {
+                            case '*':
+                                edges[group[i]].push_back(neighbor);
+                            default:
+                                continue;
+                        }
+                
                     group.push_back(neighbor);
                     processed[neighbor.y][neighbor.x] = true;
+                
                 }
             }
         }
+    
         // Step 3: Process the collected group based on character type
         switch (ch)
         {
@@ -994,7 +1007,7 @@ void Room::createMultiCellObject(char ch)
                 createSpringFromGroup(group);
                 break;
             case '*':
-                createObstacleFromGroup(group);
+                createObstacleFromGroup(group, edges);
                 break;
             default:
                 break;
@@ -1078,7 +1091,7 @@ void Room::createSpringFromGroup(const std::vector<Point>& group)
 
 //////////////////////////////////////////   createObstacleFromGroup  //////////////////////////////////////////
 
-void Room::createObstacleFromGroup(const std::vector<Point>& group)
+void Room::createObstacleFromGroup(const std::vector<Point>& group,std::unordered_map<Point, std::vector<Point>>& neighbors)
 {
     Obstacle* obstacle = new Obstacle();
     std::vector<ObstacleBlock*> blocks;
@@ -1094,6 +1107,7 @@ void Room::createObstacleFromGroup(const std::vector<Point>& group)
             addFailed = true;
             break;
         }
+        
     }
 
     if (!addFailed)
@@ -1105,4 +1119,34 @@ void Room::createObstacleFromGroup(const std::vector<Point>& group)
     {
         delete obstacle;
     }
+}
+
+
+void Room::neighborsToEdgeDirections(ObstacleBlock* block, 
+    std::unordered_map<Point, std::vector<Point>>& neighbors) const
+{
+    int x = block->getX();
+    int y = block->getY();
+
+    std::vector<Direction> edgeDirections;
+    std::vector<Point> neighborPositions = neighbors[Point(x, y)];
+
+    if (neighborPositions.empty())
+        return;
+
+    for (const Point& np : neighborPositions)
+    {
+        if (np.x == x && np.y == y - 1)
+            edgeDirections.push_back(Direction::UP);
+        else if (np.x == x && np.y == y + 1)
+            edgeDirections.push_back(Direction::DOWN);
+        else if (np.x == x - 1 && np.y == y)
+            edgeDirections.push_back(Direction::LEFT);
+        else if (np.x == x + 1 && np.y == y)
+            edgeDirections.push_back(Direction::RIGHT);
+    }
+
+    block->setEdgeDirections(edgeDirections);
+
+    return;
 }

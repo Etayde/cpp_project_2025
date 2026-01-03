@@ -43,7 +43,7 @@ bool Obstacle::move(Direction dir, Room* room)
     // Check if all new positions are free
     for (const Point& pos : newPositions)
     {
-        if (room->isCellBlocking(pos.x, pos.y))
+        if (room->isBlocked(pos.x, pos.y))
         {
             return false; // Movement blocked
         }
@@ -56,4 +56,32 @@ bool Obstacle::move(Direction dir, Room* room)
     }
 
     return true; // Movement successful
+}
+
+void ObstacleBlock::neighborsToEdgeDirections(std::unordered_map<Point, std::vector<Point>>& neighbors)
+{
+    int x = position.x;
+    int y = position.y;
+
+    std::vector<Direction> edgeDirections;
+    std::vector<Point> neighborPositions = neighbors[Point(x, y)];
+
+    if (neighborPositions.empty())
+        return;
+
+    for (const Point& np : neighborPositions)
+    {
+        if (np.x == x && np.y == y - 1)
+            edgeDirections.push_back(Direction::UP);
+        else if (np.x == x && np.y == y + 1)
+            edgeDirections.push_back(Direction::DOWN);
+        else if (np.x == x - 1 && np.y == y)
+            edgeDirections.push_back(Direction::LEFT);
+        else if (np.x == x + 1 && np.y == y)
+            edgeDirections.push_back(Direction::RIGHT);
+    }
+
+    setEdgeDirections(edgeDirections);
+
+    return;
 }

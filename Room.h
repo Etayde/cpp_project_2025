@@ -7,9 +7,12 @@
 #include "GameObject.h"
 #include "Constants.h"
 #include <vector>
+#include <unordered_map>
 
 class Player;
 class Spring;
+class Obstacle;
+class ObstacleBlock;
 
 //////////////////////////////////////////        Modification        //////////////////////////////////////////
 
@@ -183,5 +186,8 @@ private:
     void scanAndCreateSprings();
     void createMultiCellObject(char ch);
     void createSpringFromGroup(const std::vector<Point>& group);
-    void createObstacleFromGroup(const std::vector<Point>& group);
+    void createObstacleFromGroup(const std::vector<Point>& group, 
+        std::unordered_map<Point, std::vector<Point>>& neighbors);
+    void neighborsToEdgeDirections(ObstacleBlock* block, 
+        std::unordered_map<Point, std::vector<Point>>& neighbors) const;
 };

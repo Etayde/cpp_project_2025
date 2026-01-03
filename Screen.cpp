@@ -36,7 +36,7 @@ ObjectType Screen::objectIs(const Point &p) const
     case '#':
         return ObjectType::SPRING;
     case '*':
-        return ObjectType::OBSTACLE;
+        return ObjectType::OBSTACLE_BLOCK;
     case '!':
         return ObjectType::TORCH;
     case '@':
