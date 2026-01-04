@@ -248,18 +248,9 @@ void Game::update()
         obstacle->resetPushState();
     }
 
-    // Debug: Track launch state at start of update
-    DebugLog::getStream() << "[UPDATE_START] P1 launched: " << (player1.isLaunched() ? "YES" : "NO")
-                          << " | P2 launched: " << (player2.isLaunched() ? "YES" : "NO") << std::endl;
-
-    // Handle player movement - pass pointers to aRiddle so it gets set immediately
-    // NOTE: Launch frame decrement is now handled inside move() method during Bresenham traversal
+    // Handle player movement
     player1.move(room, &aRiddle.riddle, &aRiddle.player, &player2);
     player2.move(room, &aRiddle.riddle, &aRiddle.player, &player1);
-
-    // Debug: Track launch state after move
-    DebugLog::getStream() << "[UPDATE_END] P1 launched: " << (player1.isLaunched() ? "YES" : "NO")
-                          << " | P2 launched: " << (player2.isLaunched() ? "YES" : "NO") << std::endl;
 
     // Check if either player requested pause (from riddle ESC)
     if (player1.requestPause || player2.requestPause)
@@ -270,7 +261,7 @@ void Game::update()
         return;
     }
 
-    // Update all objects (bombs explode themselves and return results)
+    // Update all objects - also returns explosion results if bomb explodes
     ExplosionResult explosionResult = room->updateAllObjects(&player1, &player2);
     if (explosionResult.player1Hit || explosionResult.player2Hit ||
         explosionResult.keyDestroyed)

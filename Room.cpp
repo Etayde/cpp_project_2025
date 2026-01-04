@@ -757,7 +757,7 @@ ExplosionResult Room::updateAllObjects(Player *p1, Player *p2)
         }
     }
 
-    // Clean up inactive GameObjects (destroyed by explosions)
+    // Clean up inactive GameObjects if destroyed by explosions
     for (int i = static_cast<int>(objects.size()) - 1; i >= 0; i--)
     {
         if (objects[i] && !objects[i]->isActive())

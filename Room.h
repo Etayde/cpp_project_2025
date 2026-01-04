@@ -134,7 +134,7 @@ public:
     void setCharAt(int x, int y, char c);
     void resetMods();
 
-    // Query methods (preferred over direct character access)
+    // Query methods 
     ObjectType getObjectTypeAt(int x, int y) const;
     bool isWallAt(int x, int y) const;
 
