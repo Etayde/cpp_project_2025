@@ -440,8 +440,7 @@ void Game::showVictory() { victoryScreen.draw(); }
 
 void Game::showGameOver() { gameOverScreen.draw(); }
 
-//////////////////////////////////////////      initializeRooms
-/////////////////////////////////////////////
+//////////////////////////////////////////      initializeRooms      /////////////////////////////////////////////
 
 // Initialize all rooms with layouts and requirements
 void Game::initializeRooms() {

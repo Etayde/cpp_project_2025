@@ -10,7 +10,7 @@ std::string LevelLoader::getScreenFilename(int number) {
   std::string filename = "adv-world";
   filename += static_cast<char>('0' + (number / 10)); // tens digit
   filename += static_cast<char>('0' + (number % 10)); // ones digit
-  filename += ".screen";
+  filename += ".screen.txt";
   return filename;
 }
 

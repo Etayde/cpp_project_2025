@@ -1,0 +1,32 @@
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+W                                                  #            W              W
+W                                                  #            WWWW    W   WWWW
+W           **                                     #            W      WW      W
+0                                                  #            W   WWWWWWW    W
+W                                        *                      W      W       W
+W                ?                       *****                  WWWW \ W       W
+W                                                               WWWWWWWW       W
+W                               @                                              W
+W             *                 www                                       #####W
+W###         **                                                                W
+W                                                                              W
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW                              W
+W                                               W                              W
+W        WWWWWWWWWWWWWWWWWWWWW                  W                              W
+W        W                   W                  W                              W
+W        W     WWWWWWWW      W                  W                              W
+W        W          \ W      W                  W                              2
+W        WWWWWWWWWWWWWW      W     WWWWWWWWWWWWWW             #                W
+W                            W                                #                W
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+W                               | INVENTORY |                                  W
+W       PLAYER 1 ($):            -----------  PLAYER 2 (&):                    W
+W                                     |                                        W
+WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
+---METADATA---
+SPAWN 3 5
+SPAWN_PREV 75 17
+NEXT_ROOM 2
+PREV_ROOM 0
+DOOR 0 0 0
+DOOR 1 0 2
