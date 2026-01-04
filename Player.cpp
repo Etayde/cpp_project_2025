@@ -129,13 +129,14 @@ void Player::erase(Room* room)
     }
 
     // Query current state at player position
-    char currentChar = room->getCharAt(pos.x, pos.y);
+    ObjectType currentType = room->getObjectTypeAt(pos.x, pos.y);
     GameObject* obj = room->getObjectAt(pos.x, pos.y);
 
     char restoreChar;
     if (obj != nullptr && obj->getType() == ObjectType::DOOR) {
         restoreChar = obj->getSprite();
     } else {
+        char currentChar = static_cast<char>(currentType);
         restoreChar = (currentChar == ' ' || currentChar == sprite) ? ' ' : currentChar;
     }
 
@@ -290,10 +291,10 @@ Point Player::dropItem(Room *room)
 
         if (testX >= 1 && testX < MAX_X - 1 && testY >= 1 && testY < MAX_Y_INGAME - 1)
         {
-            char c = room->getCharAt(testX, testY);
+            ObjectType type = room->getObjectTypeAt(testX, testY);
             GameObject *existing = room->getObjectAt(testX, testY);
 
-            if ((c == ' ' || c == '.') && existing == nullptr)
+            if ((type == ObjectType::AIR || static_cast<char>(type) == '.') && existing == nullptr)
             {
                 dropX = testX;
                 dropY = testY;
@@ -475,12 +476,8 @@ bool Player::checkWallCollision(int nextX, int nextY, Room* room)
     if (room == nullptr)
         return false;
 
-    char nextChar = room->getCharAt(nextX, nextY);
-    if (nextChar != 'W' && nextChar != 'w')
-        return false; // No wall
-
     // Wall blocks movement
-    return true;
+    return room->isWallAt(nextX, nextY);
 }
 
 //////////////////////////////////////////  checkObjectInteraction  //////////////////////////////////////////
@@ -680,8 +677,7 @@ bool Player::isCellBlocking(int x, int y, Room* room) const
         return true;
 
     // Check wall collision
-    char cellChar = room->getCharAt(x, y);
-    if (cellChar == 'W' || cellChar == 'w')
+    if (room->isWallAt(x, y))
         return true;
 
     // Check blocking objects

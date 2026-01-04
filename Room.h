@@ -130,10 +130,13 @@ public:
     void drawDarkness();
     void drawVisibleObjects();
 
-    // Character access
-    char getCharAt(int x, int y) const;
+    // Character access (encapsulated - use query methods below)
     void setCharAt(int x, int y, char c);
     void resetMods();
+
+    // Query methods (preferred over direct character access)
+    ObjectType getObjectTypeAt(int x, int y) const;
+    bool isWallAt(int x, int y) const;
 
     // Object management
     GameObject *getObjectAt(int x, int y);
@@ -170,6 +173,9 @@ private:
     void copyObjectsFrom(const Room &other);
     void deleteAllObjects();
     void initVisibility();
+
+    // Low-level character access (private - use public query methods instead)
+    char getCharAt(int x, int y) const;
 
     // Spring creation helpers
     struct WallCheckResult

@@ -336,6 +336,24 @@ void Room::resetMods()
     mods.clear();
 }
 
+//////////////////////////////////////////     getObjectTypeAt         //////////////////////////////////////////
+
+// Get the type of entity at a position (walls, objects, etc.)
+ObjectType Room::getObjectTypeAt(int x, int y) const
+{
+    // Simply cast the character to ObjectType (enum values match chars)
+    return static_cast<ObjectType>(getCharAt(x, y));
+}
+
+//////////////////////////////////////////        isWallAt             //////////////////////////////////////////
+
+// Check if there's a wall at the given position
+bool Room::isWallAt(int x, int y) const
+{
+    char c = getCharAt(x, y);
+    return (c == 'W' || c == 'w');  // Both unbreakable and breakable walls
+}
+
 //////////////////////////////////////////        getObjectAt          //////////////////////////////////////////
 
 // Get object at position
@@ -467,8 +485,7 @@ std::vector<Switch *> Room::getSwitches()
 // Check if position is blocked
 bool Room::isBlocked(int x, int y)
 {
-    char c = getCharAt(x, y);
-    if (c == 'W' || c == 'w')
+    if (isWallAt(x, y))
         return true;
 
     GameObject *obj = getObjectAt(x, y);
@@ -499,8 +516,12 @@ bool Room::hasLineOfSight(int x1, int y1, int x2, int y2)
     {
         if (x != x1 || y != y1)
         {
-            char c = getCharAt(x, y);
-            if (c == 'W' || (c >= '0' && c <= '9'))
+            // Walls and doors block line of sight
+            if (isWallAt(x, y))
+                return false;
+
+            char c = getCharAt(x, y);  // Still need char for door check
+            if (c >= '0' && c <= '9')  // Doors
                 return false;
         }
 

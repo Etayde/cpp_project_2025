@@ -81,11 +81,15 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
             if (!currentRoom->hasLineOfSight(centerX, centerY, x, y))
                 continue;
 
-            // Get character at position
-            char c = currentRoom->getCharAt(x, y);
+            // Get what's at this position
+            ObjectType type = currentRoom->getObjectTypeAt(x, y);
 
-            // Skip walls and doors
-            if (c == 'W' || (c >= '0' && c <= '9'))
+            // Skip unbreakable walls
+            if (type == ObjectType::WALL)
+                continue;
+
+            // Skip doors
+            if (static_cast<char>(type) >= '0' && static_cast<char>(type) <= '9')
                 continue;
 
             // Check player hits
@@ -110,17 +114,17 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
                     result.objectsDestroyed++;
                 }
             }
-            else if (c == 'w')
+            else if (type == ObjectType::BREAKABLE_WALL)
             {
-                // Destroy non-object destructibles (like spring segments)
+                // Destroy breakable walls
                 currentRoom->setCharAt(x, y, ' ');
                 gotoxy(x, y);
                 std::cout << ' ';
                 result.objectsDestroyed++;
             }
-            else if (c != ' ' && c != 'W' && !(c >= '0' && c <= '9'))
+            else if (type != ObjectType::AIR && type != ObjectType::WALL)
             {
-                // Destroy other destructible characters
+                // Destroy other destructible characters (spring segments, etc.)
                 currentRoom->setCharAt(x, y, ' ');
                 gotoxy(x, y);
                 std::cout << ' ';
