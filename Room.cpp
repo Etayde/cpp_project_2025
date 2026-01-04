@@ -46,6 +46,12 @@ Room::~Room() {
     delete spring;
   }
   springs.clear();
+
+  // Delete obstacles (separate from objects)
+  for (Obstacle *obstacle : obstacles) {
+    delete obstacle;
+  }
+  obstacles.clear();
 }
 
 //////////////////////////////////////////      Room Copy Constructor

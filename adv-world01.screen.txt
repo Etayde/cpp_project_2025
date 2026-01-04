@@ -18,10 +18,10 @@ W                               #                                    WZZZZZZZZW
 W                  !            #                                    W        W
 W                                                                    W        1
 W                  @                                                 W        W
-W                              W*WWW                                 WWWWWWWWWW
-W                              W* \W                                          W
-W                              W WWW                                          W
-W                              W W                                            W
+WWWWWWWWWWWWWWWWWWWWWW         W*WWW                                 WWWWWWWWWW
+W                    W         W* \W                                          W
+W                    W         W WWW                                          W
+W                    W         W W                                            W
 WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 ---METADATA---
 SPAWN 3 4

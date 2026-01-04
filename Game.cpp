@@ -448,9 +448,10 @@ void Game::initializeRooms() {
   int riddlesLoaded = LevelLoader::loadRiddleFile();
   (void)riddlesLoaded; // Suppress unused variable warning
 
-  // Try to load rooms from screen files
+  // PHASE 1: Load all screens from files
+  std::vector<Screen*> screens;
+  std::vector<RoomMetadata> metadatas;
   int fileNumber = 1;
-  int riddleCounter = 0;
 
   while (true) {
     RoomMetadata metadata;
@@ -460,32 +461,13 @@ void Game::initializeRooms() {
       break; // No more files found
     }
 
-    loadedScreens.push_back(screen);
-    rooms.push_back(Room(static_cast<int>(rooms.size())));
-
-    Room &room = rooms.back();
-    room.initFromLayout(screen, &riddleCounter);
-    room.spawnPoint = metadata.spawnPoint;
-    room.spawnPointFromNext = metadata.spawnPointFromNext;
-    room.nextRoomId = metadata.nextRoomId;
-    room.prevRoomId = metadata.prevRoomId;
-
-    // Apply door requirements from metadata
-    for (const auto &doorConfig : metadata.doorConfigs) {
-      room.setDoorRequirements(std::get<0>(doorConfig), std::get<1>(doorConfig),
-                               std::get<2>(doorConfig));
-    }
-
-    // Apply dark zones from metadata
-    for (const auto &dz : metadata.darkZones) {
-      room.addDarkZone(dz.x1, dz.y1, dz.x2, dz.y2);
-    }
-
+    screens.push_back(screen);
+    metadatas.push_back(metadata);
     fileNumber++;
   }
 
   // If no files were loaded, fall back to hardcoded layouts
-  if (rooms.empty()) {
+  if (screens.empty()) {
     rooms.resize(2);
 
     // Room 0
@@ -508,6 +490,35 @@ void Game::initializeRooms() {
     rooms[1].setDoorRequirements(2, 2, 0);
     rooms[1].addDarkZone(20, 5, 46, 14);
     rooms[1].addDarkZone(62, 5, 77, 8);
+  }
+
+  // PHASE 2: Reserve exact capacity (prevents reallocation)
+  rooms.reserve(screens.size());
+  loadedScreens.reserve(screens.size());
+
+  // PHASE 3: Create all rooms (no reallocation will occur)
+  int riddleCounter = 0;
+  for (size_t i = 0; i < screens.size(); i++) {
+    loadedScreens.push_back(screens[i]);
+    rooms.push_back(Room(static_cast<int>(i)));
+
+    Room &room = rooms.back();
+    room.initFromLayout(screens[i], &riddleCounter);
+    room.spawnPoint = metadatas[i].spawnPoint;
+    room.spawnPointFromNext = metadatas[i].spawnPointFromNext;
+    room.nextRoomId = metadatas[i].nextRoomId;
+    room.prevRoomId = metadatas[i].prevRoomId;
+
+    // Apply door requirements from metadata
+    for (const auto &doorConfig : metadatas[i].doorConfigs) {
+      room.setDoorRequirements(std::get<0>(doorConfig), std::get<1>(doorConfig),
+                               std::get<2>(doorConfig));
+    }
+
+    // Apply dark zones from metadata
+    for (const auto &dz : metadatas[i].darkZones) {
+      room.addDarkZone(dz.x1, dz.y1, dz.x2, dz.y2);
+    }
   }
 
   // Set which room triggers victory when completed
