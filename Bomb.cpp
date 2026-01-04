@@ -39,6 +39,10 @@ ExplosionResult Bomb::update(Player *p1, Player *p2)
 
 //////////////////////////////////////////         explode           //////////////////////////////////////////
 
+// This method, along with other parts of the bomb's logic methods,
+// were made with AI assistance in the previous excercise but were in different classes.
+// For better OOP oriented design, I moved the explode logic into the Bomb class itself
+// to support better encapsulation and self containment.
 ExplosionResult Bomb::explode(Player *p1, Player *p2)
 {
     // Initialize explosion result
