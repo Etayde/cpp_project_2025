@@ -82,6 +82,7 @@ class Room {
 public:
   // Room identity
   int roomId;
+  Point legendTopLeft;
   bool active;
   bool completed;
 
@@ -125,11 +126,19 @@ public:
   void initFromLayout(const Screen *layout, int *riddleCounter = nullptr);
   void loadObjects(int *riddleCounter = nullptr);
   void setDoorRequirements(int doorId, int keys, int switches = 0);
+  void setLegendPoint(int x, int y) { legendTopLeft = Point(x, y); };
 
   // Drawing
   void draw();
   void drawDarkness();
   void drawVisibleObjects();
+
+  // Legend
+  void drawLegend(Player *p1, Player *p2);
+  void drawEmptyLegend();
+  void drawLegendInfo(Player *p1, Player *p2);
+  void drawPlayerStats(Player* p);
+  void DrawLives(Player* p);
 
   // Character access (encapsulated - use query methods below)
   void setCharAt(int x, int y, char c);

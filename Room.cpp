@@ -4,6 +4,7 @@
 
 #include "Room.h"
 #include "Bomb.h"
+#include "Constants.h"
 #include "DebugLog.h"
 #include "Door.h"
 #include "Items.h"
@@ -15,6 +16,7 @@
 #include "Switch.h"
 #include <algorithm>
 #include <cmath>
+#include <sys/unistd.h>
 #include <unordered_map>
 #include <vector>
 
@@ -22,16 +24,16 @@
 /////////////////////////////////////////////
 
 Room::Room()
-    : roomId(-1), active(false), completed(false), baseLayout(nullptr),
-      totalKeysInRoom(0), keysCollected(0), activeSwitches(0), totalSwitches(0),
-      nextRoomId(-1), prevRoomId(-1) {
+    : roomId(-1), legendTopLeft(), active(false), completed(false),
+      baseLayout(nullptr), totalKeysInRoom(0), keysCollected(0),
+      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1) {
   initVisibility();
 }
 
 Room::Room(int id)
-    : roomId(id), active(false), completed(false), baseLayout(nullptr),
-      totalKeysInRoom(0), keysCollected(0), activeSwitches(0), totalSwitches(0),
-      nextRoomId(-1), prevRoomId(-1) {
+    : roomId(id), legendTopLeft(), active(false), completed(false),
+      baseLayout(nullptr), totalKeysInRoom(0), keysCollected(0),
+      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1) {
   initVisibility();
 }
 
@@ -58,7 +60,8 @@ Room::~Room() {
 /////////////////////////////////////////////
 
 Room::Room(const Room &other)
-    : roomId(other.roomId), active(other.active), completed(other.completed),
+    : roomId(other.roomId), legendTopLeft(other.legendTopLeft),
+      active(other.active), completed(other.completed),
       baseLayout(other.baseLayout), mods(other.mods),
       totalKeysInRoom(other.totalKeysInRoom),
       keysCollected(other.keysCollected), activeSwitches(other.activeSwitches),
@@ -87,6 +90,7 @@ Room &Room::operator=(const Room &other) {
     springs.clear();
 
     roomId = other.roomId;
+    legendTopLeft = other.legendTopLeft;
     active = other.active;
     completed = other.completed;
     baseLayout = other.baseLayout;
@@ -367,7 +371,8 @@ ObjectType Room::getObjectTypeAt(int x, int y) const {
 // Check if there's a wall at the given position
 bool Room::isWallAt(int x, int y) const {
   char c = getCharAt(x, y);
-  return (c == 'W' || c == 'w'); // Both unbreakable and breakable walls
+  return (BlockingChars::isBlockingChar(
+      c)); // Both unbreakable walls and legend borders
 }
 
 //////////////////////////////////////////        getObjectAt
@@ -1192,4 +1197,94 @@ void Room::createObstacleFromGroup(
   } else {
     delete obstacle;
   }
+}
+
+void Room::drawLegend(Player *p1, Player *p2) {
+  drawEmptyLegend();
+  drawLegendInfo(p1, p2);
+}
+
+void Room::drawEmptyLegend() {
+
+  int startX = legendTopLeft.x - 1;
+  int startY = legendTopLeft.y - 1;
+
+  gotoxy(startX, startY);
+  std::cout << "+";
+  for (int i = 1; i < InventoryUI::WIDTH + 1; i++) {
+    std::cout << "-";
+  }
+  std::cout << "+";
+
+  for (int i = 1; i < InventoryUI::HEIGHT + 1; i++) {
+    gotoxy(startX, startY + i);
+    std::cout << "|";
+    gotoxy(startX + InventoryUI::WIDTH + 2, startY + i);
+    std::cout << "|";
+  }
+
+  gotoxy(startX, startY + InventoryUI::HEIGHT + 2);
+  std::cout << "+";
+  for (int i = 1; i < InventoryUI::WIDTH + 1; i++) {
+    std::cout << "-";
+  }
+  std::cout << "+";
+
+  gotoxy(startX, startY);
+  for (int i = 0; i < InventoryUI::HEIGHT; i++) {
+    for (int j = 0; j < InventoryUI::WIDTH; j++) {
+      gotoxy(startX + j, startY + i);
+      std::cout << " ";
+    }
+  }
+}
+
+void Room::drawLegendInfo(Player *p1, Player *p2) {
+  gotoxy(legendTopLeft.x + 2, legendTopLeft.y);
+  std::cout << "SCORE  LIVES  INV";
+  
+  drawPlayerStats(p1);
+  drawPlayerStats(p2);
+
+  return;
+}
+
+void Room::drawPlayerStats(Player* p) {
+  gotoxy(legendTopLeft.x, legendTopLeft.y + p->playerId);
+  std::cout << p->sprite << ":  " << p->getScore();
+  
+  DrawLives(p);
+  gotoxy(legendTopLeft.x + 17, legendTopLeft.y + p->playerId);
+  
+  if (p->hasItem()) {
+      std::cout << p->inventory->getSprite();
+  } else {
+      std::cout << " ";
+  }
+  return;
+}
+
+void Room::DrawLives(Player* p) {
+  
+  int LegendY = legendTopLeft.y + p->playerId;
+  int offset = legendTopLeft.x + 7;
+  
+  switch(p->lives) {
+    case 3:
+      gotoxy(offset, LegendY);
+      std::cout << "<3 <3 <3";
+      break;
+    case 2:
+      gotoxy(offset + 1, LegendY);
+      std::cout << "<3 <3";
+      break;
+    case 1:
+      gotoxy(offset + 2, LegendY);
+      std::cout << "&:";
+      break;
+    default:
+      break;
+  }
+
+  return;
 }

@@ -1,5 +1,6 @@
 
 #pragma once
+#include <string_view>
 //////////////////////////////////////////      SCREEN DIMENSIONS
 /////////////////////////////////////////////
 
@@ -116,7 +117,22 @@ constexpr char PLAYER2 = '&';
 /////////////////////////////////////////////
 
 namespace InventoryUI {
-constexpr int PLAYER1_X = 18;
-constexpr int PLAYER2_X = 58;
-constexpr int Y_POS = 23;
+constexpr int WIDTH = 20;
+constexpr int HEIGHT = 3;
 } // namespace InventoryUI
+
+namespace BlockingChars {
+inline constexpr char WALL = 'W';
+inline constexpr char LEGEND_CORNER = '+';
+inline constexpr char LEGEND_HORIZONTAL = '-';
+inline constexpr char LEGEND_VERTICAL = '|';
+
+// Implementation of std::string_view suggested by AI
+// Originally was implemented with switch case, but this is much cleaner
+inline std::string_view BLOCKING_CHARS = "W+|-";
+
+inline bool isBlockingChar(char c) {
+  return BLOCKING_CHARS.find(c) != std::string_view::npos;
+}
+
+} // namespace BlockingChars

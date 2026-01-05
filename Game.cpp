@@ -181,6 +181,8 @@ int Game::validateLegendPlacement(Room &room) {
     return 4;
   }
 
+  room.setLegendPoint(topLeftX, topLeftY);
+
   return 0; // Valid
 }
 
@@ -213,8 +215,8 @@ void Game::gameLoop() {
     }
     player1.draw(room);
     player2.draw(room);
-    player1.updateInventoryDisplay();
-    player2.updateInventoryDisplay();
+    if (room) room->drawLegend(&player1, &player2);
+
 
     // Riddle is active - keep showing it until answered or ESC multiple times
     while (aRiddle.isActive() && currentState == GameState::inGame) {
@@ -230,8 +232,7 @@ void Game::gameLoop() {
         }
         player1.draw(room);
         player2.draw(room);
-        player1.updateInventoryDisplay();
-        player2.updateInventoryDisplay();
+        if (room) room->drawLegend(&player1, &player2);
         break; // Exit riddle loop, continue to normal game
       } else if (result == RiddleResult::ESCAPED) {
         currentState = GameState::paused;
@@ -246,8 +247,7 @@ void Game::gameLoop() {
         }
         player1.draw(room);
         player2.draw(room);
-        player1.updateInventoryDisplay();
-        player2.updateInventoryDisplay();
+        if (room) room->drawLegend(&player1, &player2);
         break; // Exit riddle loop, continue to normal game
       }
     }
@@ -258,8 +258,7 @@ void Game::gameLoop() {
     }
     player1.draw(room);
     player2.draw(room);
-    player1.updateInventoryDisplay();
-    player2.updateInventoryDisplay();
+    if (room) room->drawLegend(&player1, &player2);
   }
 
   while (currentState == GameState::inGame) {
@@ -344,6 +343,8 @@ void Game::update() {
   room->drawVisibleObjects();
   player1.draw(room);
   player2.draw(room);
+  room->drawLegend(&player1, &player2);
+
 
   // Check room transitions
   checkRoomTransitions();
@@ -369,8 +370,8 @@ void Game::redrawCurrentRoom() {
   }
   player1.draw(room);
   player2.draw(room);
-  player1.updateInventoryDisplay();
-  player2.updateInventoryDisplay();
+  if (room) room->drawLegend(&player1, &player2);
+
 
   if (aRiddle.isActive()) {
     // Redraw the active riddle on top
@@ -663,7 +664,7 @@ void Game::changeRoom(int newRoomId, bool goingForward) {
   clrscr();
   if (getCurrentRoom()) {
     getCurrentRoom()->draw();
+    getCurrentRoom()->drawLegend(&player1, &player2);
   }
-  player1.updateInventoryDisplay();
-  player2.updateInventoryDisplay();
+
 }

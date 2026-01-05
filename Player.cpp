@@ -245,8 +245,8 @@ bool Player::pickupItem(GameObject *item) {
   inventory = item->clone();
   item->setActive(false);
 
-  updateInventoryDisplay();
   return true;
+
 }
 
 //////////////////////////////////////////         dropItem
@@ -306,7 +306,8 @@ Point Player::dropItem(Room *room) {
       keyCount--;
 
     clearInventory();
-    updateInventoryDisplay();
+    clearInventory();
+
 
     gotoxy(dropX, dropY);
     std::cout << droppedItem->getSprite() << std::flush;
@@ -380,24 +381,7 @@ void Player::performAction(Action action, Room *room) {
   }
 }
 
-//////////////////////////////////////////   updateInventoryDisplay
-/////////////////////////////////////////////
 
-// Show keys count and current item in UI area
-void Player::updateInventoryDisplay() {
-  int invX = (playerId == 1) ? InventoryUI::PLAYER1_X : InventoryUI::PLAYER2_X;
-  int invY = InventoryUI::Y_POS;
-
-  gotoxy(invX, invY);
-  std::cout << "Keys:" << keyCount << " [";
-
-  if (hasItem())
-    std::cout << inventory->getSprite();
-  else
-    std::cout << " ";
-
-  std::cout << "]   " << std::flush;
-}
 
 //////////////////////////////////////////           useKey
 /////////////////////////////////////////////
@@ -412,8 +396,8 @@ bool Player::useKey() {
       clearInventory();
     }
 
-    updateInventoryDisplay();
     return true;
+
   }
   return false;
 }
@@ -645,8 +629,8 @@ bool Player::handlePickableInteraction(GameObject *obj, int nextX, int nextY,
   obj->setActive(false);
   room->setCharAt(nextX, nextY, ' ');
 
-  updateInventoryDisplay();
   return false;
+
 }
 
 //////////////////////////////////////////   handleDoorInteraction

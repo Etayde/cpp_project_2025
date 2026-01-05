@@ -96,6 +96,7 @@ public:
   }
   int getKeyCount() const { return keyCount; }
   int getLives() const { return lives; }
+  int getScore() const { return score; }
   GameObject *getInventory() { return inventory; }
   const GameObject *getInventory() const { return inventory; }
   ObjectType getInventoryType() const {
@@ -126,7 +127,7 @@ public:
 
   void draw(Room *room = nullptr);
   void erase(Room *room);
-  void updateInventoryDisplay();
+
 
   // Movement & interaction
   bool move(Room *room, class Riddle **activeRiddle = nullptr,
