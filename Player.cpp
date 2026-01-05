@@ -158,10 +158,15 @@ void Player::respawn(Room *room) {
     startRespawn();
 }
 
-void Player::decreaseLives(Room *room) {
+void Player::loseLife(Room *room) {
+    decreaseLives();
+    respawn(room);
+    return;
+}
+
+void Player::decreaseLives() {
   if (lives > 0) lives--;
   if (lives == 0) { kill(); return; }
-  respawn(room);
 }
 
 // Log debug information during launch
@@ -962,3 +967,4 @@ bool Player::handleObstacleInteraction(class ObstacleBlock *block, Room *room) {
 
   return !obstacleMoved; // Return true to block player if obstacle didn't move
 }
+

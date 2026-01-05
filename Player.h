@@ -115,13 +115,8 @@ public:
   void setDirection(Direction dir, int speed = 1) {
     pos.setDirection(dir, speed);
   }
-  void kill() { alive = false; }
   void addKey() { keyCount++; }
   bool useKey();
-  void setLives(int l) { lives = l; }
-  void decreaseLives(Room *room);
-  void respawn(Room *room);
-  void startRespawn();
   void incrementScore(int points) {
     int newScore = score + points;
     newScore >= 0 ? score = newScore : score = 0;
@@ -130,6 +125,15 @@ public:
   // Drawing
   void draw(Room *room = nullptr);
   void erase(Room *room);
+
+  // Life management
+  void loseLife(Room *room);
+  void setLives(int l) { lives = l; }
+  void decreaseLives();
+  void respawn(Room *room);
+  void startRespawn();
+  void kill() { alive = false; }
+
 
 
   // Movement & interaction
