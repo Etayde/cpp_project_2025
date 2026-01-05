@@ -4,7 +4,7 @@ A Tree
 A Map
 A Piano
 A Clock
-2
+3
 ---RIDDLE---
 What runs but never walks?
 A River
