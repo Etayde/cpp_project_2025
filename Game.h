@@ -18,6 +18,8 @@ class Riddle;
 // Main game controller
 class Game {
 private:
+  int initErrorMessage;
+
   struct ActiveRiddle {
     Riddle *riddle;
     Player *player;

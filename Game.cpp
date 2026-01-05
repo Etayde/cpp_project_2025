@@ -20,7 +20,7 @@ class Constants;
 /////////////////////////////////////////////
 
 Game::Game()
-    : currentState(GameState::mainMenu), currentRoomId(-1),
+    : initErrorMessage(0), currentState(GameState::mainMenu), currentRoomId(-1),
       gameInitialized(false) {}
 
 Game::~Game() {
@@ -527,6 +527,24 @@ void Game::showGameOver() { gameOverScreen.draw(); }
 
 void Game::showErrorScreen() {
   initErrorScreen.draw();
+  gotoxy(22, 10);
+  switch (initErrorMessage) {
+  case 1:
+    cout << "Error: No 'L' found in room " << initErrorMessage << endl;
+    break;
+  case 2:
+    cout << "Error: Multiple 'L's found in room " << initErrorMessage << endl;
+    break;
+  case 3:
+    cout << "Error: 'L' out of bounds in room " << initErrorMessage << endl;
+    break;
+  case 4:
+    cout << "Error: 'L' accessible in room " << initErrorMessage << endl;
+    break;
+  default:
+    cout << "Unknown error" << endl;
+    break;
+  }
   while (check_kbhit())
     get_single_char();
   while (!check_kbhit())
@@ -603,15 +621,9 @@ void Game::initializeRooms() {
     // Validate Legend Placement
     int validationResult = validateLegendPlacement(room);
     if (validationResult != 0) {
-      clrscr();
-      std::cout << "Error validating legend in room " << i
-                << " (File: " << LevelLoader::getScreenFilename(fileNumber + i)
-                << "): Code " << validationResult << std::endl;
-      std::cout << "1: No 'L', 2: Multiple 'L', 3: Out of bounds, 4: "
-                   "Overlaps/Accessible"
-                << std::endl;
-      sleep_ms(1000);
-      exit(0);
+      initErrorMessage = validationResult;
+      currentState = GameState::error;
+      return;
     }
   }
 
@@ -653,13 +665,3 @@ void Game::changeRoom(int newRoomId, bool goingForward) {
   player1.updateInventoryDisplay();
   player2.updateInventoryDisplay();
 }
-
-//////////////////////////////////////////        showErrorScreen
-/////////////////////////////////////////////
-
-// void Game::showErrorScreen() {
-//   initErrorScreen.draw();
-//   gotoxy(22, 10);
-//   cout <<
-
-// }
