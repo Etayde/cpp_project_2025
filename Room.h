@@ -161,6 +161,7 @@ public:
   void addObstacle(Obstacle *obs);
   
   bool enoughSwitchesLeft() const { return activeSwitches >= totalSwitches; }
+  int getTotalSwitches() const { return totalSwitches; }
   int getDoorReqSwitches(int doorId) const { return doorReqs[doorId].requiredSwitches; }
   Point getSpawnPoint() const { return spawnPoint; }
   

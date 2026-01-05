@@ -750,6 +750,12 @@ ExplosionResult Room::updateAllObjects(Player *p1, Player *p2) {
         totalResult.player2Hit |= result.player2Hit;
         totalResult.switchesDestroyed += result.switchesDestroyed;
         totalResult.objectsDestroyed += result.objectsDestroyed;
+
+        // Decrement total switches count if any were destroyed
+        if (result.switchesDestroyed > 0) {
+          totalSwitches -= result.switchesDestroyed;
+          if (totalSwitches < 0) totalSwitches = 0;
+        }
       } else {
         obj->update(); // Standard update
       }

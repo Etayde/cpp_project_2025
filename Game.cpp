@@ -538,8 +538,28 @@ void Game::showVictory() {
 }
 
 void Game::showGameOver() { 
+
   gameOverScreen.draw(); 
-  gotoxy(40, 13);
+
+  switch (gameOverMessege) {
+  case GameOverMessege::PLAYER1_DIED:
+    gotoxy(24, 8);
+    cout << "Player 1 ($)  has died." << endl;
+    break;
+  case GameOverMessege::PLAYER2_DIED:
+    gotoxy(24,8);
+    cout << "Player 2 (&)  has died." << endl;
+    break;
+  case GameOverMessege::VALUABLE_DESTROYED:
+    gotoxy(18,8);
+    cout << "An essential object has been destroyed." << endl;
+    cout << " The game cannot continue without it." << endl;
+    break;
+  default:
+    gotoxy(24,8);
+    cout << "Unknown game over messege." << endl;
+    break;
+  }
   cout << player1.getScore() << endl;
   gotoxy(40, 14);
   cout << player2.getScore() << endl;
@@ -697,8 +717,9 @@ bool Game::checkGameOver(const ExplosionResult& result) {
 
   Room* room = getCurrentRoom();
   int neededSwitches = room->getDoorReqSwitches(room->nextRoomId);
+  int totalSwitches = room->getTotalSwitches();
 
-  if (neededSwitches > 0 && result.switchesDestroyed >= neededSwitches) {
+  if (neededSwitches > 0 && totalSwitches < neededSwitches) {
     setGameOverMessege(GameOverMessege::VALUABLE_DESTROYED);
     return true;
   }
