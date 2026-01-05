@@ -537,7 +537,13 @@ void Game::showVictory() {
   cout << player2.getScore() << endl;
 }
 
-void Game::showGameOver() { gameOverScreen.draw(); }
+void Game::showGameOver() { 
+  gameOverScreen.draw(); 
+  gotoxy(40, 13);
+  cout << player1.getScore() << endl;
+  gotoxy(40, 14);
+  cout << player2.getScore() << endl;
+}
 
 void Game::showErrorScreen() {
   initErrorScreen.draw();
@@ -682,7 +688,6 @@ bool Game::checkGameOver(const ExplosionResult& result) {
   if (player1.isDead()) {
     setGameOverMessege(GameOverMessege::PLAYER1_DIED);
     return true;
-  return false;
   } 
 
   if (player2.isDead()) {
@@ -693,11 +698,10 @@ bool Game::checkGameOver(const ExplosionResult& result) {
   Room* room = getCurrentRoom();
   int neededSwitches = room->getDoorReqSwitches(room->nextRoomId);
 
-  if (result.switchesDestroyed == neededSwitches) {
+  if (neededSwitches > 0 && result.switchesDestroyed >= neededSwitches) {
     setGameOverMessege(GameOverMessege::VALUABLE_DESTROYED);
     return true;
   }
 
   return false;
 }
-
