@@ -548,9 +548,6 @@ void Game::showGameOver() {
     cout << "Unknown game over messege." << endl;
     break;
   }
-  cout << player1.getScore() << endl;
-  gotoxy(40, 14);
-  cout << player2.getScore() << endl;
 }
 
 void Game::showErrorScreen() {
