@@ -24,7 +24,8 @@ enum class GameState {
   inGame,
   paused,
   gameOver,
-  victory
+  victory,
+  error
 };
 
 //////////////////////////////////////////          DIRECTIONS
@@ -50,7 +51,7 @@ enum class Action {
   MOVE_RIGHT,
   STAY,
   DROP_ITEM,
-  ESC
+  ESC = 27
 };
 
 //////////////////////////////////////////        RIDDLE RESULTS

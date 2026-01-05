@@ -60,6 +60,7 @@ public:
   void handlePauseInput();
   void showVictory();
   void showGameOver();
+  void showErrorScreen();
 
   // Game logic
   void initializeRooms();
@@ -74,4 +75,5 @@ public:
   void checkRoomTransitions();
   void redrawCurrentRoom();
   bool canPassThroughDoor(Room *room, int doorId);
+  int validateLegendPlacement(Room &room);
 };

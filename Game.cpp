@@ -2,12 +2,17 @@
 /////////////////////////////////////////////
 
 #include "Game.h"
+#include "Console.h"
+#include "Constants.h"
 #include "DebugLog.h"
 #include "Layouts.h"
 #include "LevelLoader.h"
 #include "Obstacle.h"
 #include "Riddle.h"
 #include "Spring.h"
+
+#include <queue>
+#include <set>
 
 class Constants;
 
@@ -91,11 +96,119 @@ void Game::run() {
       currentState = GameState::mainMenu;
       break;
 
+    case GameState::error:
+      showErrorScreen();
+      while (check_kbhit())
+        get_single_char();
+      while (!check_kbhit())
+        sleep_ms(50);
+      get_single_char();
+      gameInitialized = false; // Reset for next game
+      currentState = GameState::mainMenu;
+      break;
+
     case GameState::quit:
       running = false;
       break;
     }
   }
+}
+
+//////////////////////////////////////////   validateLegendPlacement
+/////////////////////////////////////////////
+
+int Game::validateLegendPlacement(Room &room) {
+  if (room.baseLayout == nullptr)
+    return 0; // Should not happen for file-loaded levels
+
+  // 1. Find 'L' markers
+  std::vector<Point> lMarkers;
+  for (int y = 0; y < MAX_Y; y++) {
+    for (int x = 0; x < MAX_X; x++) {
+      if (room.baseLayout->getCharAt(x, y) == 'L') {
+        lMarkers.push_back(Point(x, y));
+      }
+    }
+  }
+
+  // Error 1: No 'L' indicator
+  if (lMarkers.empty()) {
+    return 1;
+  }
+
+  // Error 2: More than one 'L' indicator
+  if (lMarkers.size() > 1) {
+    return 2;
+  }
+
+  Point lPos = lMarkers[0];
+  // Legend is 22x5, 'L' is at (topLeftX+1, topLeftY+1)
+  // So TopLeft is (lPos.x - 1, lPos.y - 1)
+  int topLeftX = lPos.x - 1;
+  int topLeftY = lPos.y - 1;
+  int width = 22;
+  int height = 5;
+
+  // Error 3: Legend doesn't have enough room (out of bounds)
+  if (topLeftX < 0 || topLeftY < 0 || topLeftX + width > MAX_X ||
+      topLeftY + height > MAX_Y) {
+    return 3;
+  }
+
+  // Error 4: Accessible by game objects or invalid overlap
+  // First, checking for invalid overlap (must be 'W' or ' ')
+  for (int y = topLeftY; y < topLeftY + height; y++) {
+    for (int x = topLeftX; x < topLeftX + width; x++) {
+      char c = room.baseLayout->getCharAt(x, y);
+      if (c != 'W' && c != ' ' && c != 'L') {
+        return 4;
+      }
+    }
+  }
+
+  // Second, checking reachability (BFS from spawn)
+  bool visited[MAX_Y][MAX_X] = {false};
+  std::queue<Point> q;
+
+  // Start BFS from spawn point
+  Point start = room.spawnPoint;
+  if (start.x >= 0 && start.x < MAX_X && start.y >= 0 && start.y < MAX_Y) {
+    q.push(start);
+    visited[start.y][start.x] = true;
+  }
+
+  while (!q.empty()) {
+    Point curr = q.front();
+    q.pop();
+
+    // Check if current reachable tile is inside Legend Area
+    if (curr.x >= topLeftX && curr.x < topLeftX + width && curr.y >= topLeftY &&
+        curr.y < topLeftY + height) {
+      return 4; // Legend overlaps reachable area
+    }
+
+    // Neighbors
+    int dx[] = {0, 0, 1, -1};
+    int dy[] = {1, -1, 0, 0};
+
+    for (int i = 0; i < 4; i++) {
+      int nx = curr.x + dx[i];
+      int ny = curr.y + dy[i];
+
+      if (nx >= 0 && nx < MAX_X && ny >= 0 && ny < MAX_Y) {
+        if (!visited[ny][nx]) {
+          char c = room.baseLayout->getCharAt(nx, ny);
+          // Walkable if NOT a wall
+          if (c != 'W' && c != 'w') {
+            visited[ny][nx] = true;
+            q.push(Point(nx, ny));
+          }
+        }
+      }
+    }
+  }
+
+  return 0; // Valid
 }
 
 //////////////////////////////////////////       startNewGame
@@ -417,7 +530,7 @@ void Game::showInstructions() { instructionsScreen.draw(); }
 void Game::handleInstructionsInput() {
   if (check_kbhit()) {
     char choice = get_single_char();
-    if (choice == 27)
+    if (choice == char(Action::ESC))
       currentState = GameState::mainMenu;
   }
 }
@@ -427,7 +540,7 @@ void Game::showPauseMenu() { pauseScreen.draw(); }
 void Game::handlePauseInput() {
   if (check_kbhit()) {
     char choice = get_single_char();
-    if (choice == 27)
+    if (choice == char(Action::ESC))
       currentState = GameState::inGame;
     else if (choice == 'h' || choice == 'H') {
       gameInitialized = false; // Reset when going to main menu
@@ -440,16 +553,31 @@ void Game::showVictory() { victoryScreen.draw(); }
 
 void Game::showGameOver() { gameOverScreen.draw(); }
 
-//////////////////////////////////////////      initializeRooms      /////////////////////////////////////////////
+void Game::showErrorScreen() {
+  initErrorScreen.draw();
+  while (check_kbhit())
+    get_single_char();
+  while (!check_kbhit())
+    sleep_ms(50);
+  get_single_char();
+  currentState = GameState::mainMenu;
+}
+
+//////////////////////////////////////////      initializeRooms
+////////////////////////////////////////////////
 
 // Initialize all rooms with layouts and requirements
 void Game::initializeRooms() {
+
+  rooms.clear();
+  loadedScreens.clear();
+
   // Try to load riddles from file first
   int riddlesLoaded = LevelLoader::loadRiddleFile();
   (void)riddlesLoaded; // Suppress unused variable warning
 
   // PHASE 1: Load all screens from files
-  std::vector<Screen*> screens;
+  std::vector<Screen *> screens;
   std::vector<RoomMetadata> metadatas;
   int fileNumber = 1;
 
@@ -466,30 +594,10 @@ void Game::initializeRooms() {
     fileNumber++;
   }
 
-  // If no files were loaded, fall back to hardcoded layouts
+  // If no files were loaded, show error
   if (screens.empty()) {
-    rooms.resize(2);
-
-    // Room 0
-    rooms[0] = Room(0);
-    rooms[0].initFromLayout(&room0Layout);
-    rooms[0].spawnPoint = Point(3, 5, 0, 0, ' ');
-    rooms[0].spawnPointFromNext = Point(75, 17, 0, 0, ' ');
-    rooms[0].nextRoomId = 1;
-    rooms[0].prevRoomId = -1;
-    rooms[0].setDoorRequirements(1, 0, 2);
-
-    // Room 1
-    rooms[1] = Room(1);
-    rooms[1].initFromLayout(&room1Layout);
-    rooms[1].spawnPoint = Point(3, 5, 0, 0, ' ');
-    rooms[1].spawnPointFromNext = Point(75, 17, 0, 0, ' ');
-    rooms[1].nextRoomId = 2;
-    rooms[1].prevRoomId = 0;
-    rooms[1].setDoorRequirements(0, 0, 0);
-    rooms[1].setDoorRequirements(2, 2, 0);
-    rooms[1].addDarkZone(20, 5, 46, 14);
-    rooms[1].addDarkZone(62, 5, 77, 8);
+    currentState = GameState::error;
+    return;
   }
 
   // PHASE 2: Reserve exact capacity (prevents reallocation)
@@ -518,6 +626,19 @@ void Game::initializeRooms() {
     // Apply dark zones from metadata
     for (const auto &dz : metadatas[i].darkZones) {
       room.addDarkZone(dz.x1, dz.y1, dz.x2, dz.y2);
+    }
+
+    // Validate Legend Placement
+    int validationResult = validateLegendPlacement(room);
+    if (validationResult != 0) {
+      clrscr();
+      std::cout << "Error validating legend in room " << i
+                << " (File: " << LevelLoader::getScreenFilename(fileNumber + i)
+                << "): Code " << validationResult << std::endl;
+      std::cout << "1: No 'L', 2: Multiple 'L', 3: Out of bounds, 4: "
+                   "Overlaps/Accessible"
+                << std::endl;
+      exit(0);
     }
   }
 
@@ -559,3 +680,13 @@ void Game::changeRoom(int newRoomId, bool goingForward) {
   player1.updateInventoryDisplay();
   player2.updateInventoryDisplay();
 }
+
+//////////////////////////////////////////        showErrorScreen
+/////////////////////////////////////////////
+
+// void Game::showErrorScreen() {
+//   initErrorScreen.draw();
+//   gotoxy(22, 10);
+//   cout <<
+
+// }

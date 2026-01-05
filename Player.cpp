@@ -18,15 +18,15 @@
 
 Player::Player()
     : inventory(nullptr), playerId(0), sprite(' '), atDoor(false), doorId(-1),
-      alive(true), keyCount(0), lives(3), waitingAtDoor(false),
+      alive(true), keyCount(0), lives(3), score(0), waitingAtDoor(false),
       requestPause(false), springMomentum(Momentum()) {
   pos = Point(1, 1, 0, 0, ' ');
 }
 
 Player::Player(int id, int startX, int startY, char playerSprite)
     : inventory(nullptr), playerId(id), sprite(playerSprite), atDoor(false),
-      doorId(-1), alive(true), keyCount(0), lives(3), waitingAtDoor(false),
-      requestPause(false), springMomentum(Momentum()) {
+      doorId(-1), alive(true), keyCount(0), lives(3), score(0),
+      waitingAtDoor(false), requestPause(false), springMomentum(Momentum()) {
   pos = Point(startX, startY, 0, 0, playerSprite);
 }
 
@@ -42,8 +42,8 @@ Player::Player(const Player &other)
     : pos(other.pos), inventory(nullptr), playerId(other.playerId),
       sprite(other.sprite), atDoor(other.atDoor), doorId(other.doorId),
       alive(other.alive), keyCount(other.keyCount), lives(other.lives),
-      waitingAtDoor(other.waitingAtDoor), requestPause(other.requestPause),
-      springMomentum(other.springMomentum) {
+      score(other.score), waitingAtDoor(other.waitingAtDoor),
+      requestPause(other.requestPause), springMomentum(other.springMomentum) {
   copyInventoryFrom(other);
 }
 
@@ -62,6 +62,7 @@ Player &Player::operator=(const Player &other) {
     alive = other.alive;
     keyCount = other.keyCount;
     lives = other.lives;
+    score = other.score;
     waitingAtDoor = other.waitingAtDoor;
     requestPause = other.requestPause;
     springMomentum = other.springMomentum;
@@ -410,6 +411,12 @@ void Player::updateInventoryDisplay() {
 bool Player::useKey() {
   if (keyCount > 0) {
     keyCount--;
+
+    // If the last key was used, remove it from inventory
+    if (keyCount == 0 && hasKey()) {
+      clearInventory();
+    }
+
     updateInventoryDisplay();
     return true;
   }

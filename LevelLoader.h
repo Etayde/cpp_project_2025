@@ -39,7 +39,6 @@ public:
   // Load riddles from riddle.txt - returns number of riddles loaded
   static int loadRiddleFile();
 
-private:
   // Generate filename: 1 -> "adv-world01.screen"
   static std::string getScreenFilename(int number);
 };

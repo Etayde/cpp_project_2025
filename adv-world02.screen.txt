@@ -1,7 +1,7 @@
 WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 W                                                  #            W              W
-W                                                  #            WWWW    W   WWWW
-W           **                                     #            W      WW      W
+W    L                                             #            WWWW    W   WWWW
+W                                                  #            W      WW      W
 0                                                  #            W   WWWWWWW    W
 W                                        *                      W      W       W
 W                ?                       *****                  WWWW \ W       W
@@ -19,9 +19,9 @@ W        W          \ W      W                  W                              2
 W        WWWWWWWWWWWWWW      W     WWWWWWWWWWWWWW             #                W
 W                            W                                #                W
 WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
-W                               | INVENTORY |                                  W
-W       PLAYER 1 ($):            -----------  PLAYER 2 (&):                    W
-W                                     |                                        W
+W L                                                                            W
+W                                                                              W
+W                                                                              W
 WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 ---METADATA---
 SPAWN 3 5
