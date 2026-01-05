@@ -1222,7 +1222,7 @@ void Room::drawEmptyLegend() {
   std::cout << "startX: " << startX << " startY: " << startY << std::endl;
   gotoxy(startX, startY);
   std::cout << "+";
-  for (int i = 1; i < InventoryUI::WIDTH; i++) {
+  for (int i = 0; i < InventoryUI::WIDTH; i++) {
     std::cout << "-";
   }
   std::cout << "+";
@@ -1230,13 +1230,13 @@ void Room::drawEmptyLegend() {
   for (int i = 1; i <= InventoryUI::HEIGHT; i++) {
     gotoxy(startX, startY + i);
     std::cout << "|";
-    gotoxy(startX + InventoryUI::WIDTH + 2, startY + i);
+    gotoxy(startX + InventoryUI::WIDTH + 1, startY + i);
     std::cout << "|";
   }
 
   gotoxy(startX, startY + InventoryUI::HEIGHT + 1);
   std::cout << "+";
-  for (int i = 1; i <= InventoryUI::WIDTH; i++) {
+  for (int i = 0; i < InventoryUI::WIDTH; i++) {
     std::cout << "-";
   }
   std::cout << "+";
