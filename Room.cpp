@@ -6,7 +6,7 @@
 #include "Bomb.h"
 #include "Console.h"
 #include "Constants.h"
-#include "DebugLog.h"
+
 #include "Door.h"
 #include "Layouts.h"
 
@@ -235,8 +235,6 @@ void Room::loadObjects(int *riddleCounter) {
   }
 
   // create springs and obstacles from grouped positions
-  DebugLog::getStream() << "[LOADOBJECTS] Found " << obstaclePositions.size()
-                        << " obstacle cells" << std::endl;
   createMultiCellObject(springPositions);
   createMultiCellObject(obstaclePositions);
 }
@@ -963,27 +961,9 @@ void Room::scanAndCreateSprings() {
             // If anchor is at the beginning (sorted[0]), reverse the array
             bool anchorIsFirst = (wallCheck.anchorPosition == sorted[0]);
 
-            DebugLog::getStream()
-                << "[ROOM_SPRING_SCAN] Found spring group with "
-                << sorted.size()
-                << " cells | Orientation: " << static_cast<int>(orientation)
-                << " | Anchor at: (" << wallCheck.anchorPosition.x << ","
-                << wallCheck.anchorPosition.y << ")"
-                << " | Projection dir: "
-                << static_cast<int>(wallCheck.projectionDirection) << std::endl;
-
             if (anchorIsFirst) {
-              DebugLog::getStream()
-                  << "[ROOM_SPRING_SCAN] Reversing array (anchor was first)"
-                  << std::endl;
               std::reverse(sorted.begin(), sorted.end());
             }
-
-            DebugLog::getStream()
-                << "[ROOM_SPRING_SCAN] Start cell: (" << sorted[0].x << ","
-                << sorted[0].y << ")"
-                << " | End cell: (" << sorted[sorted.size() - 1].x << ","
-                << sorted[sorted.size() - 1].y << ")" << std::endl;
 
             // Create Spring manager
             Spring *spring = new Spring();
@@ -998,9 +978,6 @@ void Room::scanAndCreateSprings() {
 
               // Add to objects vector
               if (!addObject(link)) {
-                DebugLog::getStream() << "[ROOM_SPRING_SCAN] ERROR: Failed to "
-                                         "add SpringLink at index "
-                                      << i << std::endl;
                 delete link;
                 addFailed = true;
                 break;
@@ -1013,15 +990,9 @@ void Room::scanAndCreateSprings() {
               spring->initialize(springLinks, wallCheck.anchorPosition,
                                  wallCheck.projectionDirection);
               springs.push_back(spring);
-              DebugLog::getStream()
-                  << "[ROOM_SPRING_SCAN] Spring created successfully with "
-                  << springLinks.size() << " links" << std::endl;
             } else {
               // Cleanup on failure
               delete spring;
-              DebugLog::getStream()
-                  << "[ROOM_SPRING_SCAN] Spring creation failed - cleaned up"
-                  << std::endl;
               // Links already added to objects will be cleaned up by
               // deleteAllObjects()
             }
@@ -1113,26 +1084,9 @@ void Room::createSpringFromGroup(const std::vector<Point> &group) {
           // If anchor is at the beginning (sorted[0]), reverse the array
           bool anchorIsFirst = (wallCheck.anchorPosition == sorted[0]);
 
-          DebugLog::getStream()
-              << "[ROOM_SPRING_SCAN] Found spring group with " << sorted.size()
-              << " cells | Orientation: " << static_cast<int>(orientation)
-              << " | Anchor at: (" << wallCheck.anchorPosition.x << ","
-              << wallCheck.anchorPosition.y << ")"
-              << " | Projection dir: "
-              << static_cast<int>(wallCheck.projectionDirection) << std::endl;
-
           if (anchorIsFirst) {
-            DebugLog::getStream()
-                << "[ROOM_SPRING_SCAN] Reversing array (anchor was first)"
-                << std::endl;
             std::reverse(sorted.begin(), sorted.end());
           }
-
-          DebugLog::getStream()
-              << "[ROOM_SPRING_SCAN] Start cell: (" << sorted[0].x << ","
-              << sorted[0].y << ")"
-              << " | End cell: (" << sorted[sorted.size() - 1].x << ","
-              << sorted[sorted.size() - 1].y << ")" << std::endl;
 
           // Create Spring manager
           Spring *spring = new Spring();
@@ -1147,9 +1101,6 @@ void Room::createSpringFromGroup(const std::vector<Point> &group) {
 
             // Add to objects vector
             if (!addObject(link)) {
-              DebugLog::getStream() << "[ROOM_SPRING_SCAN] ERROR: Failed to "
-                                       "add SpringLink at index "
-                                    << i << std::endl;
               delete link;
               addFailed = true;
               break;
@@ -1162,15 +1113,9 @@ void Room::createSpringFromGroup(const std::vector<Point> &group) {
             spring->initialize(springLinks, wallCheck.anchorPosition,
                                wallCheck.projectionDirection);
             springs.push_back(spring);
-            DebugLog::getStream()
-                << "[ROOM_SPRING_SCAN] Spring created successfully with "
-                << springLinks.size() << " links" << std::endl;
           } else {
             // Cleanup on failure
             delete spring;
-            DebugLog::getStream()
-                << "[ROOM_SPRING_SCAN] Spring creation failed - cleaned up"
-                << std::endl;
             // Links already added to objects will be cleaned up by
             // deleteAllObjects()
           }
@@ -1186,13 +1131,6 @@ void Room::createSpringFromGroup(const std::vector<Point> &group) {
 void Room::createObstacleFromGroup(
     const std::vector<Point> &group,
     std::unordered_map<Point, std::vector<Point>> &neighbors) {
-  DebugLog::getStream() << "[OBSTACLE_CREATE] Creating obstacle with "
-                        << group.size() << " blocks" << std::endl;
-  for (const Point &p : group) {
-    DebugLog::getStream() << "  Block at (" << p.x << ", " << p.y << ")"
-                          << std::endl;
-  }
-
   Obstacle *obstacle = new Obstacle();
   std::vector<ObstacleBlock *> blocks;
 

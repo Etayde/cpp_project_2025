@@ -4,7 +4,6 @@
 #include "Game.h"
 #include "Console.h"
 #include "Constants.h"
-#include "DebugLog.h"
 #include "Layouts.h"
 #include "LevelLoader.h"
 #include "Obstacle.h"
@@ -329,8 +328,8 @@ void Game::update() {
 
   // Update all objects - also returns explosion results if bomb explodes
   ExplosionResult explosionResult = room->updateAllObjects(&player1, &player2);
-  if (explosionResult.player1Hit) player1.decreaseLives(room);
-  if (explosionResult.player2Hit) player2.decreaseLives(room);
+  if (explosionResult.player1Hit) player1.loseLife(room);
+  if (explosionResult.player2Hit) player2.loseLife(room);
 
   if (checkGameOver(explosionResult)) {
     currentState = GameState::gameOver;

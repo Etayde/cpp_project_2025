@@ -3,7 +3,7 @@
 
 #include "Player.h"
 #include "Bomb.h"
-#include "DebugLog.h"
+
 #include "Door.h"
 #include "Obstacle.h"
 #include "Riddle.h"
@@ -169,16 +169,37 @@ void Player::decreaseLives() {
   if (lives == 0) { kill(); return; }
 }
 
-// Log debug information during launch
-void Player::logLaunchState() const {
-  int frames = springMomentum.getLaunchFramesRemaining();
-  if (frames > 0) {
-    DebugLog::getStream() << "[MOVE_START] Player " << playerId
-                          << " launchFrames: " << frames << " | vel("
-                          << pos.diff_x << "," << pos.diff_y << ")"
-                          << std::endl;
+void Player::fallBack(Room *room) {
+  if (room == nullptr) return;
+
+  int targetX = pos.x;
+  int targetY = pos.y;
+  Direction dir = getCurrentDirection();
+
+  switch (dir) {
+    case Direction::UP:
+      targetY += 1;
+      break;
+    case Direction::DOWN:
+      targetY -= 1;
+      break;
+    case Direction::LEFT:
+      targetX += 1;
+      break;
+    case Direction::RIGHT:
+      targetX -= 1;
+      break;
+    case Direction::STAY:
+    case Direction::HORIZONTAL:
+    case Direction::VERTICAL:
+      break;
   }
+
+  setPosition(targetX, targetY);
+  draw(room);
 }
+
+
 
 //////////////////////////////////////////           move
 /////////////////////////////////////////////
@@ -191,7 +212,7 @@ bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
     return false;
 
   // 2. Debug logging
-  logLaunchState();
+
 
   if (isRespawning()) {
       respawnTimer--;
@@ -362,38 +383,21 @@ Point Player::dropItem(Room *room) {
 
 void Player::performAction(Action action, Room *room) {
   int frames = springMomentum.getLaunchFramesRemaining();
-  // Debug: Log launchFramesRemaining at start of performAction
-  DebugLog::getStream() << "[PERFORM_ACTION_START] Player " << playerId
-                        << " launchFrames: " << frames
-                        << " | Action: " << static_cast<int>(action)
-                        << std::endl;
 
   // Check if currently launched
   if (frames > 0) {
-    DebugLog::getStream() << "[PLAYER_PERFORM_ACTION] Player " << playerId
-                          << " is launched (frames:" << frames
-                          << " vel:" << pos.diff_x << "," << pos.diff_y
-                          << ") | Action: " << static_cast<int>(action)
-                          << std::endl;
 
     Direction inputDir = actionToDirection(action);
-    DebugLog::getStream() << "[DIRECTION_INPUT] " << static_cast<int>(inputDir)
-                          << std::endl;
 
     // Allow perpendicular movement (blocks STAY, opposite, and same direction)
     if (canApplyInputDuringLaunch(inputDir)) {
-      DebugLog::getStream()
-          << "[PLAYER_PERFORM_ACTION] Applying perpendicular velocity"
-          << std::endl;
       applyPerpendicularVelocity(inputDir);
     }
     return;
   }
 
   // Normal movement (not launched)
-  DebugLog::getStream() << "[PLAYER_PERFORM_ACTION] Player " << playerId
-                        << " normal movement | Action: "
-                        << static_cast<int>(action) << std::endl;
+
 
   switch (action) {
   case Action::MOVE_UP:
@@ -544,15 +548,11 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room *room,
   }
 
   case ObjectType::OBSTACLE_BLOCK: {
-    DebugLog::getStream() << "[PLAYER] Detected OBSTACLE_BLOCK at (" << nextX
-                          << ", " << nextY << ")" << std::endl;
     ObstacleBlock *obstacle = dynamic_cast<ObstacleBlock *>(obj);
     if (obstacle != nullptr) {
-      DebugLog::getStream()
-          << "[PLAYER] Calling handleObstacleInteraction" << std::endl;
+
       return handleObstacleInteraction(obstacle, room); // Blocks movement
     }
-    DebugLog::getStream() << "[PLAYER] dynamic_cast failed!" << std::endl;
     break;
   }
 
@@ -639,8 +639,6 @@ bool Player::handleSwitchInteraction(Switch *sw, Room *room) {
 bool Player::handleSpringInteraction(SpringLink *link, Room *room) {
   Spring *spring = link->getParentSpring();
   if (spring == nullptr) {
-    DebugLog::getStream() << "[PLAYER_SPRING] ERROR: Link has no parent Spring!"
-                          << std::endl;
     return false;
   }
 
@@ -710,7 +708,6 @@ bool Player::isCellBlocking(int x, int y, Room *room) const {
 bool Player::canApplyInputDuringLaunch(Direction inputDir) const {
   // Always block STAY command during launch
   if (inputDir == Direction::STAY) {
-    DebugLog::getStream() << "PAPI" << std::endl;
     return false;
   }
 
@@ -735,28 +732,17 @@ bool Player::canApplyInputDuringLaunch(Direction inputDir) const {
     return false;
   }
 
-  DebugLog::getStream() << "[DIRECTION_HANDLE_PAPI2] oppositeDir = "
-                        << static_cast<int>(oppositeDir)
-                        << " | launchDir = " << static_cast<int>(launchDir)
-                        << std::endl;
-
   // Block if input is opposite to launch direction
   if (inputDir == oppositeDir) {
-    DebugLog::getStream() << "[DIRECTION_HANDLE_PAPI3] inputDir = oppositeDir"
-                          << std::endl;
     return false;
   }
 
   // Block if input is same as launch direction (redundant)
   if (inputDir == launchDir) {
-    DebugLog::getStream() << "[DIRECTION_HANDLE_PAPI4] inputDir = launchDir"
-                          << std::endl;
     return false;
   }
 
   // Allow perpendicular directions
-  DebugLog::getStream() << "[DIRECTION_HANDLE_PAPI5] perp movement approved!"
-                        << std::endl;
 
   return true;
 }

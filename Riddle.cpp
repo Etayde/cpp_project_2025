@@ -36,7 +36,9 @@ RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer) {
 
     // 6. Apply penalty for wrong answer
     if (!correct && triggeringPlayer != nullptr) {
-        triggeringPlayer->loseLife();  // Subtract 1 life
+        triggeringPlayer->decreaseLives();
+        triggeringPlayer->fallBack(room);
+        triggeringPlayer->startRespawn();
     }
 
     // 7. Show feedback

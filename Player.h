@@ -146,6 +146,7 @@ public:
   bool checkObjectInteraction(int nextX, int nextY, Room *room,
                               class Riddle **activeRiddle = nullptr,
                               Player **activePlayer = nullptr);
+  void fallBack(Room *room);                            
 
   // Movement helpers
   Direction getCurrentDirection() const;
@@ -198,7 +199,4 @@ private:
   // Movement action helpers
   void haltAndRedraw(Room *room);
   void updatePosition(int nextX, int nextY, Room *room);
-
-  // Debug helpers
-  void logLaunchState() const;
 };
