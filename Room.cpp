@@ -1219,6 +1219,7 @@ void Room::drawEmptyLegend() {
 
   gotoxy(5, 20);
   std::cout << "validTL: " << validTL << " validBR: " << validBR << std::endl;
+  std::cout << "startX: " << startX << " startY: " << startY << std::endl;
   gotoxy(startX, startY);
   std::cout << "+";
   for (int i = 1; i < InventoryUI::WIDTH + 1; i++) {
