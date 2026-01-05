@@ -600,6 +600,8 @@ int Room::getDoorIdAt(int x, int y) const {
 bool Room::unlockDoor(int doorId) {
   if (doorId >= 0 && doorId < static_cast<int>(doorReqs.size())){
     doorReqs[doorId].isUnlocked = true;
+    gotoxy(1,1);
+    std::cout << "Door " << doorId << " unlocked!" << std::endl;
     return true;
   }
   return false;

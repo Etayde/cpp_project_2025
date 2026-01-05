@@ -434,6 +434,7 @@ void Game::checkRoomTransitions() {
           currentState = GameState::victory;
           return;
         }
+        cout << "initiating room change" << endl;
         changeRoom(doorId, true);
       }
       // Backward door check
