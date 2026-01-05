@@ -682,6 +682,7 @@ bool Game::checkGameOver(const ExplosionResult& result) {
   if (player1.isDead()) {
     setGameOverMessege(GameOverMessege::PLAYER1_DIED);
     return true;
+  return false;
   } 
 
   if (player2.isDead()) {
