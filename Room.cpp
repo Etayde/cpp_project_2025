@@ -1231,8 +1231,8 @@ void Room::drawPlayerStats(Player* p) {
   // 0123456789             21
   // Score starts after ":  " (offset 4)
 
-  int lineY = legendTopLeft.y + p->playerId - 1; // p1 is row 2 (idx 2), p2 is row 3 (idx 3)
-  int startX = legendTopLeft.x - 1;
+  int lineY = legendTopLeft.y + p->playerId; // p1 is row 2 (idx 2), p2 is row 3 (idx 3)
+  int startX = legendTopLeft.x;
   
   // Draw Score
   gotoxy(startX + 4, lineY);
