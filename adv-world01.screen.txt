@@ -24,7 +24,7 @@ W                    W         W WWW                                          W
 W                    W         W W                                            W
 WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 ---METADATA---
-SPAWN 3 4
+SPAWN 3 10
 SPAWN_PREV 75 17
 NEXT_ROOM 1
 PREV_ROOM -1
