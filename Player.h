@@ -64,6 +64,7 @@ public:
   bool waitingAtDoor; // True if player has crossed through door and is waiting
   bool requestPause;  // Set when ESC pressed during riddle
   Momentum springMomentum;
+  int respawnTimer;
 
 public:
   // Constructors & Destructor
@@ -84,6 +85,7 @@ public:
   int getDoorId() const { return doorId; }
   int getId() const { return playerId; }
   bool isAlive() const { return alive; }
+  bool isDead() const { return !alive; }
   bool hasItem() const { return inventory != nullptr && inventory->isActive(); }
   bool hasTorch() const {
     return inventory != nullptr && inventory->getType() == ObjectType::TORCH;
@@ -103,6 +105,7 @@ public:
     return inventory ? inventory->getType() : ObjectType::AIR;
   }
   bool isLaunched() const { return springMomentum.isActive(); }
+  bool isRespawning() const { return respawnTimer > 0; }
 
   // Setters
   void setPosition(int x, int y) {
@@ -112,18 +115,13 @@ public:
   void setDirection(Direction dir, int speed = 1) {
     pos.setDirection(dir, speed);
   }
-  void kill() {
-    alive = false;
-    pos.diff_x = 0;
-    pos.diff_y = 0;
-  }
+  void kill() { alive = false; }
   void addKey() { keyCount++; }
   bool useKey();
   void setLives(int l) { lives = l; }
-  void loseLife() {
-    if (lives > 0)
-      lives--;
-  }
+  void decreaseLives(Room *room);
+  void respawn(Room *room);
+  void startRespawn();
   void incrementScore(int points) {
     int newScore = score + points;
     newScore >= 0 ? score = newScore : score = 0;

@@ -20,7 +20,7 @@ class Constants;
 /////////////////////////////////////////////
 
 Game::Game()
-    : initErrorMessage(0), initErrorRoomId(-1),
+    : initErrorMessage(0), initErrorRoomId(-1), gameOverMessege(GameOverMessege::NONE),
       currentState(GameState::mainMenu), currentRoomId(-1),
       gameInitialized(false) {}
 
@@ -329,8 +329,10 @@ void Game::update() {
 
   // Update all objects - also returns explosion results if bomb explodes
   ExplosionResult explosionResult = room->updateAllObjects(&player1, &player2);
-  if (explosionResult.player1Hit || explosionResult.player2Hit ||
-      explosionResult.keyDestroyed) {
+  if (explosionResult.player1Hit) player1.decreaseLives(room);
+  if (explosionResult.player2Hit) player2.decreaseLives(room);
+
+  if (checkGameOver(explosionResult)) {
     currentState = GameState::gameOver;
     return;
   }
@@ -531,9 +533,9 @@ void Game::handlePauseInput() {
 void Game::showVictory() { 
   victoryScreen.draw();
   gotoxy(40, 13);
-  cout << "Player 1: " << player1.getScore() << endl;
+  cout << player1.getScore() << endl;
   gotoxy(40, 14);
-  cout << "Player 2: " << player2.getScore() << endl;
+  cout << player2.getScore() << endl;
 }
 
 void Game::showGameOver() { gameOverScreen.draw(); }
@@ -676,3 +678,26 @@ void Game::changeRoom(int newRoomId, bool goingForward) {
   }
 
 }
+
+bool Game::checkGameOver(const ExplosionResult& result) {
+  if (player1.isDead()) {
+    setGameOverMessege(GameOverMessege::PLAYER1_DIED);
+    return true;
+  } 
+
+  if (player2.isDead()) {
+    setGameOverMessege(GameOverMessege::PLAYER2_DIED);
+    return true;
+  }
+
+  Room* room = getCurrentRoom();
+  int neededSwitches = room->getDoorReqSwitches(room->nextRoomId);
+
+  if (result.switchesDestroyed == neededSwitches) {
+    setGameOverMessege(GameOverMessege::VALUABLE_DESTROYED);
+    return true;
+  }
+
+  return false;
+}
+

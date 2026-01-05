@@ -385,7 +385,6 @@ bool Room::isWallAt(int x, int y) const {
 
   char c = getCharAt(x, y);
   gotoxy(5, 20);
-  std::cout << "c: " << c << "\nBlocking: " << BlockingChars::isBlockingChar(c);
   return (BlockingChars::isBlockingChar(c)); // Both unbreakable walls and legend borders
 }
 
@@ -751,6 +750,7 @@ ExplosionResult Room::updateAllObjects(Player *p1, Player *p2) {
         totalResult.keyDestroyed |= result.keyDestroyed;
         totalResult.player1Hit |= result.player1Hit;
         totalResult.player2Hit |= result.player2Hit;
+        totalResult.switchesDestroyed += result.switchesDestroyed;
         totalResult.objectsDestroyed += result.objectsDestroyed;
       } else {
         obj->update(); // Standard update

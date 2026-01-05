@@ -50,11 +50,12 @@ struct ExplosionResult {
   bool keyDestroyed;
   bool player1Hit;
   bool player2Hit;
+  int switchesDestroyed;
   int objectsDestroyed;
 
   ExplosionResult()
       : keyDestroyed(false), player1Hit(false), player2Hit(false),
-        objectsDestroyed(0) {}
+        switchesDestroyed(0), objectsDestroyed(0) {}
 };
 
 //////////////////////////////////////////     DoorRequirements
@@ -140,7 +141,7 @@ public:
   void drawPlayerStats(Player* p);
   void DrawLives(Player* p);
 
-  // Character access (encapsulated - use query methods below)
+  // Character access
   void setCharAt(int x, int y, char c);
   void resetMods();
 
@@ -158,7 +159,11 @@ public:
   std::vector<Switch *> getSwitches();
   ExplosionResult updateAllObjects(Player *p1, Player *p2);
   void addObstacle(Obstacle *obs);
-
+  
+  bool enoughSwitchesLeft() const { return activeSwitches >= totalSwitches; }
+  int getDoorReqSwitches(int doorId) const { return doorReqs[doorId].requiredSwitches; }
+  Point getSpawnPoint() const { return spawnPoint; }
+  
   // Collision & movement
   bool isBlocked(int x, int y);
   bool hasLineOfSight(int x1, int y1, int x2, int y2);

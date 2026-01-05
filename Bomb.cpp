@@ -105,6 +105,10 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
             {
                 if (obj->getType() == ObjectType::KEY)
                     result.keyDestroyed = true;
+                if (obj->getType() == ObjectType::SWITCH_OFF)
+                    result.switchesDestroyed++;
+                if (obj->getType() == ObjectType::SWITCH_ON)
+                    result.switchesDestroyed++;
 
                 if (obj->onExplosion())
                 {

@@ -15,11 +15,19 @@
 // Forward declarations
 class Riddle;
 
+enum class GameOverMessege {
+  NONE,
+  PLAYER1_DIED,
+  PLAYER2_DIED,
+  VALUABLE_DESTROYED
+};
+
 // Main game controller
 class Game {
 private:
   int initErrorMessage;
   int initErrorRoomId;
+  GameOverMessege gameOverMessege;
 
   struct ActiveRiddle {
     Riddle *riddle;
@@ -37,6 +45,9 @@ private:
 
   ActiveRiddle aRiddle;                // Track currently active riddle
   std::vector<Screen *> loadedScreens; // Screens loaded from files
+
+ void showGameOverMessege();
+ void setGameOverMessege(GameOverMessege messege){gameOverMessege = messege;}
 
 public:
   GameState currentState;
@@ -79,4 +90,6 @@ public:
   void redrawCurrentRoom();
   bool canPassThroughDoor(Room *room, int doorId);
   int validateLegendPlacement(Room &room);
+  bool checkGameOver(const ExplosionResult& result);
+  
 };

@@ -19,14 +19,14 @@
 Player::Player()
     : inventory(nullptr), playerId(0), sprite(' '), atDoor(false), doorId(-1),
       alive(true), keyCount(0), lives(3), score(0), waitingAtDoor(false),
-      requestPause(false), springMomentum(Momentum()) {
+      requestPause(false), springMomentum(Momentum()), respawnTimer(0) {
   pos = Point(1, 1, 0, 0, ' ');
 }
 
 Player::Player(int id, int startX, int startY, char playerSprite)
     : inventory(nullptr), playerId(id), sprite(playerSprite), atDoor(false),
       doorId(-1), alive(true), keyCount(0), lives(3), score(0),
-      waitingAtDoor(false), requestPause(false), springMomentum(Momentum()) {
+      waitingAtDoor(false), requestPause(false), springMomentum(Momentum()), respawnTimer(0) {
   pos = Point(startX, startY, 0, 0, playerSprite);
 }
 
@@ -43,7 +43,7 @@ Player::Player(const Player &other)
       sprite(other.sprite), atDoor(other.atDoor), doorId(other.doorId),
       alive(other.alive), keyCount(other.keyCount), lives(other.lives),
       score(other.score), waitingAtDoor(other.waitingAtDoor),
-      requestPause(other.requestPause), springMomentum(other.springMomentum) {
+      requestPause(other.requestPause), springMomentum(other.springMomentum), respawnTimer(other.respawnTimer) {
   copyInventoryFrom(other);
 }
 
@@ -66,6 +66,7 @@ Player &Player::operator=(const Player &other) {
     waitingAtDoor = other.waitingAtDoor;
     requestPause = other.requestPause;
     springMomentum = other.springMomentum;
+    respawnTimer = other.respawnTimer;
 
     copyInventoryFrom(other);
   }
@@ -137,6 +138,30 @@ void Player::erase(Room *room) {
 
   gotoxy(pos.x, pos.y);
   std::cout << restoreChar;
+  std::cout << restoreChar;
+}
+
+void Player::startRespawn() {
+    respawnTimer = PlayerConstants::RESPAWN_DURATION_FRAMES;
+}
+
+void Player::respawn(Room *room) {
+    pos.diff_x = 0;
+    pos.diff_y = 0;
+    springMomentum.resetMomentum();
+    if (room) {
+        if (getInventory() != nullptr) { dropItem(room); } 
+        Point spawn = room->getSpawnPoint();
+        if (playerId == 2) spawn.y += 1; // Offset for P2
+        pos = spawn;
+    }
+    startRespawn();
+}
+
+void Player::decreaseLives(Room *room) {
+  if (lives > 0) lives--;
+  if (lives == 0) { kill(); return; }
+  respawn(room);
 }
 
 // Log debug information during launch
@@ -162,6 +187,12 @@ bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
 
   // 2. Debug logging
   logLaunchState();
+
+  if (isRespawning()) {
+      respawnTimer--;
+      draw(room);
+      return false;
+  }
 
   erase(room);
 
@@ -226,6 +257,9 @@ void Player::draw(Room *room) {
   }
 
   // Always draw player sprite, even in dark zones
+  if (isRespawning() && respawnTimer % 2 != 0) {
+      return;
+  }
   std::cout << sprite;
 }
 
