@@ -1201,7 +1201,7 @@ void Room::drawPlayerStats(Player* p) {
   DrawLives(p); // Needs update to absolute position
 
   // Draw Inventory
-  gotoxy(startX + 19, lineY);
+  gotoxy(startX + 18, lineY);
   if (p->hasItem()) {
       std::cout << p->inventory->getSprite();
   } else {
