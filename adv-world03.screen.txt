@@ -17,7 +17,7 @@ W                       W                                                     W
 W                       W                                                     W
 WWWWWWWWWWWWW           W                                       WWWWWWWWWWWWWWW
 W           *           W                                       W             3
-2           *           W                                       W    WWWWWWWWWW
+1           *           W                                       W    WWWWWWWWWW
 W           *           W                                       W             W
 W###        *           WWW    WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW      W
 WWWWWWWWWWWWWWWWWWWWWWWWW         WWWW       ?                  W             W
@@ -29,6 +29,7 @@ SPAWN_PREV 78 18
 NEXT_ROOM -1
 PREV_ROOM 2
 DOOR 3 1 0
+DOOR 1 0 0
 DARK_ZONE 12 1 39 10
 DARK_ZONE 53 1 78 10
 DARK_ZONE 25 22 44 23
