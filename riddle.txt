@@ -1,10 +1,10 @@
 ---RIDDLE---
 What has keys but can't open locks?
-A Piano
-A Map
 A Tree
+A Map
+A Piano
 A Clock
-1
+3
 ---RIDDLE---
 What runs but never walks?
 A River
@@ -14,18 +14,18 @@ A Person
 1
 ---RIDDLE---
 What gets wetter as it dries?
-A Towel
 A Sponge
+A Towel
 A Desert
 A Fire
-1
+2
 ---RIDDLE---
 What can speak without a mouth?
-An Echo
+A Dream
 A Shadow
 A Memory
-A Dream
-1
+An Echo
+4
 ---RIDDLE---
 What is always coming but never arrives?
 The Future
