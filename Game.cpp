@@ -638,6 +638,7 @@ void Game::initializeRooms() {
       std::cout << "1: No 'L', 2: Multiple 'L', 3: Out of bounds, 4: "
                    "Overlaps/Accessible"
                 << std::endl;
+      sleep_ms(1000);
       exit(0);
     }
   }
