@@ -1267,7 +1267,7 @@ void Room::drawPlayerStats(Player* p) {
 void Room::DrawLives(Player* p) {
   int lineY = legendTopLeft.y + p->playerId;
   int startX = legendTopLeft.x - 1;
-  int offset = startX + 10; // Align under LIVES
+  int offset = startX + 9; // Align under LIVES
   
   switch(p->lives) {
     case 3:
@@ -1276,14 +1276,14 @@ void Room::DrawLives(Player* p) {
       break;
     case 2:
       gotoxy(offset+1, lineY);
-      std::cout << "<3 <3   ";
+      std::cout << "<3 <3";
       break;
     case 1:
-      gotoxy(offset+2, lineY);
-      std::cout << "<3      ";
+      gotoxy(offset+3, lineY);
+      std::cout << "<3";
       break;
     default:
-      gotoxy(offset+3, lineY);
+      gotoxy(offset, lineY);
       std::cout << "        ";
       break;
   }
