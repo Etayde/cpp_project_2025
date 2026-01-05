@@ -146,6 +146,9 @@ void Player::startRespawn() {
 }
 
 void Player::respawn(Room *room) {
+    
+  erase(room);
+
     pos.diff_x = 0;
     pos.diff_y = 0;
     springMomentum.resetMomentum();
@@ -155,6 +158,8 @@ void Player::respawn(Room *room) {
         if (playerId == 2) spawn.y += 1; // Offset for P2
         pos = spawn;
     }
+    
+    draw(room);
     startRespawn();
 }
 
@@ -171,6 +176,8 @@ void Player::decreaseLives() {
 
 void Player::fallBack(Room *room) {
   if (room == nullptr) return;
+
+  erase(room);
 
   int targetX = pos.x;
   int targetY = pos.y;
