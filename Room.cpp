@@ -4,6 +4,7 @@
 
 #include "Room.h"
 #include "Bomb.h"
+#include "Console.h"
 #include "Constants.h"
 #include "DebugLog.h"
 #include "Door.h"
@@ -1208,7 +1209,16 @@ void Room::drawEmptyLegend() {
 
   int startX = legendTopLeft.x - 1;
   int startY = legendTopLeft.y - 1;
+  
+  bool validTL = true;
+  bool validBR = true;
 
+  if (startX < 0 || startY < 0)                   { validTL = false; }
+  if (startX + InventoryUI::WIDTH + 2 >= MAX_X || 
+      startY + InventoryUI::HEIGHT + 2 >= MAX_Y)  { validBR = false; }
+
+  gotoxy(5, 20);
+  std::cout << "validTL: " << validTL << " validBR: " << validBR << std::endl;
   gotoxy(startX, startY);
   std::cout << "+";
   for (int i = 1; i < InventoryUI::WIDTH + 1; i++) {
