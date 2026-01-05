@@ -660,8 +660,8 @@ void Game::initializeRooms() {
 
 void Game::changeRoom(int newRoomId, bool goingForward) {
 
-  if (newRoomId < 0 || newRoomId >= TOTAL_ROOMS){
-    cout << "new room id >= TOTAL_ROOMS" << endl;
+  if (newRoomId < 0 || newRoomId >= rooms.size()){
+    cout << "new room id >= rooms.size()" << endl;
     return;}
   if (currentRoomId >= 0) {
     rooms[currentRoomId].active = false;
