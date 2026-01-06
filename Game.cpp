@@ -410,7 +410,8 @@ void Game::checkRoomTransitions() {
       // Forward door check
       if (doorId == room->nextRoomId) {
         if (!room->isDoorUnlocked(doorId)) {
-          int keysNeeded = room->doorReqs[doorId].requiredKeys;
+          int keysNeeded = (doorId >= 0 && doorId < static_cast<int>(room->doorReqs.size())) 
+                            ? room->doorReqs[doorId].requiredKeys : 0;
 
           int keysConsumed = 0;
           while (keysConsumed < keysNeeded && player1.getKeyCount() > 0) {

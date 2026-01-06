@@ -157,7 +157,10 @@ public:
   
   bool enoughSwitchesLeft() const { return activeSwitches >= totalSwitches; }
   int getTotalSwitches() const { return totalSwitches; }
-  int getDoorReqSwitches(int doorId) const { return doorReqs[doorId].requiredSwitches; }
+  int getDoorReqSwitches(int doorId) const { 
+    if (doorId < 0 || doorId >= static_cast<int>(doorReqs.size())) return 0;
+    return doorReqs[doorId].requiredSwitches; 
+  }
   Point getSpawnPoint() const { return spawnPoint; }
   
   // Collision & movement

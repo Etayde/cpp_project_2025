@@ -13,10 +13,10 @@ W          W       WWWWWWWWWWWWWWWWWWWWWW            WWWWWWWWWWWWW?WWWWWWWWWWWW
 W          W                                                                  W
 W          WWWWWWWWWWWWWW                                                     W
 W                       W         L                                           W
-W                       W                                                     W
-W                       W                                                     W
-WWWWWWWWWWWWW           W                                       WWWWWWWWWWWWWWW
-W           *           W                                       W             3
+W                       W                                       WWWWWWWWWWWWWWW
+W                       W                                       W             W
+WWWWWWWWWWWWW           W                                       W             3
+W           *           W                                       W             W
 1           *           W                                       W    WWWWWWWWWW
 W           *           W                                       W             W
 W###        *           WWW    WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW      W
@@ -25,7 +25,7 @@ W                       W         **         W                                W
 WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW
 ---METADATA---
 SPAWN 2 20
-SPAWN_PREV 78 18
+SPAWN_PREV 78 17
 NEXT_ROOM -1
 PREV_ROOM 2
 DOOR 3 1 0
