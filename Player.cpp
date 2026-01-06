@@ -908,6 +908,7 @@ void Player::transferMomentumTo(Player *otherPlayer) {
   // Also transfer current velocity for consistency
   otherPlayer->pos.diff_x = pos.diff_x;
   otherPlayer->pos.diff_y = pos.diff_y;
+  springMomentum.setLaunchFramesRemaining(0);
 }
 
 ////////////////////////////////////////////   calculateForce       /////////////////////////////////////////////
