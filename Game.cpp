@@ -435,11 +435,11 @@ void Game::checkRoomTransitions() {
           currentState = GameState::victory;
           return;
         }
-        changeRoom(doorId, true);
+        changeRoom(room->nextRoomId, true);
       }
       // Backward door check
       else if (doorId == room->prevRoomId) {
-        changeRoom(doorId, false);
+        changeRoom(room->prevRoomId, false);
       }
     }
   }
@@ -658,7 +658,8 @@ void Game::initializeRooms() {
 
 void Game::changeRoom(int newRoomId, bool goingForward) {
 
-  if (newRoomId < -1 || newRoomId >= rooms.size()){
+  if (newRoomId < -1 || newRoomId > rooms.size()){
+    if 
     gotoxy(1,1);
     std::cout << "newRoomId: " << newRoomId << std::endl;
     std::cout << "rooms.size(): " << rooms.size() << std::endl;
