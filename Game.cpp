@@ -658,22 +658,23 @@ void Game::initializeRooms() {
 
 void Game::changeRoom(int newRoomId, bool goingForward) {
 
-  if (newRoomId < -1 || newRoomId > rooms.size()){
-    gotoxy(1,1);
-    std::cout << "failed to change room, newRoomId: " << newRoomId << std::endl;
-    std::cout << "rooms.size(): " << rooms.size() << std::endl;
-    return;}
-  if (currentRoomId >= 0) {
-    rooms[currentRoomId].active = false;
+  // Check for victory FIRST (before error validation)
+  // newRoomId == -1 or newRoomId == rooms.size() means the player has won
+  if (newRoomId == -1 || newRoomId == static_cast<int>(rooms.size())) {
+    if (currentRoomId >= 0) {
+      rooms[currentRoomId].active = false;
+    }
+    currentState = GameState::victory;
+    return;
   }
 
-  if (newRoomId == -1 || newRoomId == rooms.size()) {
-    gotoxy(1,1);
-    std::cout << "newRoomId: " << newRoomId << std::endl;
-    std::cout << "rooms.size(): " << rooms.size() << std::endl;
-    currentState = GameState::victory;
-    std::cout << "Victory!" << std::endl;
+  // Now validate that it's a real room ID
+  if (newRoomId < 0 || newRoomId >= static_cast<int>(rooms.size())) {
     return;
+  }
+
+  if (currentRoomId >= 0) {
+    rooms[currentRoomId].active = false;
   }
 
   currentRoomId = newRoomId;
