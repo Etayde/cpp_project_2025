@@ -56,8 +56,7 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
     int centerX = position.x;
     int centerY = position.y;
 
-    // Remove bomb from room
-    currentRoom->removeObjectAt(centerX, centerY);
+    // Clear the bomb's position visually (cleanup happens after iteration in updateAllObjects)
     currentRoom->setCharAt(centerX, centerY, ' ');
     gotoxy(centerX, centerY);
     std::cout << ' ';
