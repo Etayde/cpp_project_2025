@@ -378,9 +378,14 @@ bool Game::canPassThroughDoor(Room *room, int doorId) {
     return false;
 
   if (doorId == room->nextRoomId) {
+    gotoxy(1,1);
+    std::cout << "next room" << std::endl;
+    std::cout << "can open?: " << room->canOpenDoor(doorId, player1.getKeyCount(),
+                             player2.getKeyCount()) << std::endl;
     return room->isDoorUnlocked(doorId) ||
            room->canOpenDoor(doorId, player1.getKeyCount(),
                              player2.getKeyCount());
+
   } else if (doorId == room->prevRoomId) {
     return true; // Backward doors always passable
   }
