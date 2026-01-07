@@ -14,7 +14,6 @@ void drawAt(int x, int y, char c)
 
 //////////////////////////////////////////         getFps          //////////////////////////////////////////
 
-// Calculate frames per second - For Debugging Only
 int getFps()
 {
     static int lastTime = 0;
@@ -43,7 +42,6 @@ int getFps()
 
 //////////////////////////////////////////         showFps          //////////////////////////////////////////
 
-// Show frames per second - For Debugging Only
 void showFps()
 {
     const int x = 0, y = 0, width = 10;

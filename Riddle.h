@@ -6,7 +6,7 @@
 #include "Constants.h"
 #include "Player.h"
 
-class Room;    // Forward declaration
+class Room;
 
 //////////////////////////////////////////          Riddle            //////////////////////////////////////////
 
@@ -18,20 +18,18 @@ private:
     int solvingPlayerId;
     int riddleId;
     int correctAnswer;
-    
 
 public:
     Riddle() : InteractableObject(), firstAttempt(true), solvingPlayerSprite(' '),
-                solvingPlayerId(-1), riddleId(-1), correctAnswer(-1)
+               solvingPlayerId(-1), riddleId(-1), correctAnswer(-1)
     {
         sprite = '?';
         type = ObjectType::RIDDLE;
     }
 
-    Riddle(const Point &pos, int ridId = 0, int ansId = 0) :
-                InteractableObject(pos, '?', ObjectType::RIDDLE),
-                firstAttempt(true), solvingPlayerSprite(' '), solvingPlayerId(-1),
-                riddleId(ridId), correctAnswer(ansId) {}
+    Riddle(const Point &pos, int ridId = 0, int ansId = 0) : InteractableObject(pos, '?', ObjectType::RIDDLE),
+                                                             firstAttempt(true), solvingPlayerSprite(' '), solvingPlayerId(-1),
+                                                             riddleId(ridId), correctAnswer(ansId) {}
 
     GameObject *clone() const override { return new Riddle(*this); }
     const char *getName() const override { return "Riddle"; }
@@ -48,10 +46,19 @@ public:
     void displayFeedback(bool correct) const;
     void playExitAnimation() const;
     bool checkAnswer(int playerAnswer) const;
-    void reset() { solvingPlayerId = -1; solvingPlayerSprite = ' '; }
-    void setSolvingPlayer(Player& player) { solvingPlayerId = player.getId(); 
-                                            solvingPlayerSprite = player.getSprite(); }
-    void makeAir() { sprite = ' '; type = ObjectType::AIR; }
-
-
+    void reset()
+    {
+        solvingPlayerId = -1;
+        solvingPlayerSprite = ' ';
+    }
+    void setSolvingPlayer(Player &player)
+    {
+        solvingPlayerId = player.getId();
+        solvingPlayerSprite = player.getSprite();
+    }
+    void makeAir()
+    {
+        sprite = ' ';
+        type = ObjectType::AIR;
+    }
 };

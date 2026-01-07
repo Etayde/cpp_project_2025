@@ -14,11 +14,12 @@ private:
     int dy;
     int launchFramesRemaining;
     Direction launchDir;
+
 public:
-    // Constructor
     Momentum()
         : activeState(false), dx(0), dy(0), launchFramesRemaining(0), launchDir(Direction::STAY)
-    {}
+    {
+    }
 
     Momentum &operator=(const Momentum &other);
     Momentum(const Momentum &other)
@@ -26,7 +27,7 @@ public:
           launchFramesRemaining(other.launchFramesRemaining), launchDir(other.launchDir) {}
 
     // Getters
-    bool isActive() const { return activeState; } 
+    bool isActive() const { return activeState; }
     int getDX() const { return dx; }
     int getDY() const { return dy; }
     int getLaunchFramesRemaining() const { return launchFramesRemaining; }
@@ -41,4 +42,4 @@ public:
     void resetMomentum();
     void incrementDX(int deltaX) { dx += deltaX; }
     void incrementDY(int deltaY) { dy += deltaY; }
-}; 
+};

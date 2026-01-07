@@ -30,7 +30,6 @@ public:
     bool isBlocking() const override { return true; }
     bool onExplosion() override { return true; }
 
-    // Toggle the switch state
     void toggle()
     {
         isOn = !isOn;
@@ -54,6 +53,5 @@ public:
         type = isOn ? ObjectType::SWITCH_ON : ObjectType::SWITCH_OFF;
     }
 
-    // Handle player interaction
     bool onInteract(Player *player, Room *room) override;
 };

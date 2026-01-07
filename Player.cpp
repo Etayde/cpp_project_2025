@@ -17,14 +17,16 @@
 Player::Player()
     : inventory(nullptr), playerId(0), sprite(' '), atDoor(false), doorId(-1),
       alive(true), keyCount(0), lives(3), score(0), waitingAtDoor(false),
-      requestPause(false), springMomentum(Momentum()), respawnTimer(0) {
+      requestPause(false), springMomentum(Momentum()), respawnTimer(0)
+{
   pos = Point(1, 1, 0, 0, ' ');
 }
 
 Player::Player(int id, int startX, int startY, char playerSprite)
     : inventory(nullptr), playerId(id), sprite(playerSprite), atDoor(false),
       doorId(-1), alive(true), keyCount(0), lives(3), score(0),
-      waitingAtDoor(false), requestPause(false), springMomentum(Momentum()), respawnTimer(0) {
+      waitingAtDoor(false), requestPause(false), springMomentum(Momentum()), respawnTimer(0)
+{
   pos = Point(startX, startY, 0, 0, playerSprite);
 }
 
@@ -39,14 +41,17 @@ Player::Player(const Player &other)
       sprite(other.sprite), atDoor(other.atDoor), doorId(other.doorId),
       alive(other.alive), keyCount(other.keyCount), lives(other.lives),
       score(other.score), waitingAtDoor(other.waitingAtDoor),
-      requestPause(other.requestPause), springMomentum(other.springMomentum), respawnTimer(other.respawnTimer) {
+      requestPause(other.requestPause), springMomentum(other.springMomentum), respawnTimer(other.respawnTimer)
+{
   copyInventoryFrom(other);
 }
 
 //////////////////////////////////////////  Player Assignment Operator       /////////////////////////////////////////////
 
-Player &Player::operator=(const Player &other) {
-  if (this != &other) {
+Player &Player::operator=(const Player &other)
+{
+  if (this != &other)
+  {
     clearInventory();
 
     pos = other.pos;
@@ -70,60 +75,63 @@ Player &Player::operator=(const Player &other) {
 
 //////////////////////////////////////////       Private Helpers       /////////////////////////////////////////////
 
-void Player::clearInventory() {
+void Player::clearInventory()
+{
   delete inventory;
   inventory = nullptr;
 }
 
-// Deep copy using polymorphic clone()
-void Player::copyInventoryFrom(const Player &other) {
-  if (other.inventory != nullptr) {
+void Player::copyInventoryFrom(const Player &other)
+{
+  if (other.inventory != nullptr)
+  {
     inventory = other.inventory->clone();
   }
 }
 
 //////////////////////////////////////////     Movement Helpers       /////////////////////////////////////////////
 
-// Check if player has no velocity (not moving)
-bool Player::isStationary() const {
+bool Player::isStationary() const
+{
   return (pos.diff_x == 0 && pos.diff_y == 0);
 }
 
-// Check if position is within absolute screen boundaries
-bool Player::isWithinAbsoluteBounds(int x, int y) const {
+bool Player::isWithinAbsoluteBounds(int x, int y) const
+{
   return (x >= 0 && x < MAX_X && y >= 1 && y < MAX_Y_INGAME - 1);
 }
 
-// Check if movement to edge columns (x=0 or x=79) is allowed (only if door
-// exists)
-bool Player::canMoveToBoundaryPosition(int x, int y, Room *room) const {
-  // Check if position is in the special boundary columns (0 or 79)
+bool Player::canMoveToBoundaryPosition(int x, int y, Room *room) const
+{
   bool atBoundaryColumn = (x < 1 || x >= MAX_X - 1);
 
   if (!atBoundaryColumn)
-    return true; // Not at boundary, always allowed
+    return true;
 
   // At boundary - only allow if there's a door
   GameObject *obj = room->getObjectAt(x, y);
   return (obj != nullptr && obj->getType() == ObjectType::DOOR);
 }
 
-// Erase player from current position by querying room state
-void Player::erase(Room *room) {
-  if (room == nullptr) {
+void Player::erase(Room *room)
+{
+  if (room == nullptr)
+  {
     gotoxy(pos.x, pos.y);
     std::cout << ' ';
     return;
   }
 
-  // Query current state at player position
   ObjectType currentType = room->getObjectTypeAt(pos.x, pos.y);
   GameObject *obj = room->getObjectAt(pos.x, pos.y);
 
   char restoreChar;
-  if (obj != nullptr && obj->getType() == ObjectType::DOOR) {
+  if (obj != nullptr && obj->getType() == ObjectType::DOOR)
+  {
     restoreChar = obj->getSprite();
-  } else {
+  }
+  else
+  {
     char currentChar = static_cast<char>(currentType);
     restoreChar =
         (currentChar == ' ' || currentChar == sprite) ? ' ' : currentChar;
@@ -135,121 +143,143 @@ void Player::erase(Room *room) {
 
 //////////////////////////////////////////  Respawn and Death Helpers       /////////////////////////////////////////////
 
-void Player::startRespawn() {
-    respawnTimer = PlayerConstants::RESPAWN_DURATION_FRAMES;
+void Player::startRespawn()
+{
+  respawnTimer = PlayerConstants::RESPAWN_DURATION_FRAMES;
 }
 
-void Player::respawn(Room *room) {
-    
+void Player::respawn(Room *room)
+{
+
   erase(room);
 
-    pos.diff_x = 0;
-    pos.diff_y = 0;
-    springMomentum.resetMomentum();
-    if (room) {
-        if (getInventory() != nullptr) { dropItem(room); } 
-        Point spawn = room->getSpawnPoint();
-        if (playerId == 2) spawn.y += 1; // Offset for P2
-        pos = spawn;
+  pos.diff_x = 0;
+  pos.diff_y = 0;
+  springMomentum.resetMomentum();
+  if (room)
+  {
+    if (getInventory() != nullptr)
+    {
+      dropItem(room);
     }
-    
-    draw(room);
-    startRespawn();
+    Point spawn = room->getSpawnPoint();
+    if (playerId == 2)
+      spawn.y += 1;
+    pos = spawn;
+  }
+
+  draw(room);
+  startRespawn();
 }
 
-void Player::loseLife(Room *room) {
-    decreaseLives();
-    respawn(room);
+void Player::loseLife(Room *room)
+{
+  decreaseLives();
+  respawn(room);
+  return;
+}
+
+void Player::decreaseLives()
+{
+  if (lives > 0)
+    lives--;
+  if (lives == 0)
+  {
+    kill();
     return;
+  }
 }
 
-void Player::decreaseLives() {
-  if (lives > 0) lives--;
-  if (lives == 0) { kill(); return; }
-}
-
-void Player::fallBack(Room *room) {
-  if (room == nullptr) return;
+void Player::fallBack(Room *room)
+{
+  if (room == nullptr)
+    return;
 
   erase(room);
 
   int targetX = pos.x;
   int targetY = pos.y;
   Direction dir = getCurrentDirection();
-  if (springMomentum.isActive()) { springMomentum.resetMomentum(); }
-
-  switch (dir) {
-    case Direction::UP:
-      targetY += 1;
-      break;
-    case Direction::DOWN:
-      targetY -= 1;
-      break;
-    case Direction::LEFT:
-      targetX += 1;
-      break;
-    case Direction::RIGHT:
-      targetX -= 1;
-      break;
-    case Direction::STAY:
-    case Direction::HORIZONTAL:
-    case Direction::VERTICAL:
-      break;
+  if (springMomentum.isActive())
+  {
+    springMomentum.resetMomentum();
   }
-  
+
+  switch (dir)
+  {
+  case Direction::UP:
+    targetY += 1;
+    break;
+  case Direction::DOWN:
+    targetY -= 1;
+    break;
+  case Direction::LEFT:
+    targetX += 1;
+    break;
+  case Direction::RIGHT:
+    targetX -= 1;
+    break;
+  case Direction::STAY:
+  case Direction::HORIZONTAL:
+  case Direction::VERTICAL:
+    break;
+  }
+
   bool spotVacant = room->isVacantSpot(targetX, targetY);
-  
-  if (spotVacant) { setPosition(targetX, targetY); }
-  
+
+  if (spotVacant)
+  {
+    setPosition(targetX, targetY);
+  }
+
   draw(room);
 
   return;
 }
 
-
-
 //////////////////////////////////////////           move       /////////////////////////////////////////////
 
-// Move player in current direction, handle collisions and interactions
 bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
-                  Player *otherPlayer) {
-  // 1. Early validation
+                  Player *otherPlayer)
+{
   if (room == nullptr)
     return false;
 
-  // 2. Debug logging
-
-
-  if (isRespawning()) {
-      respawnTimer--;
-      draw(room);
-      return false;
+  if (isRespawning())
+  {
+    respawnTimer--;
+    draw(room);
+    return false;
   }
 
   erase(room);
 
   // Check for direction change while on compressed spring
-  if (!springMomentum.isActive()) {
+  if (!springMomentum.isActive())
+  {
     GameObject *currentObj = room->getObjectAt(pos.x, pos.y);
     if (currentObj != nullptr &&
-        currentObj->getType() == ObjectType::SPRING_LINK) {
+        currentObj->getType() == ObjectType::SPRING_LINK)
+    {
       SpringLink *link = static_cast<SpringLink *>(currentObj);
       Spring *spring = link->getParentSpring();
 
-      if (spring != nullptr && spring->isCompressed()) {
+      if (spring != nullptr && spring->isCompressed())
+      {
         Direction myDirection = getCurrentDirection();
         Direction springDirection = spring->getCompressionDir();
 
-        // Changing direction while on compressed spring? Launch!
-        if (myDirection != springDirection) {
+        if (myDirection != springDirection)
+        {
           Spring::InteractionResult result =
               spring->handlePlayerInteraction(link, this, room);
-          if (result.launched) {
+          if (result.launched)
+          {
             this->springMomentum = result.momentum;
             this->springMomentum.setActive(true);
           }
           draw(room);
-          return true; // Don't do normal movement
+          return true;
         }
       }
     }
@@ -257,16 +287,16 @@ bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
 
   bool success;
 
-  // 4. Check if launched using springMomentum.isActive()
-  if (!springMomentum.isActive()) {
-    // Normal single-step movement
+  if (!springMomentum.isActive())
+  {
     int nextX = pos.x + pos.diff_x;
     int nextY = pos.y + pos.diff_y;
 
     success =
         singleStep(nextX, nextY, room, activeRiddle, activePlayer, otherPlayer);
-  } else {
-    // Launched multi-step movement
+  }
+  else
+  {
     success = moveMultiStep(room, activeRiddle, activePlayer, otherPlayer);
   }
 
@@ -277,19 +307,19 @@ bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
 
 //////////////////////////////////////////           draw       /////////////////////////////////////////////
 
-// Draw player (hide if in dark zone without visibility)
-void Player::draw(Room *room) {
+void Player::draw(Room *room)
+{
   gotoxy(pos.x, pos.y);
 
-  // Don't draw if waiting at door (player has "crossed through")
-  if (waitingAtDoor) {
+  if (waitingAtDoor)
+  {
     erase(room);
     return;
   }
 
-  // Always draw player sprite, even in dark zones
-  if (isRespawning() && respawnTimer % 2 != 0) {
-      return;
+  if (isRespawning() && respawnTimer % 2 != 0)
+  {
+    return;
   }
   std::cout << sprite;
   std::cout.flush();
@@ -297,8 +327,8 @@ void Player::draw(Room *room) {
 
 //////////////////////////////////////////        pickupItem       /////////////////////////////////////////////
 
-// Pick up an item (ownership transferred via clone)
-bool Player::pickupItem(GameObject *item) {
+bool Player::pickupItem(GameObject *item)
+{
   if (item == nullptr || hasItem())
     return false;
   if (!item->isPickable())
@@ -311,36 +341,36 @@ bool Player::pickupItem(GameObject *item) {
   item->setActive(false);
 
   return true;
-
 }
 
 //////////////////////////////////////////         dropItem       /////////////////////////////////////////////
 
-// Drop current item, returns position or (-1,-1) if failed
-Point Player::dropItem(Room *room) {
+Point Player::dropItem(Room *room)
+{
   Point dropPos(-1, -1);
 
   if (!hasItem() || room == nullptr)
     return dropPos;
 
-  // Find empty spot around player
-  const int checkOffsets[][2] = {{0, 1}, {0, -1}, {1, 0},  {-1, 0},
-                                 {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
+  const int checkOffsets[][2] = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}, {1, 1}, {1, -1}, {-1, 1}, {-1, -1}};
 
   int dropX = -1, dropY = -1;
   bool found = false;
 
-  for (int i = 0; i < 8 && !found; i++) {
+  for (int i = 0; i < 8 && !found; i++)
+  {
     int testX = pos.x + checkOffsets[i][0];
     int testY = pos.y + checkOffsets[i][1];
 
     if (testX >= 1 && testX < MAX_X - 1 && testY >= 1 &&
-        testY < MAX_Y_INGAME - 1) {
+        testY < MAX_Y_INGAME - 1)
+    {
       ObjectType type = room->getObjectTypeAt(testX, testY);
       GameObject *existing = room->getObjectAt(testX, testY);
 
       if ((type == ObjectType::AIR || static_cast<char>(type) == '.') &&
-          existing == nullptr) {
+          existing == nullptr)
+      {
         dropX = testX;
         dropY = testY;
         found = true;
@@ -351,18 +381,18 @@ Point Player::dropItem(Room *room) {
   if (!found)
     return dropPos;
 
-  // Create dropped item
   GameObject *droppedItem = inventory->clone();
   droppedItem->setPosition(dropX, dropY);
   droppedItem->setActive(true);
 
-  // Special handling for bombs - activate when dropped
-  if (droppedItem->getType() == ObjectType::BOMB) {
+  if (droppedItem->getType() == ObjectType::BOMB)
+  {
     Bomb *bomb = static_cast<Bomb *>(droppedItem);
-    bomb->activate(room); // Start countdown
+    bomb->activate(room);
   }
 
-  if (room->addObject(droppedItem)) {
+  if (room->addObject(droppedItem))
+  {
     dropPos.x = dropX;
     dropPos.y = dropY;
 
@@ -372,10 +402,11 @@ Point Player::dropItem(Room *room) {
     clearInventory();
     clearInventory();
 
-
     gotoxy(dropX, dropY);
     std::cout << droppedItem->getSprite();
-  } else {
+  }
+  else
+  {
     delete droppedItem;
   }
 
@@ -384,25 +415,24 @@ Point Player::dropItem(Room *room) {
 
 //////////////////////////////////////////       performAction       /////////////////////////////////////////////
 
-void Player::performAction(Action action, Room *room) {
+void Player::performAction(Action action, Room *room)
+{
   int frames = springMomentum.getLaunchFramesRemaining();
 
-  // Check if currently launched
-  if (frames > 0) {
+  if (frames > 0)
+  {
 
     Direction inputDir = actionToDirection(action);
 
-    // Allow perpendicular movement (blocks STAY, opposite, and same direction)
-    if (canApplyInputDuringLaunch(inputDir)) {
+    if (canApplyInputDuringLaunch(inputDir))
+    {
       applyPerpendicularVelocity(inputDir);
     }
     return;
   }
 
-  // Normal movement (not launched)
-
-
-  switch (action) {
+  switch (action)
+  {
   case Action::MOVE_UP:
     pos.setDirection(Direction::UP);
     break;
@@ -427,30 +457,30 @@ void Player::performAction(Action action, Room *room) {
   }
 }
 
-
-
 //////////////////////////////////////////           useKey       /////////////////////////////////////////////
 
-// Use one key (returns true if successful)
-bool Player::useKey() {
-  if (keyCount > 0) {
+bool Player::useKey()
+{
+  if (keyCount > 0)
+  {
     keyCount--;
 
-    // If the last key was used, remove it from inventory
-    if (keyCount == 0 && hasKey()) {
+    if (keyCount == 0 && hasKey())
+    {
       clearInventory();
     }
 
     return true;
-
   }
   return false;
 }
 
 //////////////////////////////////////////    Movement Direction Helpers       /////////////////////////////////////////////
 
-Direction Player::getCurrentDirection() const {
-  if (springMomentum.isActive()) {
+Direction Player::getCurrentDirection() const
+{
+  if (springMomentum.isActive())
+  {
     return springMomentum.getLaunchDir();
   }
 
@@ -467,8 +497,10 @@ Direction Player::getCurrentDirection() const {
   return Direction::STAY;
 }
 
-Direction Player::actionToDirection(Action action) const {
-  switch (action) {
+Direction Player::actionToDirection(Action action) const
+{
+  switch (action)
+  {
   case Action::MOVE_UP:
     return Direction::UP;
   case Action::MOVE_DOWN:
@@ -486,37 +518,37 @@ Direction Player::actionToDirection(Action action) const {
 
 //////////////////////////////////////////    checkWallCollision       /////////////////////////////////////////////
 
-// Check if next position has a wall - returns true if wall blocks movement
-bool Player::checkWallCollision(int nextX, int nextY, Room *room) {
+bool Player::checkWallCollision(int nextX, int nextY, Room *room)
+{
   if (room == nullptr)
     return false;
 
-  // Wall blocks movement
   return room->isWallAt(nextX, nextY);
 }
 
 //////////////////////////////////////////  checkObjectInteraction       /////////////////////////////////////////////
 
-// Check object interaction at next position - returns true if object blocks
-// movement
 bool Player::checkObjectInteraction(int nextX, int nextY, Room *room,
                                     Riddle **activeRiddle,
-                                    Player **activePlayer) {
+                                    Player **activePlayer)
+{
   if (room == nullptr)
     return false;
 
   GameObject *obj = room->getObjectAt(nextX, nextY);
 
-  if (obj == nullptr || !obj->isActive()) {
+  if (obj == nullptr || !obj->isActive())
+  {
     clearDoorState();
     return false;
   }
 
   ObjectType objType = obj->getType();
 
-  // Handle each object type with switch statement for clarity
-  switch (objType) {
-  case ObjectType::RIDDLE: {
+  switch (objType)
+  {
+  case ObjectType::RIDDLE:
+  {
     Riddle *riddle = dynamic_cast<Riddle *>(obj);
     if (riddle != nullptr)
       return handleRiddleInteraction(riddle, nextX, nextY, room, activeRiddle,
@@ -525,45 +557,47 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room *room,
   }
 
   case ObjectType::SWITCH_OFF:
-  case ObjectType::SWITCH_ON: {
+  case ObjectType::SWITCH_ON:
+  {
     Switch *sw = dynamic_cast<Switch *>(obj);
     if (sw != nullptr)
       return handleSwitchInteraction(sw, room);
     break;
   }
 
-  case ObjectType::SPRING_LINK: {
+  case ObjectType::SPRING_LINK:
+  {
     SpringLink *link = dynamic_cast<SpringLink *>(obj);
     if (link != nullptr)
       return handleSpringInteraction(link, room);
     break;
   }
 
-  case ObjectType::DOOR: {
+  case ObjectType::DOOR:
+  {
     Door *door = dynamic_cast<Door *>(obj);
     if (door != nullptr)
       handleDoorInteraction(door);
-    return false; // Doors don't block movement
+    return false;
   }
 
-  case ObjectType::OBSTACLE_BLOCK: {
+  case ObjectType::OBSTACLE_BLOCK:
+  {
     ObstacleBlock *obstacle = dynamic_cast<ObstacleBlock *>(obj);
-    if (obstacle != nullptr) {
+    if (obstacle != nullptr)
+    {
 
-      return handleObstacleInteraction(obstacle, room); // Blocks movement
+      return handleObstacleInteraction(obstacle, room);
     }
     break;
   }
 
   default:
-    // Handle all other object types
     clearDoorState();
 
-    // Check if object blocks movement
     if (obj->isBlocking())
       return true;
 
-    // Handle pickable objects
     if (obj->isPickable() && !hasItem())
       handlePickableInteraction(obj, nextX, nextY, room);
 
@@ -575,7 +609,8 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room *room,
 
 //////////////////////////////////////////   clearDoorState       /////////////////////////////////////////////
 
-void Player::clearDoorState() {
+void Player::clearDoorState()
+{
   atDoor = false;
   doorId = -1;
 }
@@ -584,41 +619,42 @@ void Player::clearDoorState() {
 
 bool Player::handleRiddleInteraction(Riddle *riddle, int nextX, int nextY,
                                      Room *room, Riddle **activeRiddle,
-                                     Player **activePlayer) {
-  // Store riddle IMMEDIATELY in Game's aRiddle (for pause persistence)
-  if (activeRiddle != nullptr && activePlayer != nullptr) {
+                                     Player **activePlayer)
+{
+  if (activeRiddle != nullptr && activePlayer != nullptr)
+  {
     *activeRiddle = riddle;
     *activePlayer = this;
     riddle->setSolvingPlayer(*this);
   }
 
-  // Enter riddle (blocks game) - pass 'this' to track triggering player
   RiddleResult result = riddle->enterRiddle(room, this);
 
-  if (result == RiddleResult::NO_RIDDLE) {
+  if (result == RiddleResult::NO_RIDDLE)
+  {
     room->removeObjectAt(nextX, nextY);
-    // Clear aRiddle since solved
     if (activeRiddle != nullptr)
       *activeRiddle = nullptr;
     if (activePlayer != nullptr)
       *activePlayer = nullptr;
-    return false; // Allow movement onto position
+    return false;
   }
-  else if (result == RiddleResult::SOLVED) {
-    // Remove riddle from room entirely
+  else if (result == RiddleResult::SOLVED)
+  {
     room->removeObjectAt(nextX, nextY);
-    // Clear aRiddle since solved
     if (activeRiddle != nullptr)
       *activeRiddle = nullptr;
     if (activePlayer != nullptr)
       *activePlayer = nullptr;
-    return false; // Allow movement onto position
-  } else if (result == RiddleResult::ESCAPED) {
-    // Signal pause to game loop (aRiddle stays set for resuming)
+    return false;
+  }
+  else if (result == RiddleResult::ESCAPED)
+  {
     requestPause = true;
-    return true; // Block movement
-  } else {
-    // Failed - block movement, riddle stays, clear aRiddle
+    return true;
+  }
+  else
+  {
     if (activeRiddle != nullptr)
       *activeRiddle = nullptr;
     if (activePlayer != nullptr)
@@ -629,40 +665,43 @@ bool Player::handleRiddleInteraction(Riddle *riddle, int nextX, int nextY,
 
 //////////////////////////////////////////   handleSwitchInteraction       /////////////////////////////////////////////
 
-bool Player::handleSwitchInteraction(Switch *sw, Room *room) {
+bool Player::handleSwitchInteraction(Switch *sw, Room *room)
+{
   sw->toggle();
   room->setCharAt(sw->getX(), sw->getY(), sw->getSprite());
   gotoxy(sw->getX(), sw->getY());
   std::cout << sw->getSprite();
   room->updatePuzzleState();
-  return true; // Blocks movement
+  return true;
 }
 
 //////////////////////////////////////////   handleSpringInteraction       /////////////////////////////////////////////
 
-bool Player::handleSpringInteraction(SpringLink *link, Room *room) {
+bool Player::handleSpringInteraction(SpringLink *link, Room *room)
+{
   Spring *spring = link->getParentSpring();
-  if (spring == nullptr) {
+  if (spring == nullptr)
+  {
     return false;
   }
 
-  // Delegate to Spring class for all compression/launch logic
   Spring::InteractionResult result =
       spring->handlePlayerInteraction(link, this, room);
 
-  // Apply launch velocity if launched
-  if (result.launched) {
+  if (result.launched)
+  {
     this->springMomentum = result.momentum;
-    this->springMomentum.setActive(true); // Activate the momentum
+    this->springMomentum.setActive(true);
   }
 
-  return false; // SpringLinks are non-blocking
+  return false;
 }
 
 //////////////////////////////////////////   handlePickableInteraction       /////////////////////////////////////////////
 
 bool Player::handlePickableInteraction(GameObject *obj, int nextX, int nextY,
-                                       Room *room) {
+                                       Room *room)
+{
   if (obj->getType() == ObjectType::KEY)
     keyCount++;
 
@@ -671,31 +710,29 @@ bool Player::handlePickableInteraction(GameObject *obj, int nextX, int nextY,
   room->setCharAt(nextX, nextY, ' ');
 
   return false;
-
 }
 
 //////////////////////////////////////////   handleDoorInteraction       /////////////////////////////////////////////
 
-void Player::handleDoorInteraction(Door *door) {
+void Player::handleDoorInteraction(Door *door)
+{
   atDoor = true;
   doorId = door->getDoorId();
 }
 
 //////////////////////////////////////////   isCellBlocking       /////////////////////////////////////////////
 
-bool Player::isCellBlocking(int x, int y, Room *room) const {
+bool Player::isCellBlocking(int x, int y, Room *room) const
+{
   if (room == nullptr)
     return true;
 
-  // Check bounds
   if (x < 0 || x >= MAX_X || y < 1 || y >= MAX_Y_INGAME - 1)
     return true;
 
-  // Check wall collision
   if (room->isWallAt(x, y))
     return true;
 
-  // Check blocking objects
   GameObject *obj = room->getObjectAt(x, y);
   if (obj != nullptr && obj->isActive() && obj->isBlocking())
     return true;
@@ -705,17 +742,18 @@ bool Player::isCellBlocking(int x, int y, Room *room) const {
 
 //////////////////////////////////////////   canApplyInputDuringLaunch       /////////////////////////////////////////////
 
-bool Player::canApplyInputDuringLaunch(Direction inputDir) const {
-  // Always block STAY command during launch
-  if (inputDir == Direction::STAY) {
+bool Player::canApplyInputDuringLaunch(Direction inputDir) const
+{
+  if (inputDir == Direction::STAY)
+  {
     return false;
   }
 
-  // Get opposite direction of launch
   Direction oppositeDir;
   Direction launchDir = springMomentum.getLaunchDir();
 
-  switch (launchDir) {
+  switch (launchDir)
+  {
   case Direction::UP:
     oppositeDir = Direction::DOWN;
     break;
@@ -732,42 +770,34 @@ bool Player::canApplyInputDuringLaunch(Direction inputDir) const {
     return false;
   }
 
-  // Block if input is opposite to launch direction
-  if (inputDir == oppositeDir) {
+  if (inputDir == oppositeDir)
+  {
     return false;
   }
 
-  // Block if input is same as launch direction (redundant)
-  if (inputDir == launchDir) {
+  if (inputDir == launchDir)
+  {
     return false;
   }
-
-  // Allow perpendicular directions
 
   return true;
 }
 
 //////////////////////////////////////////   applyPerpendicularVelocity       /////////////////////////////////////////////
 
-void Player::applyPerpendicularVelocity(Direction perpendicularDir) {
-  // Increase perpendicular component speed by 1
-  // Keep launch component unchanged
-
+void Player::applyPerpendicularVelocity(Direction perpendicularDir)
+{
   Direction launchDir = springMomentum.getLaunchDir();
 
-  // If launch is horizontal (LEFT/RIGHT)
-  if (launchDir == Direction::LEFT || launchDir == Direction::RIGHT) {
-    // Launch velocity in diff_x stays same
-    // Apply perpendicular in diff_y
+  if (launchDir == Direction::LEFT || launchDir == Direction::RIGHT)
+  {
     if (perpendicularDir == Direction::UP)
       springMomentum.incrementDY(-1);
     else if (perpendicularDir == Direction::DOWN)
       springMomentum.incrementDY(1);
   }
-  // If launch is vertical (UP/DOWN)
-  else if (launchDir == Direction::UP || launchDir == Direction::DOWN) {
-    // Launch velocity in diff_y stays same
-    // Apply perpendicular in diff_x
+  else if (launchDir == Direction::UP || launchDir == Direction::DOWN)
+  {
     if (perpendicularDir == Direction::LEFT)
       springMomentum.incrementDX(-1);
     else if (perpendicularDir == Direction::RIGHT)
@@ -778,14 +808,17 @@ void Player::applyPerpendicularVelocity(Direction perpendicularDir) {
 //////////////////////////////////////////   calculateNextBresenhamPoint       /////////////////////////////////////////////
 
 void Player::calculateNextBresenhamPoint(int &x, int &y, int &err, int absDX,
-                                         int absDY, int sx, int sy) const {
+                                         int absDY, int sx, int sy) const
+{
   int e2 = 2 * err;
 
-  if (e2 > -absDY) {
+  if (e2 > -absDY)
+  {
     err -= absDY;
     x += sx;
   }
-  if (e2 < absDX) {
+  if (e2 < absDX)
+  {
     err += absDX;
     y += sy;
   }
@@ -794,12 +827,13 @@ void Player::calculateNextBresenhamPoint(int &x, int &y, int &err, int absDX,
 //////////////////////////////////////////   moveMultiStep       /////////////////////////////////////////////
 
 bool Player::moveMultiStep(Room *room, Riddle **activeRiddle,
-                           Player **activePlayer, Player *otherPlayer) {
-  // Get velocity from springMomentum
+                           Player **activePlayer, Player *otherPlayer)
+{
   int dx = springMomentum.getDX();
   int dy = springMomentum.getDY();
 
-  if (dx == 0 && dy == 0) {
+  if (dx == 0 && dy == 0)
+  {
     springMomentum.resetMomentum();
     return false;
   }
@@ -817,36 +851,33 @@ bool Player::moveMultiStep(Room *room, Riddle **activeRiddle,
   int currentX = pos.x;
   int currentY = pos.y;
 
-  // Traverse line from current position to target
-  while (currentX != targetX || currentY != targetY) {
-    // Calculate next Bresenham point
+  while (currentX != targetX || currentY != targetY)
+  {
     int nextX = currentX;
     int nextY = currentY;
     calculateNextBresenhamPoint(nextX, nextY, err, absDX, absDY, sx, sy);
 
-    // Try to move one step
     bool moveSucceeded =
         singleStep(nextX, nextY, room, activeRiddle, activePlayer, otherPlayer);
 
-    if (!moveSucceeded) {
-      // Movement blocked - stop this frame's movement but keep launch active
+    if (!moveSucceeded)
+    {
       break;
     }
 
-    // Update current position for next iteration
     currentX = nextX;
     currentY = nextY;
   }
 
-  if (springMomentum.getLaunchFramesRemaining() == 0) {
-    // Reset momentum after launch completes
+  if (springMomentum.getLaunchFramesRemaining() == 0)
+  {
     springMomentum.resetMomentum();
     pos.diff_x = 0;
     pos.diff_y = 0;
   }
 
-  else {
-    // Decrement launch frames
+  else
+  {
     int remaining = springMomentum.getLaunchFramesRemaining() - 1;
     springMomentum.setLaunchFramesRemaining(remaining);
   }
@@ -857,34 +888,30 @@ bool Player::moveMultiStep(Room *room, Riddle **activeRiddle,
 //////////////////////////////////////////   singleStep       /////////////////////////////////////////////
 
 bool Player::singleStep(int nextX, int nextY, Room *room, Riddle **activeRiddle,
-                        Player **activePlayer, Player *otherPlayer) {
-  // 1. Absolute boundary check
+                        Player **activePlayer, Player *otherPlayer)
+{
   if (!isWithinAbsoluteBounds(nextX, nextY))
     return false;
 
-  // 2. Special boundary (door) check
   if (!canMoveToBoundaryPosition(nextX, nextY, room))
     return false;
 
-  // 3. Wall collision check
   if (checkWallCollision(nextX, nextY, room))
     return false;
 
-  // 4. Player-to-player collision check (ONLY if launched)
-  if (springMomentum.isActive()) {
+  if (springMomentum.isActive())
+  {
     if (otherPlayer != nullptr && otherPlayer->isAlive() &&
-        otherPlayer->pos.x == nextX && otherPlayer->pos.y == nextY) {
-      // Transfer momentum and stop
+        otherPlayer->pos.x == nextX && otherPlayer->pos.y == nextY)
+    {
       transferMomentumTo(otherPlayer);
       return false;
     }
   }
 
-  // 5. Object interaction check
   if (checkObjectInteraction(nextX, nextY, room, activeRiddle, activePlayer))
     return false;
 
-  // 6. All checks passed - update position directly
   pos.x = nextX;
   pos.y = nextY;
   return true;
@@ -892,41 +919,42 @@ bool Player::singleStep(int nextX, int nextY, Room *room, Riddle **activeRiddle,
 
 //////////////////////////////////////////   stopAtPosition       /////////////////////////////////////////////
 
-void Player::stopAtPosition(int x, int y) {
-  // Update position to safe cell
+void Player::stopAtPosition(int x, int y)
+{
   pos.x = x;
   pos.y = y;
 
-  // CRITICAL: Reset velocity to zero
   pos.diff_x = 0;
   pos.diff_y = 0;
 
-  // Reset launch state
   springMomentum.setLaunchFramesRemaining(0);
 }
 
 //////////////////////////////////////////   transferMomentumTo       /////////////////////////////////////////////
 
-void Player::transferMomentumTo(Player *otherPlayer) {
+void Player::transferMomentumTo(Player *otherPlayer)
+{
   if (otherPlayer == nullptr || !otherPlayer->isAlive())
     return;
 
-  // Transfer entire momentum state
   otherPlayer->springMomentum = this->springMomentum;
 
-  // Also transfer current velocity for consistency
   otherPlayer->pos.diff_x = pos.diff_x;
   otherPlayer->pos.diff_y = pos.diff_y;
   springMomentum.setLaunchFramesRemaining(0);
 }
 
 ////////////////////////////////////////////   calculateForce       /////////////////////////////////////////////
-int Player::calculateForce() const {
+int Player::calculateForce() const
+{
   int dx, dy;
-  if (springMomentum.isActive()) {
+  if (springMomentum.isActive())
+  {
     dx = abs(springMomentum.getDX());
     dy = abs(springMomentum.getDY());
-  } else {
+  }
+  else
+  {
     dx = abs(pos.diff_x);
     dy = abs(pos.diff_y);
   }
@@ -934,19 +962,16 @@ int Player::calculateForce() const {
 }
 
 ////////////////////////////////////////////   handleObstacleInteraction       /////////////////////////////////////////////
-bool Player::handleObstacleInteraction(class ObstacleBlock *block, Room *room) {
+bool Player::handleObstacleInteraction(class ObstacleBlock *block, Room *room)
+{
   Obstacle *obstacle = block->getParent();
   if (obstacle == nullptr)
     return false;
 
-  // Calculate force and direction
   int force = calculateForce();
   Direction pushDir = getCurrentDirection();
 
-  // Try to push obstacle (Obstacle handles collaboration and movement
-  // internally)
   bool obstacleMoved = obstacle->tryPush(pushDir, force, room, this);
 
-  return !obstacleMoved; // Return true to block player if obstacle didn't move
+  return !obstacleMoved;
 }
-

@@ -16,7 +16,8 @@ class ObstacleBlock;
 
 //////////////////////////////////////////        Modification       /////////////////////////////////////////////
 
-struct Modification {
+struct Modification
+{
   int x;
   int y;
   char newChar;
@@ -27,7 +28,8 @@ struct Modification {
 
 //////////////////////////////////////////         DarkZone       /////////////////////////////////////////////
 
-struct DarkZone {
+struct DarkZone
+{
   int x1, y1; // Top-left corner
   int x2, y2; // Bottom-right corner
 
@@ -35,14 +37,16 @@ struct DarkZone {
   DarkZone(int _x1, int _y1, int _x2, int _y2)
       : x1(_x1), y1(_y1), x2(_x2), y2(_y2) {}
 
-  bool contains(int x, int y) const {
+  bool contains(int x, int y) const
+  {
     return x >= x1 && x <= x2 && y >= y1 && y <= y2;
   }
 };
 
 //////////////////////////////////////////      ExplosionResult       /////////////////////////////////////////////
 
-struct ExplosionResult {
+struct ExplosionResult
+{
   bool keyDestroyed;
   bool player1Hit;
   bool player2Hit;
@@ -55,9 +59,8 @@ struct ExplosionResult {
 };
 
 //////////////////////////////////////////     DoorRequirements       /////////////////////////////////////////////
-
-// Requirements to open a specific door
-struct DoorRequirements {
+struct DoorRequirements
+{
   int doorId;
   int requiredKeys;
   int requiredSwitches;
@@ -72,45 +75,38 @@ struct DoorRequirements {
 
 //////////////////////////////////////////           Room       /////////////////////////////////////////////
 
-// Represents a single game room/level
-class Room {
+// Represents a single game room
+class Room
+{
 public:
-  // Room identity
   int roomId;
   Point legendTopLeft;
   bool active;
   bool completed;
 
-  // Layout
   const Screen *baseLayout;
   std::vector<Modification> mods;
 
-  // Objects
   std::vector<GameObject *> objects;
-  std::vector<Spring *> springs;     // Spring managers (not GameObjects)
-  std::vector<Obstacle *> obstacles; // Obstacles in the room
+  std::vector<Spring *> springs;
+  std::vector<Obstacle *> obstacles;
 
-  // Key counter system
   int totalKeysInRoom;
   int keysCollected;
   int activeSwitches;
   int totalSwitches;
 
-  // Door requirements
   std::vector<DoorRequirements> doorReqs;
 
-  // Room navigation
   int nextRoomId;
   int prevRoomId;
   Point spawnPoint;
   Point spawnPointFromNext;
 
-  // Dark zones
   std::vector<DarkZone> darkZones;
   bool visibilityMap[MAX_Y][MAX_X];
 
 public:
-  // Constructors & Destructor
   Room();
   explicit Room(int id);
   ~Room();
@@ -132,8 +128,8 @@ public:
   void drawLegend(Player *p1, Player *p2);
   void drawEmptyLegend();
   void drawLegendInfo(Player *p1, Player *p2);
-  void drawPlayerStats(Player* p);
-  void DrawLives(Player* p);
+  void drawPlayerStats(Player *p);
+  void DrawLives(Player *p);
 
   // Character access
   void setCharAt(int x, int y, char c);
@@ -154,15 +150,17 @@ public:
   std::vector<Switch *> getSwitches();
   ExplosionResult updateAllObjects(Player *p1, Player *p2);
   void addObstacle(Obstacle *obs);
-  
+
   bool enoughSwitchesLeft() const { return activeSwitches >= totalSwitches; }
   int getTotalSwitches() const { return totalSwitches; }
-  int getDoorReqSwitches(int doorId) const { 
-    if (doorId < 0 || doorId >= static_cast<int>(doorReqs.size())) return 0;
-    return doorReqs[doorId].requiredSwitches; 
+  int getDoorReqSwitches(int doorId) const
+  {
+    if (doorId < 0 || doorId >= static_cast<int>(doorReqs.size()))
+      return 0;
+    return doorReqs[doorId].requiredSwitches;
   }
   Point getSpawnPoint() const { return spawnPoint; }
-  
+
   // Collision & movement
   bool isBlocked(int x, int y);
   bool hasLineOfSight(int x1, int y1, int x2, int y2);
@@ -188,11 +186,10 @@ private:
   void deleteAllObjects();
   void initVisibility();
 
-  // Low-level character access (private - use public query methods instead)
   char getCharAt(int x, int y) const;
 
-  // Spring creation helpers
-  struct WallCheckResult {
+  struct WallCheckResult
+  {
     bool valid;
     Direction projectionDirection;
     Point anchorPosition;

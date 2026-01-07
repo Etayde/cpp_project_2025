@@ -17,7 +17,6 @@
 #include "SpringLink.h"
 #include "StaticObjects.h"
 #include "Switch.h"
-#include <algorithm>
 #include <cmath>
 #include <unordered_map>
 #include <vector>
@@ -27,30 +26,33 @@
 Room::Room()
     : roomId(-1), legendTopLeft(), active(false), completed(false),
       baseLayout(nullptr), totalKeysInRoom(0), keysCollected(0),
-      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1) {
+      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1)
+{
   initVisibility();
 }
 
 Room::Room(int id)
     : roomId(id), legendTopLeft(), active(false), completed(false),
       baseLayout(nullptr), totalKeysInRoom(0), keysCollected(0),
-      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1) {
+      activeSwitches(0), totalSwitches(0), nextRoomId(-1), prevRoomId(-1)
+{
   initVisibility();
 }
 
 //////////////////////////////////////////       Room Destructor       /////////////////////////////////////////////
 
-Room::~Room() {
+Room::~Room()
+{
   deleteAllObjects();
 
-  // Delete springs (separate from objects)
-  for (Spring *spring : springs) {
+  for (Spring *spring : springs)
+  {
     delete spring;
   }
   springs.clear();
 
-  // Delete obstacles (separate from objects)
-  for (Obstacle *obstacle : obstacles) {
+  for (Obstacle *obstacle : obstacles)
+  {
     delete obstacle;
   }
   obstacles.clear();
@@ -67,7 +69,8 @@ Room::Room(const Room &other)
       totalSwitches(other.totalSwitches), doorReqs(other.doorReqs),
       nextRoomId(other.nextRoomId), prevRoomId(other.prevRoomId),
       spawnPoint(other.spawnPoint),
-      spawnPointFromNext(other.spawnPointFromNext), darkZones(other.darkZones) {
+      spawnPointFromNext(other.spawnPointFromNext), darkZones(other.darkZones)
+{
   for (int y = 0; y < MAX_Y; y++)
     for (int x = 0; x < MAX_X; x++)
       visibilityMap[y][x] = other.visibilityMap[y][x];
@@ -77,12 +80,14 @@ Room::Room(const Room &other)
 
 //////////////////////////////////////////    Room Assignment Operator       /////////////////////////////////////////////
 
-Room &Room::operator=(const Room &other) {
-  if (this != &other) {
+Room &Room::operator=(const Room &other)
+{
+  if (this != &other)
+  {
     deleteAllObjects();
 
-    // Delete old springs before copying
-    for (Spring *spring : springs) {
+    for (Spring *spring : springs)
+    {
       delete spring;
     }
     springs.clear();
@@ -115,51 +120,57 @@ Room &Room::operator=(const Room &other) {
 
 //////////////////////////////////////////       Private Helpers       /////////////////////////////////////////////
 
-// Deep copy objects
-void Room::copyObjectsFrom(const Room &other) {
+void Room::copyObjectsFrom(const Room &other)
+{
   objects.clear();
-  for (GameObject *obj : other.objects) {
-    if (obj != nullptr) {
+  for (GameObject *obj : other.objects)
+  {
+    if (obj != nullptr)
+    {
       objects.push_back(obj->clone());
     }
   }
 
-  // Deep copy springs
   springs.clear();
   std::unordered_map<Spring *, Spring *> springMap;
 
-  for (Spring *oldSpring : other.springs) {
-    if (oldSpring != nullptr) {
+  for (Spring *oldSpring : other.springs)
+  {
+    if (oldSpring != nullptr)
+    {
       Spring *newSpring = oldSpring->clone();
       springs.push_back(newSpring);
       springMap[oldSpring] = newSpring;
     }
   }
 
-  // Update SpringLink parent pointers to reference the new Spring objects
-  for (GameObject *obj : objects) {
-    if (obj != nullptr && obj->getType() == ObjectType::SPRING_LINK) {
+  for (GameObject *obj : objects)
+  {
+    if (obj != nullptr && obj->getType() == ObjectType::SPRING_LINK)
+    {
       SpringLink *link = static_cast<SpringLink *>(obj);
       Spring *oldParent = link->getParentSpring();
 
       if (oldParent != nullptr &&
-          springMap.find(oldParent) != springMap.end()) {
+          springMap.find(oldParent) != springMap.end())
+      {
         link->setParentSpring(springMap[oldParent]);
       }
     }
   }
 }
 
-// Delete all allocated objects
-void Room::deleteAllObjects() {
-  for (GameObject *obj : objects) {
+void Room::deleteAllObjects()
+{
+  for (GameObject *obj : objects)
+  {
     delete obj;
   }
   objects.clear();
 }
 
-// Set all visibility to true
-void Room::initVisibility() {
+void Room::initVisibility()
+{
   for (int y = 0; y < MAX_Y; y++)
     for (int x = 0; x < MAX_X; x++)
       visibilityMap[y][x] = true;
@@ -167,8 +178,8 @@ void Room::initVisibility() {
 
 //////////////////////////////////////////       initFromLayout       /////////////////////////////////////////////
 
-// Initialize room from a screen layout
-void Room::initFromLayout(const Screen *layout, int *riddleCounter) {
+void Room::initFromLayout(const Screen *layout, int *riddleCounter)
+{
   baseLayout = layout;
   mods.clear();
   deleteAllObjects();
@@ -177,8 +188,8 @@ void Room::initFromLayout(const Screen *layout, int *riddleCounter) {
 
 //////////////////////////////////////////        loadObjects       /////////////////////////////////////////////
 
-// Scan layout and create objects
-void Room::loadObjects(int *riddleCounter) {
+void Room::loadObjects(int *riddleCounter)
+{
   totalKeysInRoom = 0;
   keysCollected = 0;
   activeSwitches = 0;
@@ -189,36 +200,44 @@ void Room::loadObjects(int *riddleCounter) {
   if (baseLayout == nullptr)
     return;
 
-  for (int y = 0; y < MAX_Y_INGAME; y++) {
-    for (int x = 0; x < MAX_X; x++) {
+  for (int y = 0; y < MAX_Y_INGAME; y++)
+  {
+    for (int x = 0; x < MAX_X; x++)
+    {
       char ch = baseLayout->getCharAt(x, y);
 
-      if (ch == '#') {
+      if (ch == '#')
+      {
         springPositions.push_back(Point(x, y));
         continue;
       }
-      if (ch == '*') {
+      if (ch == '*')
+      {
         obstaclePositions.push_back(Point(x, y));
         continue;
       }
 
-      // For riddles, use and increment the counter if provided
       int riddleId = -1;
-      if (ch == '?'){
-        if (riddleCounter != nullptr){
+      if (ch == '?')
+      {
+        if (riddleCounter != nullptr)
+        {
           riddleId = (*riddleCounter)++;
         }
-        else continue;
+        else
+          continue;
       }
 
       GameObject *obj = createObjectFromChar(ch, x, y, riddleId);
 
-      if (obj != nullptr) {
+      if (obj != nullptr)
+      {
         if (obj->getType() == ObjectType::KEY)
           totalKeysInRoom++;
         else if (obj->getType() == ObjectType::SWITCH_OFF)
           totalSwitches++;
-        else if (obj->getType() == ObjectType::SWITCH_ON) {
+        else if (obj->getType() == ObjectType::SWITCH_ON)
+        {
           totalSwitches++;
           activeSwitches++;
         }
@@ -229,20 +248,19 @@ void Room::loadObjects(int *riddleCounter) {
     }
   }
 
-  // create springs and obstacles from grouped positions
   createMultiCellObject(springPositions);
   createMultiCellObject(obstaclePositions);
 }
 
 //////////////////////////////////////////    setDoorRequirements       /////////////////////////////////////////////
 
-// Set key and switch requirements for a door
-void Room::setDoorRequirements(int doorId, int keys, int switches) {
+void Room::setDoorRequirements(int doorId, int keys, int switches)
+{
   if (doorId < 0)
     return;
 
-  // Ensure vector is large enough
-  if (doorId >= static_cast<int>(doorReqs.size())) {
+  if (doorId >= static_cast<int>(doorReqs.size()))
+  {
     doorReqs.resize(doorId + 1);
   }
 
@@ -254,29 +272,31 @@ void Room::setDoorRequirements(int doorId, int keys, int switches) {
 
 //////////////////////////////////////////           draw       /////////////////////////////////////////////
 
-// Draw room: base layout -> modifications -> darkness
-void Room::draw() {
+void Room::draw()
+{
   if (baseLayout != nullptr)
     baseLayout->draw();
 
-  for (const Modification &mod : mods) {
+  for (const Modification &mod : mods)
+  {
     gotoxy(mod.x, mod.y);
     std::cout << mod.newChar;
   }
 
   drawDarkness();
- 
 }
 
 //////////////////////////////////////////        drawDarkness       /////////////////////////////////////////////
 
-// Draw darkness overlay for dark zones
-void Room::drawDarkness() {
+void Room::drawDarkness()
+{
   if (darkZones.empty())
     return;
 
-  for (int y = 0; y < MAX_Y_INGAME; y++) {
-    for (int x = 0; x < MAX_X; x++) {
+  for (int y = 0; y < MAX_Y_INGAME; y++)
+  {
+    for (int x = 0; x < MAX_X; x++)
+    {
       if (!isInDarkZone(x, y))
         continue;
 
@@ -287,40 +307,37 @@ void Room::drawDarkness() {
         std::cout << ' ';
     }
   }
- 
 }
 
 //////////////////////////////////////////     drawVisibleObjects       /////////////////////////////////////////////
 
-void Room::drawVisibleObjects() {
-  // Iterate through ALL GameObjects
-  for (GameObject *obj : objects) {
+void Room::drawVisibleObjects()
+{
+  for (GameObject *obj : objects)
+  {
     if (!obj || !obj->isActive())
       continue;
 
     int x = obj->getX();
     int y = obj->getY();
 
-    // Check visibility: skip if in dark zone and not visible (unless object is always visible)
-    if (isInDarkZone(x, y) && !visibilityMap[y][x] && !obj->isAlwaysVisible()) {
-      // Ensure darkness by clearing the position
+    if (isInDarkZone(x, y) && !visibilityMap[y][x] && !obj->isAlwaysVisible())
+    {
       gotoxy(x, y);
       std::cout << ' ';
       continue;
     }
 
-    // Call the object's virtual draw() method
     obj->draw();
   }
-
- 
 }
 
 //////////////////////////////////////////         getCharAt       /////////////////////////////////////////////
 
-// Get character at position (checks mods first, then base)
-char Room::getCharAt(int x, int y) const {
-  for (const Modification &mod : mods) {
+char Room::getCharAt(int x, int y) const
+{
+  for (const Modification &mod : mods)
+  {
     if (mod.x == x && mod.y == y)
       return mod.newChar;
   }
@@ -332,10 +349,12 @@ char Room::getCharAt(int x, int y) const {
 
 //////////////////////////////////////////         setCharAt       /////////////////////////////////////////////
 
-// Set/modify character at position
-void Room::setCharAt(int x, int y, char c) {
-  for (Modification &mod : mods) {
-    if (mod.x == x && mod.y == y) {
+void Room::setCharAt(int x, int y, char c)
+{
+  for (Modification &mod : mods)
+  {
+    if (mod.x == x && mod.y == y)
+    {
       mod.newChar = c;
       return;
     }
@@ -350,37 +369,38 @@ void Room::resetMods() { mods.clear(); }
 
 //////////////////////////////////////////     getObjectTypeAt       /////////////////////////////////////////////
 
-// Get the type of entity at a position (walls, objects, etc.)
-ObjectType Room::getObjectTypeAt(int x, int y) const {
-  // Simply cast the character to ObjectType (enum values match chars)
+ObjectType Room::getObjectTypeAt(int x, int y) const
+{
   return static_cast<ObjectType>(getCharAt(x, y));
 }
 
 //////////////////////////////////////////        isWallAt       /////////////////////////////////////////////
 
-// Check if there's a wall at the given position
-bool Room::isWallAt(int x, int y) const {
-  // Check collision with Legend
-  if (legendTopLeft.x >= 0 && legendTopLeft.y >= 0) {
-      int legX = legendTopLeft.x - 1;
-      int legY = legendTopLeft.y - 1;
-      // Dimensions of legendData in Layouts.h: 22 wide, 5 high
-      if (x >= legX && x < legX + 22 && y >= legY && y < legY + 5) {
-          return true;
-      }
+bool Room::isWallAt(int x, int y) const
+{
+  if (legendTopLeft.x >= 0 && legendTopLeft.y >= 0)
+  {
+    int legX = legendTopLeft.x - 1;
+    int legY = legendTopLeft.y - 1;
+    if (x >= legX && x < legX + 22 && y >= legY && y < legY + 5)
+    {
+      return true;
+    }
   }
   char c = getCharAt(x, y);
-  return (BlockingChars::isBlockingChar(c)); // Both unbreakable walls and legend borders
+  return (BlockingChars::isBlockingChar(c));
 }
 
 //////////////////////////////////////////        getObjectAt       /////////////////////////////////////////////
 
-// Get object at position
-GameObject *Room::getObjectAt(int x, int y) {
-  for (GameObject *obj : objects) {
-    if (obj != nullptr && obj->isActive()) {
-      // All objects (including SpringLinks) are single-position
-      if (obj->getX() == x && obj->getY() == y) {
+GameObject *Room::getObjectAt(int x, int y)
+{
+  for (GameObject *obj : objects)
+  {
+    if (obj != nullptr && obj->isActive())
+    {
+      if (obj->getX() == x && obj->getY() == y)
+      {
         return obj;
       }
     }
@@ -388,11 +408,14 @@ GameObject *Room::getObjectAt(int x, int y) {
   return nullptr;
 }
 
-const GameObject *Room::getObjectAt(int x, int y) const {
-  for (const GameObject *obj : objects) {
-    if (obj != nullptr && obj->isActive()) {
-      // All objects (including SpringLinks) are single-position
-      if (obj->getX() == x && obj->getY() == y) {
+const GameObject *Room::getObjectAt(int x, int y) const
+{
+  for (const GameObject *obj : objects)
+  {
+    if (obj != nullptr && obj->isActive())
+    {
+      if (obj->getX() == x && obj->getY() == y)
+      {
         return obj;
       }
     }
@@ -402,8 +425,8 @@ const GameObject *Room::getObjectAt(int x, int y) const {
 
 //////////////////////////////////////////         addObject       /////////////////////////////////////////////
 
-// Add object to room
-bool Room::addObject(GameObject *obj) {
+bool Room::addObject(GameObject *obj)
+{
   if (obj == nullptr)
     return false;
 
@@ -415,13 +438,14 @@ bool Room::addObject(GameObject *obj) {
 
 //////////////////////////////////////////        removeObject       /////////////////////////////////////////////
 
-// Remove object at given index
-void Room::removeObject(int index) {
+void Room::removeObject(int index)
+{
   if (index < 0 || index >= static_cast<int>(objects.size()))
     return;
 
   GameObject *obj = objects[index];
-  if (obj != nullptr) {
+  if (obj != nullptr)
+  {
     setCharAt(obj->getX(), obj->getY(), ' ');
     delete obj;
   }
@@ -430,11 +454,13 @@ void Room::removeObject(int index) {
 
 //////////////////////////////////////////       removeObjectAt       /////////////////////////////////////////////
 
-// Remove object at position
-void Room::removeObjectAt(int x, int y) {
-  for (size_t i = 0; i < objects.size(); i++) {
+void Room::removeObjectAt(int x, int y)
+{
+  for (size_t i = 0; i < objects.size(); i++)
+  {
     if (objects[i] != nullptr && objects[i]->getX() == x &&
-        objects[i]->getY() == y) {
+        objects[i]->getY() == y)
+    {
       removeObject(i);
       return;
     }
@@ -443,20 +469,23 @@ void Room::removeObjectAt(int x, int y) {
 
 //////////////////////////////////////////        addObstacle       /////////////////////////////////////////////
 
-// Add an obstacle to the room (used when obstacles split)
-void Room::addObstacle(Obstacle *obs) {
-  if (obs != nullptr) {
+void Room::addObstacle(Obstacle *obs)
+{
+  if (obs != nullptr)
+  {
     obstacles.push_back(obs);
   }
 }
 
 //////////////////////////////////////////          getDoors       /////////////////////////////////////////////
 
-// Get all doors in the room
-std::vector<Door *> Room::getDoors() {
+std::vector<Door *> Room::getDoors()
+{
   std::vector<Door *> doors;
-  for (GameObject *obj : objects) {
-    if (obj != nullptr && obj->getType() == ObjectType::DOOR) {
+  for (GameObject *obj : objects)
+  {
+    if (obj != nullptr && obj->getType() == ObjectType::DOOR)
+    {
       doors.push_back(static_cast<Door *>(obj));
     }
   }
@@ -465,12 +494,14 @@ std::vector<Door *> Room::getDoors() {
 
 //////////////////////////////////////////        getSwitches       /////////////////////////////////////////////
 
-// Get all switches in the room
-std::vector<Switch *> Room::getSwitches() {
+std::vector<Switch *> Room::getSwitches()
+{
   std::vector<Switch *> switches;
-  for (GameObject *obj : objects) {
+  for (GameObject *obj : objects)
+  {
     if (obj != nullptr && (obj->getType() == ObjectType::SWITCH_ON ||
-                           obj->getType() == ObjectType::SWITCH_OFF)) {
+                           obj->getType() == ObjectType::SWITCH_OFF))
+    {
       switches.push_back(static_cast<Switch *>(obj));
     }
   }
@@ -479,13 +510,14 @@ std::vector<Switch *> Room::getSwitches() {
 
 //////////////////////////////////////////         isBlocked       /////////////////////////////////////////////
 
-// Check if position is blocked
-bool Room::isBlocked(int x, int y) {
+bool Room::isBlocked(int x, int y)
+{
   if (isWallAt(x, y))
     return true;
 
   GameObject *obj = getObjectAt(x, y);
-  if (obj != nullptr) {
+  if (obj != nullptr)
+  {
     if (obj->isBlocking())
       return true;
     if (obj->isPickable())
@@ -498,7 +530,8 @@ bool Room::isBlocked(int x, int y) {
 //////////////////////////////////////////      hasLineOfSight       /////////////////////////////////////////////
 
 // Check line of sight using Bresenham's algorithm - MADE WITH AI
-bool Room::hasLineOfSight(int x1, int y1, int x2, int y2) {
+bool Room::hasLineOfSight(int x1, int y1, int x2, int y2)
+{
   int dx = abs(x2 - x1);
   int dy = abs(y2 - y1);
   int sx = (x1 < x2) ? 1 : -1;
@@ -507,23 +540,26 @@ bool Room::hasLineOfSight(int x1, int y1, int x2, int y2) {
 
   int x = x1, y = y1;
 
-  while (x != x2 || y != y2) {
-    if (x != x1 || y != y1) {
-      // Walls and doors block line of sight
+  while (x != x2 || y != y2)
+  {
+    if (x != x1 || y != y1)
+    {
       if (isWallAt(x, y))
         return false;
 
-      char c = getCharAt(x, y); // Still need char for door check
-      if (c >= '0' && c <= '9') // Doors
+      char c = getCharAt(x, y);
+      if (c >= '0' && c <= '9')
         return false;
     }
 
     int e2 = 2 * err;
-    if (e2 > -dy) {
+    if (e2 > -dy)
+    {
       err -= dy;
       x += sx;
     }
-    if (e2 < dx) {
+    if (e2 < dx)
+    {
       err += dx;
       y += sy;
     }
@@ -534,17 +570,21 @@ bool Room::hasLineOfSight(int x1, int y1, int x2, int y2) {
 
 //////////////////////////////////////////     updatePuzzleState       /////////////////////////////////////////////
 
-// Check switches and remove switch walls if complete
-void Room::updatePuzzleState() {
+void Room::updatePuzzleState()
+{
   activeSwitches = countActiveSwitches();
 
-  if (activeSwitches >= totalSwitches && totalSwitches > 0 && !completed) {
+  if (activeSwitches >= totalSwitches && totalSwitches > 0 && !completed)
+  {
     completed = true;
 
-    for (GameObject *obj : objects) {
-      if (obj != nullptr && obj->getType() == ObjectType::SWITCH_WALL) {
+    for (GameObject *obj : objects)
+    {
+      if (obj != nullptr && obj->getType() == ObjectType::SWITCH_WALL)
+      {
         SwitchWall *sww = dynamic_cast<SwitchWall *>(obj);
-        if (sww != nullptr && sww->isRemovedBySwitch()) {
+        if (sww != nullptr && sww->isRemovedBySwitch())
+        {
           setCharAt(sww->getX(), sww->getY(), ' ');
           gotoxy(sww->getX(), sww->getY());
           std::cout << ' ';
@@ -552,15 +592,16 @@ void Room::updatePuzzleState() {
         }
       }
     }
-   
   }
 }
 
 //////////////////////////////////////////    countActiveSwitches       /////////////////////////////////////////////
 
-int Room::countActiveSwitches() const {
+int Room::countActiveSwitches() const
+{
   int count = 0;
-  for (const GameObject *obj : objects) {
+  for (const GameObject *obj : objects)
+  {
     if (obj != nullptr && obj->getType() == ObjectType::SWITCH_ON)
       count++;
   }
@@ -569,8 +610,8 @@ int Room::countActiveSwitches() const {
 
 //////////////////////////////////////////        canOpenDoor       /////////////////////////////////////////////
 
-// Check if door requirements are met
-bool Room::canOpenDoor(int doorId, int player1Keys, int player2Keys) const {
+bool Room::canOpenDoor(int doorId, int player1Keys, int player2Keys) const
+{
   if (doorId < 0 || doorId >= static_cast<int>(doorReqs.size()))
     return false;
 
@@ -581,7 +622,6 @@ bool Room::canOpenDoor(int doorId, int player1Keys, int player2Keys) const {
   if (req.requiredSwitches > 0 && activeSwitches < req.requiredSwitches)
     return false;
 
-  // Check total keys from both players
   int totalKeys = player1Keys + player2Keys;
   if (req.requiredKeys > 0 && totalKeys < req.requiredKeys)
     return false;
@@ -591,7 +631,8 @@ bool Room::canOpenDoor(int doorId, int player1Keys, int player2Keys) const {
 
 //////////////////////////////////////////        getDoorIdAt       /////////////////////////////////////////////
 
-int Room::getDoorIdAt(int x, int y) const {
+int Room::getDoorIdAt(int x, int y) const
+{
   char c = getCharAt(x, y);
   if (c >= '0' && c <= '9')
     return c - '0';
@@ -600,8 +641,10 @@ int Room::getDoorIdAt(int x, int y) const {
 
 //////////////////////////////////////////        unlockDoor       /////////////////////////////////////////////
 
-bool Room::unlockDoor(int doorId) {
-  if (doorId >= 0 && doorId < static_cast<int>(doorReqs.size())){
+bool Room::unlockDoor(int doorId)
+{
+  if (doorId >= 0 && doorId < static_cast<int>(doorReqs.size()))
+  {
     doorReqs[doorId].isUnlocked = true;
     return true;
   }
@@ -610,7 +653,8 @@ bool Room::unlockDoor(int doorId) {
 
 //////////////////////////////////////////      isDoorUnlocked       /////////////////////////////////////////////
 
-bool Room::isDoorUnlocked(int doorId) const {
+bool Room::isDoorUnlocked(int doorId) const
+{
   if (doorId >= 0 && doorId < static_cast<int>(doorReqs.size()))
     return doorReqs[doorId].isUnlocked;
   return false;
@@ -618,21 +662,25 @@ bool Room::isDoorUnlocked(int doorId) const {
 
 //////////////////////////////////////////        addDarkZone       /////////////////////////////////////////////
 
-void Room::addDarkZone(int x1, int y1, int x2, int y2) {
+void Room::addDarkZone(int x1, int y1, int x2, int y2)
+{
   darkZones.push_back(DarkZone(x1, y1, x2, y2));
 }
 
 //////////////////////////////////////////       clearDarkZones       /////////////////////////////////////////////
 
-void Room::clearDarkZones() {
+void Room::clearDarkZones()
+{
   darkZones.clear();
   initVisibility();
 }
 
 //////////////////////////////////////////       isInDarkZone       /////////////////////////////////////////////
 
-bool Room::isInDarkZone(int x, int y) const {
-  for (const DarkZone &zone : darkZones) {
+bool Room::isInDarkZone(int x, int y) const
+{
+  for (const DarkZone &zone : darkZones)
+  {
     if (zone.contains(x, y))
       return true;
   }
@@ -641,28 +689,32 @@ bool Room::isInDarkZone(int x, int y) const {
 
 //////////////////////////////////////////      updateVisibility       /////////////////////////////////////////////
 
-// Update visibility based on player torches
-void Room::updateVisibility(Player *p1, Player *p2) {
+void Room::updateVisibility(Player *p1, Player *p2)
+{
   if (darkZones.empty())
     return;
 
   initVisibility();
 
-  for (const DarkZone &zone : darkZones) {
-    for (int y = zone.y1; y <= zone.y2; y++) {
-      for (int x = zone.x1; x <= zone.x2; x++) {
+  for (const DarkZone &zone : darkZones)
+  {
+    for (int y = zone.y1; y <= zone.y2; y++)
+    {
+      for (int x = zone.x1; x <= zone.x2; x++)
+      {
         if (x >= 0 && x < MAX_X && y >= 0 && y < MAX_Y)
           visibilityMap[y][x] = false;
       }
     }
   }
 
-  // Players with torches light up area
-  if (p1 != nullptr && p1->hasTorch()) {
+  if (p1 != nullptr && p1->hasTorch())
+  {
     Torch *torch = static_cast<Torch *>(p1->getInventory());
     torch->illuminate(this, p1->getX(), p1->getY());
   }
-  if (p2 != nullptr && p2->hasTorch()) {
+  if (p2 != nullptr && p2->hasTorch())
+  {
     Torch *torch = static_cast<Torch *>(p2->getInventory());
     torch->illuminate(this, p2->getX(), p2->getY());
   }
@@ -671,9 +723,12 @@ void Room::updateVisibility(Player *p1, Player *p2) {
 //////////////////////////////////////////        lightRadius       /////////////////////////////////////////////
 
 // Light circular area around center - MADE WITH AI
-void Room::lightRadius(int centerX, int centerY, int radius) {
-  for (int dy = -radius; dy <= radius; dy++) {
-    for (int dx = -radius; dx <= radius; dx++) {
+void Room::lightRadius(int centerX, int centerY, int radius)
+{
+  for (int dy = -radius; dy <= radius; dy++)
+  {
+    for (int dx = -radius; dx <= radius; dx++)
+    {
       int x = centerX + dx;
       int y = centerY + dy;
 
@@ -691,7 +746,8 @@ void Room::lightRadius(int centerX, int centerY, int radius) {
 
 //////////////////////////////////////////         isVisible       /////////////////////////////////////////////
 
-bool Room::isVisible(int x, int y) const {
+bool Room::isVisible(int x, int y) const
+{
   if (x < 0 || x >= MAX_X || y < 0 || y >= MAX_Y)
     return false;
   return visibilityMap[y][x];
@@ -699,61 +755,70 @@ bool Room::isVisible(int x, int y) const {
 
 //////////////////////////////////////////     updateAllObjects       /////////////////////////////////////////////
 
-ExplosionResult Room::updateAllObjects(Player *p1, Player *p2) {
+ExplosionResult Room::updateAllObjects(Player *p1, Player *p2)
+{
   ExplosionResult totalResult;
 
-  for (GameObject *obj : objects) {
-    if (obj && obj->isActive()) {
-      if (obj->getType() == ObjectType::BOMB) {
-        // Bombs need player references and return explosion results
+  for (GameObject *obj : objects)
+  {
+    if (obj && obj->isActive())
+    {
+      if (obj->getType() == ObjectType::BOMB)
+      {
         Bomb *bomb = static_cast<Bomb *>(obj);
         ExplosionResult result = bomb->update(p1, p2);
 
-        // Accumulate bomb explosion results
         totalResult.keyDestroyed |= result.keyDestroyed;
         totalResult.player1Hit |= result.player1Hit;
         totalResult.player2Hit |= result.player2Hit;
         totalResult.switchesDestroyed += result.switchesDestroyed;
         totalResult.objectsDestroyed += result.objectsDestroyed;
 
-        // Decrement total switches count if any were destroyed
-        if (result.switchesDestroyed > 0) {
+        if (result.switchesDestroyed > 0)
+        {
           totalSwitches -= result.switchesDestroyed;
-          if (totalSwitches < 0) totalSwitches = 0;
+          if (totalSwitches < 0)
+            totalSwitches = 0;
         }
-      } else {
-        obj->update(); // Standard update
+      }
+      else
+      {
+        obj->update();
       }
     }
   }
 
-  // Clean up inactive GameObjects if destroyed by explosions
-  for (int i = static_cast<int>(objects.size()) - 1; i >= 0; i--) {
-    if (objects[i] && !objects[i]->isActive()) {
+  for (int i = static_cast<int>(objects.size()) - 1; i >= 0; i--)
+  {
+    if (objects[i] && !objects[i]->isActive())
+    {
       delete objects[i];
       objects.erase(objects.begin() + i);
     }
   }
 
-  // Clean up springs with all links destroyed
-  for (int i = static_cast<int>(springs.size()) - 1; i >= 0; i--) {
-    if (springs[i] && springs[i]->allLinksInactive()) {
+  for (int i = static_cast<int>(springs.size()) - 1; i >= 0; i--)
+  {
+    if (springs[i] && springs[i]->allLinksInactive())
+    {
       delete springs[i];
       springs.erase(springs.begin() + i);
     }
   }
 
-  // Reconstruct damaged obstacles
-  for (Obstacle *obstacle : obstacles) {
-    if (obstacle && obstacle->needsReconstruction()) {
+  for (Obstacle *obstacle : obstacles)
+  {
+    if (obstacle && obstacle->needsReconstruction())
+    {
       obstacle->reconstruct(this);
     }
   }
 
-  // Remove fully destroyed obstacles
-  for (int i = static_cast<int>(obstacles.size()) - 1; i >= 0; i--) {
+  for (int i = static_cast<int>(obstacles.size()) - 1; i >= 0; i--)
+  {
     Obstacle *obs = obstacles[i];
-    if (obs && obs->getBlocks().empty()) {
+    if (obs && obs->getBlocks().empty())
+    {
       delete obs;
       obstacles.erase(obstacles.begin() + i);
     }
@@ -764,7 +829,8 @@ ExplosionResult Room::updateAllObjects(Player *p1, Player *p2) {
 
 //////////////////////////////////////////   Multi-Cell Object Detection Helpers       /////////////////////////////////////////////
 
-Direction Room::detectOrientation(const std::vector<Point> &positions) {
+Direction Room::detectOrientation(const std::vector<Point> &positions)
+{
   if (positions.size() < 2)
     return Direction::STAY;
 
@@ -774,7 +840,8 @@ Direction Room::detectOrientation(const std::vector<Point> &positions) {
   int firstX = positions[0].x;
   int firstY = positions[0].y;
 
-  for (size_t i = 1; i < positions.size(); i++) {
+  for (size_t i = 1; i < positions.size(); i++)
+  {
     if (positions[i].x != firstX)
       allSameX = false;
     if (positions[i].y != firstY)
@@ -782,35 +849,44 @@ Direction Room::detectOrientation(const std::vector<Point> &positions) {
   }
 
   if (allSameX)
-    return Direction::VERTICAL; // Same column
+    return Direction::VERTICAL;
   if (allSameY)
-    return Direction::HORIZONTAL; // Same row
-  return Direction::STAY;         // Not aligned
+    return Direction::HORIZONTAL;
+  return Direction::STAY;
 }
 
 std::vector<Point> Room::sortPositions(const std::vector<Point> &positions,
-                                       Direction orientation) {
+                                       Direction orientation)
+{
   std::vector<Point> sorted = positions;
 
-  if (orientation == Direction::HORIZONTAL) {
-    // Sort by x coordinate (left to right)
+  if (orientation == Direction::HORIZONTAL)
+  {
     std::sort(sorted.begin(), sorted.end(),
-              [](const Point &a, const Point &b) { return a.x < b.x; });
-  } else {
-    // Sort by y coordinate (top to bottom)
+              [](const Point &a, const Point &b)
+              { return a.x < b.x; });
+  }
+  else
+  {
     std::sort(sorted.begin(), sorted.end(),
-              [](const Point &a, const Point &b) { return a.y < b.y; });
+              [](const Point &a, const Point &b)
+              { return a.y < b.y; });
   }
 
-  // Verify consecutive
-  for (size_t i = 1; i < sorted.size(); i++) {
-    if (orientation == Direction::HORIZONTAL) {
-      if (sorted[i].x != sorted[i - 1].x + 1) {
-        return {}; // Not consecutive
+  for (size_t i = 1; i < sorted.size(); i++)
+  {
+    if (orientation == Direction::HORIZONTAL)
+    {
+      if (sorted[i].x != sorted[i - 1].x + 1)
+      {
+        return {};
       }
-    } else {
-      if (sorted[i].y != sorted[i - 1].y + 1) {
-        return {}; // Not consecutive
+    }
+    else
+    {
+      if (sorted[i].y != sorted[i - 1].y + 1)
+      {
+        return {};
       }
     }
   }
@@ -819,53 +895,55 @@ std::vector<Point> Room::sortPositions(const std::vector<Point> &positions,
 }
 
 Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point> &sorted,
-                                               Direction orientation) {
+                                               Direction orientation)
+{
   WallCheckResult result;
 
   if (sorted.empty())
     return result;
 
-  // Check first position (index 0) for wall adjacency
   Point first = sorted[0];
   Point last = sorted[sorted.size() - 1];
 
-  if (orientation == Direction::HORIZONTAL) {
-    // Check left of first position
+  if (orientation == Direction::HORIZONTAL)
+  {
     char leftChar = baseLayout->getCharAt(first.x - 1, first.y);
-    if (leftChar == 'W' || leftChar == 'w') {
+    if (leftChar == 'W')
+    {
       result.valid = true;
       result.projectionDirection =
-          Direction::LEFT; // Compress TOWARD wall (left)
+          Direction::LEFT;
       result.anchorPosition = first;
       return result;
     }
 
-    // Check right of last position
     char rightChar = baseLayout->getCharAt(last.x + 1, last.y);
-    if (rightChar == 'W' || rightChar == 'w') {
+    if (rightChar == 'W')
+    {
       result.valid = true;
       result.projectionDirection =
-          Direction::RIGHT; // Compress TOWARD wall (right)
+          Direction::RIGHT;
       result.anchorPosition = last;
       return result;
     }
-  } else // VERTICAL
+  }
+  else
   {
-    // Check above first position
     char topChar = baseLayout->getCharAt(first.x, first.y - 1);
-    if (topChar == 'W' || topChar == 'w') {
+    if (topChar == 'W')
+    {
       result.valid = true;
-      result.projectionDirection = Direction::UP; // Compress TOWARD wall (up)
+      result.projectionDirection = Direction::UP;
       result.anchorPosition = first;
       return result;
     }
 
-    // Check below last position
     char bottomChar = baseLayout->getCharAt(last.x, last.y + 1);
-    if (bottomChar == 'W' || bottomChar == 'w') {
+    if (bottomChar == 'W')
+    {
       result.valid = true;
       result.projectionDirection =
-          Direction::DOWN; // Compress TOWARD wall (down)
+          Direction::DOWN;
       result.anchorPosition = last;
       return result;
     }
@@ -876,98 +954,99 @@ Room::WallCheckResult Room::checkWallAdjacency(const std::vector<Point> &sorted,
 
 //////////////////////////////////////////   scanAndCreateSprings       /////////////////////////////////////////////
 
-void Room::scanAndCreateSprings() {
+void Room::scanAndCreateSprings()
+{
   if (baseLayout == nullptr)
     return;
 
-  // Step 1: Collect all '#' positions
   std::vector<Point> allSpringCells;
-  for (int y = 0; y < MAX_Y_INGAME; y++) {
-    for (int x = 0; x < MAX_X; x++) {
-      if (baseLayout->getCharAt(x, y) == '#') {
+  for (int y = 0; y < MAX_Y_INGAME; y++)
+  {
+    for (int x = 0; x < MAX_X; x++)
+    {
+      if (baseLayout->getCharAt(x, y) == '#')
+      {
         allSpringCells.push_back(Point(x, y));
       }
     }
   }
 
-  // Step 2: Group adjacent cells into springs
   bool processed[MAX_Y_INGAME][MAX_X] = {{false}};
 
-  for (const Point &p : allSpringCells) {
+  for (const Point &p : allSpringCells)
+  {
     if (processed[p.y][p.x])
       continue;
 
-    // Start new spring group
     std::vector<Point> group;
     group.push_back(p);
     processed[p.y][p.x] = true;
 
-    // Collect all adjacent cells (horizontal or vertical)
-    for (size_t i = 0; i < group.size(); i++) {
+    for (size_t i = 0; i < group.size(); i++)
+    {
       int x = group[i].x;
       int y = group[i].y;
 
-      // Check 4 neighbors
       Point neighbors[] = {Point(x + 1, y), Point(x - 1, y), Point(x, y + 1),
                            Point(x, y - 1)};
 
-      for (const Point &neighbor : neighbors) {
+      for (const Point &neighbor : neighbors)
+      {
         if (neighbor.x >= 0 && neighbor.x < MAX_X && neighbor.y >= 0 &&
             neighbor.y < MAX_Y_INGAME && !processed[neighbor.y][neighbor.x] &&
-            baseLayout->getCharAt(neighbor.x, neighbor.y) == '#') {
+            baseLayout->getCharAt(neighbor.x, neighbor.y) == '#')
+        {
           group.push_back(neighbor);
           processed[neighbor.y][neighbor.x] = true;
         }
       }
     }
 
-    // Step 3: Validate and create spring
-    if (group.size() > 1) {
+    if (group.size() > 1)
+    {
       Direction orientation = detectOrientation(group);
-      if (orientation != Direction::STAY) {
+      if (orientation != Direction::STAY)
+      {
         std::vector<Point> sorted = sortPositions(group, orientation);
-        if (!sorted.empty()) {
+        if (!sorted.empty())
+        {
           WallCheckResult wallCheck = checkWallAdjacency(sorted, orientation);
-          if (wallCheck.valid) {
-            // Ensure sorted array has START cell first, ANCHOR cell last
-            // If anchor is at the beginning (sorted[0]), reverse the array
+          if (wallCheck.valid)
+          {
+
             bool anchorIsFirst = (wallCheck.anchorPosition == sorted[0]);
 
-            if (anchorIsFirst) {
+            if (anchorIsFirst)
+            {
               std::reverse(sorted.begin(), sorted.end());
             }
 
-            // Create Spring manager
             Spring *spring = new Spring();
             std::vector<SpringLink *> springLinks;
 
-            // Create SpringLink for each cell
             bool addFailed = false;
-            for (size_t i = 0; i < sorted.size(); i++) {
+            for (size_t i = 0; i < sorted.size(); i++)
+            {
               SpringLink *link =
                   new SpringLink(sorted[i], spring, static_cast<int>(i));
               springLinks.push_back(link);
 
-              // Add to objects vector
-              if (!addObject(link)) {
+              if (!addObject(link))
+              {
                 delete link;
                 addFailed = true;
                 break;
               }
             }
 
-            // If all links added successfully, initialize spring and add to
-            // springs vector
-            if (!addFailed) {
+            if (!addFailed)
+            {
               spring->initialize(springLinks, wallCheck.anchorPosition,
                                  wallCheck.projectionDirection);
               springs.push_back(spring);
-            } else {
-              // Cleanup if failed
-              delete spring;
-              // Links already added to objects will be cleaned up by
-              // deleteAllObjects()
             }
+            else
+              delete spring;
           }
         }
       }
@@ -977,7 +1056,8 @@ void Room::scanAndCreateSprings() {
 
 ///////////////////////////////////////////     createMultiCellObject       /////////////////////////////////////////////
 
-void Room::createMultiCellObject(const std::vector<Point> &allObjCells) {
+void Room::createMultiCellObject(const std::vector<Point> &allObjCells)
+{
   if (baseLayout == nullptr)
     return;
 
@@ -986,38 +1066,39 @@ void Room::createMultiCellObject(const std::vector<Point> &allObjCells) {
 
   char ch = baseLayout->getCharAt(allObjCells[0].x, allObjCells[0].y);
 
-  // Step 2: Group adjacent cells into springs
   bool processed[MAX_Y_INGAME][MAX_X] = {{false}};
 
-  for (const Point &p : allObjCells) {
+  for (const Point &p : allObjCells)
+  {
     if (processed[p.y][p.x])
       continue;
 
-    // Start new spring group
     std::vector<Point> group;
     std::unordered_map<Point, std::vector<Point>>
-        edges; // To store edge positions for obstacles
+        edges;
     group.push_back(p);
     processed[p.y][p.x] = true;
 
-    // Collect all adjacent cells (horizontal or vertical)
-    for (size_t i = 0; i < group.size(); i++) {
+    for (size_t i = 0; i < group.size(); i++)
+    {
       int x = group[i].x;
       int y = group[i].y;
 
-      // Check 4 neighbors
       Point neighbors[] = {Point(x + 1, y), Point(x - 1, y), Point(x, y + 1),
                            Point(x, y - 1)};
 
-      for (const Point &neighbor : neighbors) {
+      for (const Point &neighbor : neighbors)
+      {
         if (neighbor.x >= 0 && neighbor.x < MAX_X && neighbor.y >= 0 &&
-            neighbor.y < MAX_Y_INGAME && !processed[neighbor.y][neighbor.x]) {
-          if (baseLayout->getCharAt(neighbor.x, neighbor.y) != ch) {
-            // Neighbor is different - only track edges for obstacles
+            neighbor.y < MAX_Y_INGAME && !processed[neighbor.y][neighbor.x])
+        {
+          if (baseLayout->getCharAt(neighbor.x, neighbor.y) != ch)
+          {
             if (ch == '*')
               edges[group[i]].push_back(neighbor);
-          } else {
-            // Neighbor is SAME character - add to group
+          }
+          else
+          {
             group.push_back(neighbor);
             processed[neighbor.y][neighbor.x] = true;
           }
@@ -1025,10 +1106,9 @@ void Room::createMultiCellObject(const std::vector<Point> &allObjCells) {
       }
     }
 
-    // Step 3: Process the collected group based on character type
-    switch (ch) {
+    switch (ch)
+    {
     case '#':
-      // Handle springs separately
       createSpringFromGroup(group);
       break;
     case '*':
@@ -1042,53 +1122,53 @@ void Room::createMultiCellObject(const std::vector<Point> &allObjCells) {
 
 ///////////////////////////////////////////    createSpringFromGroup       /////////////////////////////////////////////
 
-void Room::createSpringFromGroup(const std::vector<Point> &group) {
-  if (group.size() > 1) {
+void Room::createSpringFromGroup(const std::vector<Point> &group)
+{
+  if (group.size() > 1)
+  {
     Direction orientation = detectOrientation(group);
-    if (orientation != Direction::STAY) {
+    if (orientation != Direction::STAY)
+    {
       std::vector<Point> sorted = sortPositions(group, orientation);
-      if (!sorted.empty()) {
+      if (!sorted.empty())
+      {
         WallCheckResult wallCheck = checkWallAdjacency(sorted, orientation);
-        if (wallCheck.valid) {
-          // Ensure sorted array has START cell first, ANCHOR cell last
-          // If anchor is at the beginning (sorted[0]), reverse the array
+        if (wallCheck.valid)
+        {
+
           bool anchorIsFirst = (wallCheck.anchorPosition == sorted[0]);
 
-          if (anchorIsFirst) {
+          if (anchorIsFirst)
+          {
             std::reverse(sorted.begin(), sorted.end());
           }
 
-          // Create Spring manager
           Spring *spring = new Spring();
           std::vector<SpringLink *> springLinks;
 
-          // Create SpringLink for each cell
           bool addFailed = false;
-          for (size_t i = 0; i < sorted.size(); i++) {
+          for (size_t i = 0; i < sorted.size(); i++)
+          {
             SpringLink *link =
                 new SpringLink(sorted[i], spring, static_cast<int>(i));
             springLinks.push_back(link);
 
-            // Add to objects vector
-            if (!addObject(link)) {
+            if (!addObject(link))
+            {
               delete link;
               addFailed = true;
               break;
             }
           }
 
-          // If all links added successfully, initialize spring and add to
-          // springs vector
-          if (!addFailed) {
+          if (!addFailed)
+          {
             spring->initialize(springLinks, wallCheck.anchorPosition,
                                wallCheck.projectionDirection);
             springs.push_back(spring);
-          } else {
-            // Cleanup on failure
-            delete spring;
-            // Links already added to objects will be cleaned up by
-            // deleteAllObjects()
           }
+          else
+            delete spring;
         }
       }
     }
@@ -1099,110 +1179,129 @@ void Room::createSpringFromGroup(const std::vector<Point> &group) {
 
 void Room::createObstacleFromGroup(
     const std::vector<Point> &group,
-    std::unordered_map<Point, std::vector<Point>> &neighbors) {
+    std::unordered_map<Point, std::vector<Point>> &neighbors)
+{
   Obstacle *obstacle = new Obstacle();
   std::vector<ObstacleBlock *> blocks;
 
   bool addFailed = false;
-  for (const Point &pos : group) {
+  for (const Point &pos : group)
+  {
     ObstacleBlock *block = new ObstacleBlock(pos, obstacle);
     blocks.push_back(block);
 
-    if (!addObject(block)) {
+    if (!addObject(block))
+    {
       delete block;
       addFailed = true;
       break;
     }
   }
 
-  if (!addFailed) {
+  if (!addFailed)
+  {
     obstacle->initialize(blocks, neighbors);
     obstacles.push_back(obstacle);
-  } else {
+  }
+  else
+  {
     delete obstacle;
   }
 }
 
 //////////////////////////////////////////     Legend Drawing       /////////////////////////////////////////////
 
-void Room::drawLegend(Player *p1, Player *p2) {
+void Room::drawLegend(Player *p1, Player *p2)
+{
   drawEmptyLegend();
   drawLegendInfo(p1, p2);
 }
 
-void Room::drawEmptyLegend() {
+void Room::drawEmptyLegend()
+{
   int startX = legendTopLeft.x - 1;
   int startY = legendTopLeft.y - 1;
 
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 5; i++)
+  {
     gotoxy(startX, startY + i);
     std::cout << legendData[i];
   }
 }
 
-void Room::drawLegendInfo(Player *p1, Player *p2) {
+void Room::drawLegendInfo(Player *p1, Player *p2)
+{
   drawPlayerStats(p1);
   drawPlayerStats(p2);
 }
 
-void Room::drawPlayerStats(Player* p) {
+void Room::drawPlayerStats(Player *p)
+{
 
-  int lineY = legendTopLeft.y + p->playerId; 
+  int lineY = legendTopLeft.y + p->playerId;
   int startX = legendTopLeft.x;
-  
-  // Draw Score
+
   gotoxy(startX + 3, lineY);
   std::cout << p->getScore();
-  
-  DrawLives(p); 
 
-  // Draw Inventory
+  DrawLives(p);
+
   gotoxy(startX + 17, lineY);
-  if (p->hasItem()) {
-      std::cout << p->inventory->getSprite();
-  } else {
-      std::cout << " ";
+  if (p->hasItem())
+  {
+    std::cout << p->inventory->getSprite();
+  }
+  else
+  {
+    std::cout << " ";
   }
 }
 
-void Room::DrawLives(Player* p) {
+void Room::DrawLives(Player *p)
+{
   int lineY = legendTopLeft.y + p->playerId;
   int startX = legendTopLeft.x - 1;
-  int offset = startX + 8; // Align under LIVES
-  
-  switch(p->lives) {
-    case 3:
-      gotoxy(offset, lineY);
-      std::cout << "<3 <3 <3";
-      break;
-    case 2:
-      gotoxy(offset+1, lineY);
-      std::cout << "<3 <3";
-      break;
-    case 1:
-      gotoxy(offset+3, lineY);
-      std::cout << "<3";
-      break;
-    default:
-      gotoxy(offset, lineY);
-      std::cout << "        ";
-      break;
+  int offset = startX + 8;
+
+  switch (p->lives)
+  {
+  case 3:
+    gotoxy(offset, lineY);
+    std::cout << "<3 <3 <3";
+    break;
+  case 2:
+    gotoxy(offset + 1, lineY);
+    std::cout << "<3 <3";
+    break;
+  case 1:
+    gotoxy(offset + 3, lineY);
+    std::cout << "<3";
+    break;
+  default:
+    gotoxy(offset, lineY);
+    std::cout << "        ";
+    break;
   }
 }
 
 //////////////////////////////////////////       isVacantSpot       /////////////////////////////////////////////
 
-bool Room::isVacantSpot(int x, int y) {
-  if (x < 0 || x >= MAX_X || y < 0 || y >= MAX_Y_INGAME) {
+bool Room::isVacantSpot(int x, int y)
+{
+  if (x < 0 || x >= MAX_X || y < 0 || y >= MAX_Y_INGAME)
+  {
     return false;
   }
 
-  if (isWallAt(x, y)) {
+  if (isWallAt(x, y))
+  {
     return false;
   }
-  
-  for (GameObject *obj : objects) {
-    if (obj->getX() == x && obj->getY() == y) {
+
+  for (GameObject *obj : objects)
+  {
+    if (obj->getX() == x && obj->getY() == y)
+    {
       return false;
     }
   }

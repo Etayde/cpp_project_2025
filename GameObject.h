@@ -25,7 +25,8 @@ class Riddle;
 // Abstract base class for all game objects
 // Uses virtual methods for polymorphism (with help of AI since we didn't learn
 // it yet and didn't have time to learn solo)
-class GameObject {
+class GameObject
+{
 protected:
   Point position;
   char sprite;
@@ -59,17 +60,19 @@ public:
   /////////////////////////////////////////////
 
   // Can be overridden by derived classes
-  virtual bool onInteract(Player * /*player*/, Room * /*room*/) {
+  virtual bool onInteract(Player * /*player*/, Room * /*room*/)
+  {
     return false;
   }
   virtual bool onExplosion() { return false; }
-  virtual bool isAlwaysVisible() const { return false; }  // Override for objects visible in dark (e.g., ticking bombs)
+  virtual bool isAlwaysVisible() const { return false; } // Override for objects visible in dark (e.g., ticking bombs)
 
-  virtual void draw() const {
-    if (active && position.x >= 0 && position.y >= 0) {
+  virtual void draw() const
+  {
+    if (active && position.x >= 0 && position.y >= 0)
+    {
       gotoxy(position.x, position.y);
       std::cout << sprite;
-
     }
   }
 
@@ -89,7 +92,8 @@ public:
   /////////////////////////////////////////////
 
   void setPosition(const Point &pos) { position = pos; }
-  void setPosition(int x, int y) {
+  void setPosition(int x, int y)
+  {
     position.x = x;
     position.y = y;
   }

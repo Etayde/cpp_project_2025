@@ -10,81 +10,77 @@ using std::cout;
 
 //////////////////////////////////////////         enterRiddle         //////////////////////////////////////////
 
-RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer) {
-    // 1. Entry animation (flush input buffer)
+RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer)
+{
     playRiddleAnimation();
 
-    // 2. Display UI
-    if (!displayRiddleQuestion()) return RiddleResult::NO_RIDDLE;
+    if (!displayRiddleQuestion())
+        return RiddleResult::NO_RIDDLE;
 
-    // 3. Get player input (blocking)
     int playerAnswer = getPlayerAnswer();
 
-    // 4. Handle ESC - don't restore screen, keep riddle visible
-    if (playerAnswer == -1) {
+    if (playerAnswer == -1)
+    {
         return RiddleResult::ESCAPED;
     }
 
-    // 5. Check answer
     bool correct = checkAnswer(playerAnswer);
 
-    if (correct && firstAttempt && triggeringPlayer != nullptr) {
+    if (correct && firstAttempt && triggeringPlayer != nullptr)
+    {
         triggeringPlayer->incrementScore(100);
     }
 
     firstAttempt = false;
 
-    // 6. Apply penalty for wrong answer
-    if (!correct && triggeringPlayer != nullptr) {
+    if (!correct && triggeringPlayer != nullptr)
+    {
         triggeringPlayer->decreaseLives();
         triggeringPlayer->fallBack(room);
         triggeringPlayer->startRespawn();
     }
 
-    // 7. Show feedback
     displayFeedback(correct);
 
-    // 8. Exit animation
     playExitAnimation();
 
-    // 9. Restore screen (only when riddle is answered, not on ESC)
     if (room != nullptr)
         room->draw();
 
-    // 10. Return result
-    if (correct) return RiddleResult::SOLVED;
+    if (correct)
+        return RiddleResult::SOLVED;
 
     return RiddleResult::FAILED;
 }
 
 //////////////////////////////////////////     displayRiddleQuestion    //////////////////////////////////////////
 
-bool Riddle::displayRiddleQuestion() {
-    const RiddleData* data = RiddleDatabase::getRiddle(riddleId);
-    if (data == nullptr) {
+bool Riddle::displayRiddleQuestion()
+{
+    const RiddleData *data = RiddleDatabase::getRiddle(riddleId);
+    if (data == nullptr)
+    {
         return false;
     }
 
-    // Draw top border
     int startX = 11;
     int startY = 4;
     int endY = 16;
-    for (int i = 0; i < endY; i++) {
+    for (int i = 0; i < endY; i++)
+    {
         gotoxy(startX, startY + i);
         cout << riddlePopupScreen[i];
     }
 
-    // Display question
     gotoxy(13, 6);
     cout << data->question;
 
-    // Display options
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++)
+    {
         gotoxy(13, 8 + i);
         cout << (i + 1) << ") " << data->options[i];
     }
 
-    // Display prompt
     gotoxy(13, 13);
     cout << "Choose answer (1-4)";
     cout.flush();
@@ -93,43 +89,44 @@ bool Riddle::displayRiddleQuestion() {
 
 //////////////////////////////////////////       getPlayerAnswer        //////////////////////////////////////////
 
-int Riddle::getPlayerAnswer() const {
+int Riddle::getPlayerAnswer() const
+{
     showCursor();
 
-    // Flush input buffer first
     while (check_kbhit())
         get_char_nonblocking();
 
-    while (true) {
-        int key = get_single_char();  // Blocking
+    while (true)
+    {
+        int key = get_single_char();
 
-        // ESC
-        if (key == 27) {
+        if (key == 27)
+        {
             hideCursor();
             return -1;
         }
 
-        // Valid answers (1-4)
-        if (key >= '1' && key <= '4') {
+        if (key >= '1' && key <= '4')
+        {
             hideCursor();
-            return key - '1';  // Convert to 0-3
+            return key - '1';
         }
-
-        // Invalid key - ignore and loop
     }
 }
 
 //////////////////////////////////////////       displayFeedback        //////////////////////////////////////////
 
-void Riddle::displayFeedback(bool correct) const {
+void Riddle::displayFeedback(bool correct) const
+{
 
     if (correct && firstAttempt)
     {
         gotoxy(33, 14);
         cout << "CORRECT!";
         gotoxy(18, 16);
-        cout << "P" << solvingPlayerId << "(" << solvingPlayerSprite << ") " " solved the riddle on the first try!";
-        
+        cout << "P" << solvingPlayerId << "(" << solvingPlayerSprite << ") "
+                                                                        " solved the riddle on the first try!";
+
         gotoxy(31, 18);
         cout << "+100 Points!";
 
@@ -142,41 +139,44 @@ void Riddle::displayFeedback(bool correct) const {
         cout << "CORRECT!";
 
         gotoxy(20, 16);
-        cout << "P" << solvingPlayerId << " (" << solvingPlayerSprite << ") " " solved the riddle!";
-        
+        cout << "P" << solvingPlayerId << " (" << solvingPlayerSprite << ") "
+                                                                         " solved the riddle!";
+
         gotoxy(27, 17);
         cout << "Riddle disapeared...";
     }
-    else 
+    else
     {
         gotoxy(24, 17);
         cout << "INCORRECT! Try again later.";
     }
     cout.flush();
 
-    sleep_ms(2000);  // Wait for player to read
+    sleep_ms(2000);
 }
 
 //////////////////////////////////////////    playRiddleAnimation      //////////////////////////////////////////
 
-void Riddle::playRiddleAnimation() const {
-    // Flush input buffer
+void Riddle::playRiddleAnimation() const
+{
     while (check_kbhit())
         get_char_nonblocking();
 }
 
 //////////////////////////////////////////     playExitAnimation       //////////////////////////////////////////
 
-void Riddle::playExitAnimation() const {
-    // No-op for MVP
+void Riddle::playExitAnimation() const
+{
 }
 
 //////////////////////////////////////////        checkAnswer           //////////////////////////////////////////
 
-bool Riddle::checkAnswer(int playerAnswer) const {
-    const RiddleData* data = RiddleDatabase::getRiddle(riddleId);
-    if (data == nullptr) {
-        return false;  // Can't verify without data
+bool Riddle::checkAnswer(int playerAnswer) const
+{
+    const RiddleData *data = RiddleDatabase::getRiddle(riddleId);
+    if (data == nullptr)
+    {
+        return false;
     }
     return playerAnswer == data->correctAnswerIndex;
 }

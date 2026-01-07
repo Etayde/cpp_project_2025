@@ -13,31 +13,28 @@ class Spring;
 
 //////////////////////////////////////////      PlayerKeyBinding       /////////////////////////////////////////////
 
-// Maps keyboard key to player action
-struct PlayerKeyBinding {
+struct PlayerKeyBinding
+{
   char key;
   int playerID;
   Action action;
 };
 
-// Key bindings for both players
-// Player 1: WAXDS for movement, E to drop
-// Player 2: IJKLM for movement, O to drop
 static const PlayerKeyBinding keyBindings[] = {
-    {'w', 1, Action::MOVE_UP},    {'W', 1, Action::MOVE_UP},
-    {'x', 1, Action::MOVE_DOWN},  {'X', 1, Action::MOVE_DOWN},
-    {'a', 1, Action::MOVE_LEFT},  {'A', 1, Action::MOVE_LEFT},
-    {'d', 1, Action::MOVE_RIGHT}, {'D', 1, Action::MOVE_RIGHT},
-    {'s', 1, Action::STAY},       {'S', 1, Action::STAY},
-    {'e', 1, Action::DROP_ITEM},  {'E', 1, Action::DROP_ITEM},
-    {27, 1, Action::ESC},
+    {'w', 1, Action::MOVE_UP}, {'W', 1, Action::MOVE_UP}, {'x', 1, Action::MOVE_DOWN}, {'X', 1, Action::MOVE_DOWN}, {'a', 1, Action::MOVE_LEFT}, {'A', 1, Action::MOVE_LEFT}, {'d', 1, Action::MOVE_RIGHT}, {'D', 1, Action::MOVE_RIGHT}, {'s', 1, Action::STAY}, {'S', 1, Action::STAY}, {'e', 1, Action::DROP_ITEM}, {'E', 1, Action::DROP_ITEM}, {27, 1, Action::ESC},
 
-    {'i', 2, Action::MOVE_UP},    {'I', 2, Action::MOVE_UP},
-    {'m', 2, Action::MOVE_DOWN},  {'M', 2, Action::MOVE_DOWN},
-    {'j', 2, Action::MOVE_LEFT},  {'J', 2, Action::MOVE_LEFT},
-    {'l', 2, Action::MOVE_RIGHT}, {'L', 2, Action::MOVE_RIGHT},
-    {'k', 2, Action::STAY},       {'K', 2, Action::STAY},
-    {'o', 2, Action::DROP_ITEM},  {'O', 2, Action::DROP_ITEM},
+    {'i', 2, Action::MOVE_UP},
+    {'I', 2, Action::MOVE_UP},
+    {'m', 2, Action::MOVE_DOWN},
+    {'M', 2, Action::MOVE_DOWN},
+    {'j', 2, Action::MOVE_LEFT},
+    {'J', 2, Action::MOVE_LEFT},
+    {'l', 2, Action::MOVE_RIGHT},
+    {'L', 2, Action::MOVE_RIGHT},
+    {'k', 2, Action::STAY},
+    {'K', 2, Action::STAY},
+    {'o', 2, Action::DROP_ITEM},
+    {'O', 2, Action::DROP_ITEM},
     {27, 2, Action::ESC}};
 
 static const int NUM_KEY_BINDINGS =
@@ -46,25 +43,25 @@ static const int NUM_KEY_BINDINGS =
 //////////////////////////////////////////          Player       /////////////////////////////////////////////
 
 // Represents a player character
-class Player {
+class Player
+{
 public:
   Point pos;
-  GameObject *inventory; // Polymorphic pointer to held item
+  GameObject *inventory;
   int playerId;
   char sprite;
   bool atDoor;
   int doorId;
   bool alive;
-  int keyCount; // Number of keys collected
-  int lives;    // Player's remaining lives (for riddles and future features)
+  int keyCount;
+  int lives;
   int score;
-  bool waitingAtDoor; // True if player has crossed through door and is waiting
-  bool requestPause;  // Set when ESC pressed during riddle
+  bool waitingAtDoor;
+  bool requestPause;
   Momentum springMomentum;
   int respawnTimer;
 
 public:
-  // Constructors & Destructor
   Player();
   Player(int id, int startX, int startY, char playerSprite);
   ~Player();
@@ -84,13 +81,16 @@ public:
   bool isAlive() const { return alive; }
   bool isDead() const { return !alive; }
   bool hasItem() const { return inventory != nullptr && inventory->isActive(); }
-  bool hasTorch() const {
+  bool hasTorch() const
+  {
     return inventory != nullptr && inventory->getType() == ObjectType::TORCH;
   }
-  bool hasKey() const {
+  bool hasKey() const
+  {
     return inventory != nullptr && inventory->getType() == ObjectType::KEY;
   }
-  bool hasBomb() const {
+  bool hasBomb() const
+  {
     return inventory != nullptr && inventory->getType() == ObjectType::BOMB;
   }
   int getKeyCount() const { return keyCount; }
@@ -98,23 +98,27 @@ public:
   int getScore() const { return score; }
   GameObject *getInventory() { return inventory; }
   const GameObject *getInventory() const { return inventory; }
-  ObjectType getInventoryType() const {
+  ObjectType getInventoryType() const
+  {
     return inventory ? inventory->getType() : ObjectType::AIR;
   }
   bool isLaunched() const { return springMomentum.isActive(); }
   bool isRespawning() const { return respawnTimer > 0; }
 
   // Setters
-  void setPosition(int x, int y) {
+  void setPosition(int x, int y)
+  {
     pos.x = x;
     pos.y = y;
   }
-  void setDirection(Direction dir, int speed = 1) {
+  void setDirection(Direction dir, int speed = 1)
+  {
     pos.setDirection(dir, speed);
   }
   void addKey() { keyCount++; }
   bool useKey();
-  void incrementScore(int points) {
+  void incrementScore(int points)
+  {
     int newScore = score + points;
     newScore >= 0 ? score = newScore : score = 0;
   }
@@ -131,8 +135,6 @@ public:
   void startRespawn();
   void kill() { alive = false; }
 
-
-
   // Movement & interaction
   bool move(Room *room, class Riddle **activeRiddle = nullptr,
             Player **activePlayer = nullptr, Player *otherPlayer = nullptr);
@@ -143,7 +145,7 @@ public:
   bool checkObjectInteraction(int nextX, int nextY, Room *room,
                               class Riddle **activeRiddle = nullptr,
                               Player **activePlayer = nullptr);
-  void fallBack(Room *room);                            
+  void fallBack(Room *room);
 
   // Movement helpers
   Direction getCurrentDirection() const;
@@ -192,8 +194,4 @@ private:
   bool isStationary() const;
   bool isWithinAbsoluteBounds(int x, int y) const;
   bool canMoveToBoundaryPosition(int x, int y, Room *room) const;
-
-  // Movement action helpers
-  void haltAndRedraw(Room *room);
-  void updatePosition(int nextX, int nextY, Room *room);
 };

@@ -15,7 +15,8 @@ class Player;
 //////////////////////////////////////////     Switch::onInteract    /////////////////////////////////////////////
 
 // Toggles switch state and updates room puzzle
-bool Switch::onInteract(Player *player, Room *room) {
+bool Switch::onInteract(Player *player, Room *room)
+{
 
   if (player == nullptr || room == nullptr)
     return false;
@@ -31,14 +32,16 @@ bool Switch::onInteract(Player *player, Room *room) {
 
 // Factory function - creates appropriate object type from character
 // If riddleId >= 0, use it for riddles; otherwise use auto-increment
-GameObject *createObjectFromChar(char ch, int x, int y, int riddleId) {
+GameObject *createObjectFromChar(char ch, int x, int y, int riddleId)
+{
   Point pos(x, y, 0, 0, ch);
 
   // Static counter for auto-incrementing riddle IDs (fallback when riddleId <
   // 0)
   static int nextRiddleId = 0;
 
-  switch (ch) {
+  switch (ch)
+  {
   case 'K':
     return new Key(pos);
   case '@':
@@ -67,7 +70,8 @@ GameObject *createObjectFromChar(char ch, int x, int y, int riddleId) {
     return new SwitchWall(pos);
   // '#' removed - springs are created via Room::addSpring(), not from layout
   // chars
-  case '?': {
+  case '?':
+  {
     // Use provided riddleId if >= 0, otherwise auto-increment
     int id = (riddleId >= 0) ? riddleId : nextRiddleId++;
     return new Riddle(pos, id);

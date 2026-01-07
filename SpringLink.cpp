@@ -8,7 +8,7 @@
 
 //////////////////////////////////////////       Constructor       /////////////////////////////////////////////
 
-SpringLink::SpringLink(const Point& pos, Spring* parent, int index)
+SpringLink::SpringLink(const Point &pos, Spring *parent, int index)
     : StaticObject(pos, '#', ObjectType::SPRING_LINK),
       parentSpring(parent),
       linkIndex(index),
@@ -18,7 +18,7 @@ SpringLink::SpringLink(const Point& pos, Spring* parent, int index)
 
 //////////////////////////////////////////          clone       /////////////////////////////////////////////
 
-GameObject* SpringLink::clone() const
+GameObject *SpringLink::clone() const
 {
     return new SpringLink(*this);
 }
@@ -36,7 +36,7 @@ bool SpringLink::onExplosion()
 
 //////////////////////////////////////////        collapse       /////////////////////////////////////////////
 
-void SpringLink::collapse(Room* room)
+void SpringLink::collapse(Room *room)
 {
     if (collapsed)
     {
@@ -44,9 +44,8 @@ void SpringLink::collapse(Room* room)
     }
 
     collapsed = true;
-    sprite = ' ';  // Change sprite to space (or '~' for visual feedback)
+    sprite = ' ';
 
-    // Update room's character map and display
     if (room != nullptr)
     {
         room->setCharAt(position.x, position.y, sprite);
@@ -57,7 +56,7 @@ void SpringLink::collapse(Room* room)
 
 //////////////////////////////////////////          reset       /////////////////////////////////////////////
 
-void SpringLink::reset(Room* room)
+void SpringLink::reset(Room *room)
 {
     if (!collapsed)
     {
@@ -65,9 +64,8 @@ void SpringLink::reset(Room* room)
     }
 
     collapsed = false;
-    sprite = '#';  // Back to normal spring visual
+    sprite = '#';
 
-    // Update room's character map and display
     if (room != nullptr)
     {
         room->setCharAt(position.x, position.y, sprite);

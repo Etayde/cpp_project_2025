@@ -44,5 +44,5 @@ public:
     const char *getName() const override { return "Torch"; }
 
     // Apply lighting effect at player's position in the room
-    void illuminate(Room* room, int playerX, int playerY) const;
+    void illuminate(Room *room, int playerX, int playerY) const;
 };

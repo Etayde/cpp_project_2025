@@ -40,7 +40,7 @@ public:
 
 //////////////////////////////////////////      BreakableWall         //////////////////////////////////////////
 
-// Destructible wall (=)
+// Destructible wall (w)
 class BreakableWall : public StaticObject
 {
 public:
@@ -61,7 +61,7 @@ public:
 
 //////////////////////////////////////////         SwitchWall            //////////////////////////////////////////
 
-// Blocks movement until switches activate or bomb destroys it (Z)
+// A wall that can be removed by activating switches (Z)
 class SwitchWall : public StaticObject
 {
 private:
@@ -86,7 +86,6 @@ public:
     bool isRemovedBySwitch() const { return removedBySwitch; }
     void setRemovedBySwitch(bool removable) { removedBySwitch = removable; }
 };
-
 
 class Air : public StaticObject
 {

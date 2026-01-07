@@ -6,7 +6,7 @@
 //////////////////////////////////////////    Torch::illuminate       //////////////////////////////////////////
 
 // Apply torch lighting effect to room at player position
-void Torch::illuminate(Room* room, int playerX, int playerY) const
+void Torch::illuminate(Room *room, int playerX, int playerY) const
 {
     if (room == nullptr)
         return;

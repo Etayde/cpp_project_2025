@@ -4,7 +4,6 @@
 
 //////////////////////////////////////////           move             //////////////////////////////////////////
 
-// Apply movement vector to position
 void Point::move()
 {
     int newX = x + diff_x;
@@ -18,7 +17,6 @@ void Point::move()
 
 //////////////////////////////////////////       setDirection         //////////////////////////////////////////
 
-// Set movement direction
 void Point::setDirection(Direction dir, int speed)
 {
     switch (dir)
@@ -40,11 +38,10 @@ void Point::setDirection(Direction dir, int speed)
         diff_y = 0;
         break;
     case Direction::STAY:
-    case Direction::HORIZONTAL:  // Not used for player movement
-    case Direction::VERTICAL:    // Not used for player movement
+    case Direction::HORIZONTAL:
+    case Direction::VERTICAL:
         diff_x = 0;
         diff_y = 0;
         break;
     }
 }
-

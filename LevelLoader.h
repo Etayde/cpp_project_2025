@@ -13,7 +13,8 @@
 
 //////////////////////////////////////////        RoomMetadata       /////////////////////////////////////////////
 
-struct RoomMetadata {
+struct RoomMetadata
+{
   Point spawnPoint;
   Point spawnPointFromNext;
   int nextRoomId;
@@ -28,14 +29,12 @@ struct RoomMetadata {
 
 //////////////////////////////////////////        LevelLoader       /////////////////////////////////////////////
 
-class LevelLoader {
+class LevelLoader
+{
 public:
-  // Load screen file by number (1, 2, 3...) - returns nullptr if file not found
   static Screen *loadScreenFile(int fileNumber, RoomMetadata &metadata);
 
-  // Load riddles from riddle.txt - returns number of riddles loaded
   static int loadRiddleFile();
 
-  // Generate filename: 1 -> "adv-world01.screen"
   static std::string getScreenFilename(int number);
 };

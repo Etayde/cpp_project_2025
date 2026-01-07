@@ -15,28 +15,24 @@ Spring::Spring()
 
 //////////////////////////////////////////      Destructor          //////////////////////////////////////////
 
-Spring::~Spring()
-{
-    // Links are owned by Room's objects vector, don't delete them here
-}
+Spring::~Spring() {}
 
 //////////////////////////////////////////      Clone               //////////////////////////////////////////
 
-Spring* Spring::clone() const
+Spring *Spring::clone() const
 {
-    Spring* newSpring = new Spring();
+    Spring *newSpring = new Spring();
     newSpring->anchorPosition = this->anchorPosition;
     newSpring->compressionDir = this->compressionDir;
     newSpring->compressedCount = this->compressedCount;
-    // Note: links vector will be populated later by Room after cloning SpringLinks
     return newSpring;
 }
 
 //////////////////////////////////////////      Initialize          //////////////////////////////////////////
 
-void Spring::initialize(const std::vector<SpringLink*>& springLinks,
-                       const Point& anchor,
-                       Direction projectionDir)
+void Spring::initialize(const std::vector<SpringLink *> &springLinks,
+                        const Point &anchor,
+                        Direction projectionDir)
 {
     links = springLinks;
     anchorPosition = anchor;
@@ -48,34 +44,29 @@ void Spring::initialize(const std::vector<SpringLink*>& springLinks,
 
 bool Spring::canCompressLink(int linkIndex, Direction playerDir) const
 {
-    // Must be valid index
     if (linkIndex < 0 || linkIndex >= static_cast<int>(links.size()))
     {
         return false;
     }
 
-    // Must move in compression direction (or STAY for launch trigger)
     if (playerDir != compressionDir)
     {
         return false;
     }
 
-    // For first link: always allow if direction matches
     if (linkIndex == 0)
     {
         return true;
     }
 
-    // For subsequent links: all previous links must be compressed
     for (int i = 0; i < linkIndex; i++)
     {
         if (!links[i]->isCollapsed())
         {
-            return false;  // Gap in compression sequence
+            return false;
         }
     }
 
-    // Link itself must not already be collapsed
     if (links[linkIndex]->isCollapsed())
     {
         return false;
@@ -86,7 +77,7 @@ bool Spring::canCompressLink(int linkIndex, Direction playerDir) const
 
 //////////////////////////////////////////    compressLink          //////////////////////////////////////////
 
-void Spring::compressLink(int linkIndex, Room* room)
+void Spring::compressLink(int linkIndex, Room *room)
 {
     if (linkIndex < 0 || linkIndex >= static_cast<int>(links.size()))
         return;
@@ -110,35 +101,34 @@ Spring::LaunchData Spring::calculateLaunch() const
     launch.shouldLaunch = (compressedCount > 0);
     launch.frames = compressedCount * compressedCount;
 
-    // Launch OPPOSITE of compression direction
     switch (compressionDir)
     {
-        case Direction::UP:
-            launch.velocityX = 0;
-            launch.velocityY = compressedCount;  // Launch DOWN
-            launch.direction = Direction::DOWN;
-            break;
-        case Direction::DOWN:
-            launch.velocityX = 0;
-            launch.velocityY = -compressedCount;  // Launch UP
-            launch.direction = Direction::UP;
-            break;
-        case Direction::LEFT:
-            launch.velocityX = compressedCount;  // Launch RIGHT
-            launch.velocityY = 0;
-            launch.direction = Direction::RIGHT;
-            break;
-        case Direction::RIGHT:
-            launch.velocityX = -compressedCount;  // Launch LEFT
-            launch.velocityY = 0;
-            launch.direction = Direction::LEFT;
-            break;
-        default:
-            launch.shouldLaunch = false;
-            launch.velocityX = 0;
-            launch.velocityY = 0;
-            launch.direction = Direction::STAY;
-            break;
+    case Direction::UP:
+        launch.velocityX = 0;
+        launch.velocityY = compressedCount;
+        launch.direction = Direction::DOWN;
+        break;
+    case Direction::DOWN:
+        launch.velocityX = 0;
+        launch.velocityY = -compressedCount;
+        launch.direction = Direction::UP;
+        break;
+    case Direction::LEFT:
+        launch.velocityX = compressedCount;
+        launch.velocityY = 0;
+        launch.direction = Direction::RIGHT;
+        break;
+    case Direction::RIGHT:
+        launch.velocityX = -compressedCount;
+        launch.velocityY = 0;
+        launch.direction = Direction::LEFT;
+        break;
+    default:
+        launch.shouldLaunch = false;
+        launch.velocityX = 0;
+        launch.velocityY = 0;
+        launch.direction = Direction::STAY;
+        break;
     }
 
     return launch;
@@ -152,27 +142,26 @@ Momentum Spring::calculateLaunchMomentum() const
     momentum.setActive(true);
     momentum.setLaunchFramesRemaining(compressedCount * compressedCount);
 
-    // Launch OPPOSITE of compression direction
     switch (compressionDir)
     {
-        case Direction::UP:
-            momentum.setDY(compressedCount);  // Launch DOWN
-            momentum.setLaunchDir(Direction::DOWN);
-            break;
-        case Direction::DOWN:
-            momentum.setDY(-compressedCount);  // Launch UP
-            momentum.setLaunchDir(Direction::UP);
-            break;
-        case Direction::LEFT:
-            momentum.setDX(compressedCount);  // Launch RIGHT
-            momentum.setLaunchDir(Direction::RIGHT);
-            break;
-        case Direction::RIGHT:
-            momentum.setDX(-compressedCount);  // Launch LEFT
-            momentum.setLaunchDir(Direction::LEFT);
-            break;
-        default:
-            break;
+    case Direction::UP:
+        momentum.setDY(compressedCount);
+        momentum.setLaunchDir(Direction::DOWN);
+        break;
+    case Direction::DOWN:
+        momentum.setDY(-compressedCount);
+        momentum.setLaunchDir(Direction::UP);
+        break;
+    case Direction::LEFT:
+        momentum.setDX(compressedCount);
+        momentum.setLaunchDir(Direction::RIGHT);
+        break;
+    case Direction::RIGHT:
+        momentum.setDX(-compressedCount);
+        momentum.setLaunchDir(Direction::LEFT);
+        break;
+    default:
+        break;
     }
 
     return momentum;
@@ -180,9 +169,9 @@ Momentum Spring::calculateLaunchMomentum() const
 
 //////////////////////////////////////////  resetCompression        //////////////////////////////////////////
 
-void Spring::resetCompression(Room* room)
+void Spring::resetCompression(Room *room)
 {
-    for (SpringLink* link : links)
+    for (SpringLink *link : links)
     {
         link->reset(room);
     }
@@ -191,73 +180,65 @@ void Spring::resetCompression(Room* room)
 
 //////////////////////////////////////////  handlePlayerInteraction   //////////////////////////////////////////
 
-Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink* link, Player* player, Room* room)
+Spring::InteractionResult Spring::handlePlayerInteraction(SpringLink *link, Player *player, Room *room)
 {
     if (link == nullptr || player == nullptr)
     {
-        return {false, false, Momentum() };
+        return {false, false, Momentum()};
     }
 
-    // Get player's current direction
     Direction moveDir = player->getCurrentDirection();
 
-    // Check if compression is valid
     if (!canCompressLink(link->getLinkIndex(), moveDir))
     {
-        if (isCompressed()) 
-        {            
+        if (isCompressed())
+        {
             Momentum launch = calculateLaunchMomentum();
             resetCompression(room);
-            return {true, true, launch };
-        } 
+            return {true, true, launch};
+        }
         else
         {
-            return {false, false, Momentum() };
+            return {false, false, Momentum()};
         }
     }
 
-    // Compress this link
     compressLink(link->getLinkIndex(), room);
 
-    // Check if should launch
     bool fullyCompressed = isFullyCompressed();
 
     if (!fullyCompressed && moveDir == compressionDir)
     {
-        // Compressed but not ready to launch
         return {true, false, Momentum()};
     }
 
-    // Launch triggered!
     Momentum launch = calculateLaunchMomentum();
     bool shouldLaunch = compressedCount > 0;
 
     if (!shouldLaunch)
     {
-        return {true, false, Momentum() };
+        return {true, false, Momentum()};
     }
 
-    // Reset spring IMMEDIATELY after launch
     resetCompression(room);
 
-    // Return launch data for Player to apply
     return {true, true, launch};
 }
 
 //////////////////////////////////////////    Spring State Helpers        /////////////////////////////////////////////
 
-bool Spring::playerSTAYcheck(Player& p, SpringLink& link) const{
+bool Spring::playerSTAYcheck(Player &p, SpringLink &link) const
+{
 
-    if (p.getX() == link.getX() && p.getY() == link.getY() 
-        && (!link.isCollapsed())
-        && p.getCurrentDirection() == Direction::STAY){
+    if (p.getX() == link.getX() && p.getY() == link.getY() && (!link.isCollapsed()) && p.getCurrentDirection() == Direction::STAY)
+    {
         return true;
     }
     return false;
 }
 
-
-SpringLink* Spring::getPrevLink(const SpringLink* current) const{
+SpringLink *Spring::getPrevLink(const SpringLink *current) const
+{
     if (current == nullptr)
         return nullptr;
 
@@ -269,7 +250,7 @@ SpringLink* Spring::getPrevLink(const SpringLink* current) const{
 
 void Spring::destroyAllLinks()
 {
-    for (SpringLink* link : links)
+    for (SpringLink *link : links)
     {
         if (link && link->isActive())
         {
@@ -282,7 +263,7 @@ void Spring::destroyAllLinks()
 
 bool Spring::allLinksInactive() const
 {
-    for (SpringLink* link : links)
+    for (SpringLink *link : links)
     {
         if (link && link->isActive())
             return false;
