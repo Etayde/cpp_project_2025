@@ -24,10 +24,12 @@ enum class GameOverMessege
 // Main game controller
 class Game
 {
-private:
+protected:
   int initErrorMessage;
   int initErrorRoomId;
   GameOverMessege gameOverMessege;
+  
+  Game();
 
   struct ActiveRiddle
   {
@@ -48,7 +50,6 @@ private:
   ActiveRiddle aRiddle;                // Track currently active riddle
   std::vector<Screen *> loadedScreens; // Screens loaded from files
 
-  void showGameOverMessege();
   void setGameOverMessege(GameOverMessege messege) { gameOverMessege = messege; }
 
 public:
@@ -60,9 +61,7 @@ public:
   Player player2;
   bool gameInitialized; // Track if game is already started
 
-public:
-  Game();
-  ~Game();
+  virtual ~Game();
 
   // Main game loop
   void run();
