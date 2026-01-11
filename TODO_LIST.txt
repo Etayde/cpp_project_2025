@@ -1,0 +1,61 @@
+======================================
+GAME CLASS REFACTORING - EX3 FOUNDATION
+======================================
+
+Goal: Transform Game class into an abstract base class with NormalGame and LoadedGame as concrete implementations.
+This creates the foundation for the recording/replay system (EX3).
+
+PHASE 1: Prepare Base Class
+----------------------------
+[ ] Make Game destructor virtual (~Game() → virtual ~Game())
+[ ] Move Game constructor to protected section
+[ ] Test compilation - should still work identically
+
+PHASE 2: Create NormalGame Class
+---------------------------------
+[ ] Create NormalGame.h (class declaration inheriting from Game)
+[ ] Create NormalGame.cpp (implement constructor and handleInput())
+    - Extract current Game::handleInput() logic to NormalGame::handleInput()
+[ ] Update main.cpp to use NormalGame instead of Game
+[ ] Update Makefile to include NormalGame.cpp and NormalGame.h
+[ ] Test compilation with NormalGame - game should work identically
+
+PHASE 3: Make Game Abstract
+----------------------------
+[ ] Mark handleInput() as pure virtual in Game.h: virtual void handleInput() = 0;
+[ ] Remove Game::handleInput() implementation from Game.cpp
+[ ] Mark these methods as virtual (with default implementation):
+    - virtual void gameLoop();
+    - virtual void startNewGame();
+    - virtual void update();
+    - virtual void showMainMenu();
+    - virtual void showInstructions();
+    - virtual void showPauseMenu();
+[ ] Test - should compile with NormalGame, Game cannot be instantiated directly
+
+PHASE 4: Create LoadedGame Class
+---------------------------------
+[ ] Create LoadedGame.h (class declaration inheriting from Game)
+[ ] Create LoadedGame.cpp with stub implementations:
+    - Constructor: LoadedGame::LoadedGame() : Game() {}
+    - handleInput(): Empty stub (TODO: inject recorded actions)
+[ ] Update Makefile to include LoadedGame.cpp and LoadedGame.h
+[ ] Test - should compile with both NormalGame and LoadedGame
+
+PHASE 5: Final Testing
+-----------------------
+[ ] Run make clean && make - should compile without warnings
+[ ] Test game functionality with NormalGame:
+    - Main menu works
+    - Gameplay works (both players, objects, riddles, etc.)
+    - Pause menu works
+    - Victory and game over work
+[ ] Verify Game cannot be instantiated directly (abstract base class)
+
+FUTURE EX3 EXTENSIONS (Not part of foundation)
+-----------------------------------------------
+- Add command-line argument parsing in main.cpp (-save, -load, -silent flags)
+- Implement action recording in NormalGame or RecordGameMode subclass
+- Implement action replay in LoadedGame (load from adv-world.steps)
+- Add SilentLoadedGame subclass for fast verification
+- Add cycle tracking to base Game class for deterministic replay
