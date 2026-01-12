@@ -5,7 +5,7 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -O2
 
 # Source files
 SOURCES = main.cpp Game.cpp NormalGame.cpp Player.cpp Room.cpp Screen.cpp Point.cpp Utils.cpp GameObject.cpp Bomb.cpp Spring.cpp SpringLink.cpp Riddle.cpp RiddleDatabase.cpp Momentum.cpp Obstacle.cpp Items.cpp LevelLoader.cpp LoadedGame.cpp Recorder.cpp
-HEADERS = Console.h Constants.h Game.h NormalGame.h Layouts.h GameObject.h Player.h Point.h Room.h Screen.h Utils.h Bomb.h Spring.h SpringLink.h Riddle.h RiddleDatabase.h Momentum.h Obstacle.h Items.h PickableObject.h LevelLoader.h LoadedGame.h Recorder.h
+HEADERS = Console.h Constants.h Game.h NormalGame.h Layouts.h GameObject.h Player.h Point.h Room.h Screen.h Utils.h Bomb.h Spring.h SpringLink.h Riddle.h RiddleDatabase.h Momentum.h Obstacle.h Items.h PickableObject.h LevelLoader.h LoadedGame.h Recorder.h Renderer.h
 
 # Object files
 OBJECTS = $(SOURCES:.cpp=.o)

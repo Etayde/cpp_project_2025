@@ -133,27 +133,49 @@ PHASE 6.4: Implement Action Replay in LoadedGame
 [✓] Implement handleInput() in LoadedGame.cpp (injects recorded actions at correct cycles)
 [✓] Test compilation
 
-PHASE 6.5: Create SilentLoadedGame Class
------------------------------------------
-[ ] Create SilentLoadedGame.h (inherits from LoadedGame)
-[ ] Create SilentLoadedGame.cpp with:
-    - Constructor that accepts filename
-    - Override render() methods to do nothing (no-op)
-    - Override gameLoop() to run at maximum speed (no delays)
-[ ] Update Makefile to include SilentLoadedGame.cpp and SilentLoadedGame.h
-[ ] Test compilation
+PHASE 6.5: Implement Silent Mode (CLEAN OOP APPROACH)
+-----------------------------------------------------
+[✓] Create Renderer.h - Static wrapper class for all Console.h functions
+    - Static methods: gotoxy(), clrscr(), sleep_ms(), print(), flush(), etc.
+    - Static bool silentMode flag (inline initialization)
+    - All methods check shouldRender() before calling Console.h
+[✓] Add silentMode member to Game.h (protected bool)
+[✓] Update Game.cpp constructor to call Renderer::setSilentMode(silentMode)
+[✓] Update LoadedGame.h - Add silent parameter to constructor (default false)
+[✓] Update LoadedGame.cpp - Set silentMode and call Renderer::setSilentMode()
+[✓] Update main.cpp - Parse -silent flag, pass to LoadedGame constructor
+[✓] Update Makefile - Add Renderer.h to HEADERS
+[✓] Replace all rendering calls in Game.cpp (~40 locations):
+    - sleep_ms → Renderer::sleep_ms
+    - gotoxy → Renderer::gotoxy
+    - clrscr → Renderer::clrscr
+    - cout << → Renderer::print()
+    - cout.flush() → Renderer::flush()
+[✓] Test compilation - Phases 1 & 2 complete
 
-PHASE 6.6: Command-Line Argument Parsing
------------------------------------------
-[ ] Update main.cpp to parse command-line arguments:
+[ ] Replace rendering calls in Room.cpp (~35 locations)
+[ ] Replace rendering calls in Player.cpp (~10 locations)
+[ ] Replace rendering calls in GameObject.h (base draw method)
+[ ] Replace rendering calls in Riddle.cpp (~27 locations)
+[ ] Replace rendering calls in Bomb.cpp (~15 locations)
+[ ] Replace rendering calls in Screen.h
+[ ] Replace rendering calls in SpringLink.cpp (collapse/reset)
+[ ] Replace rendering calls in Obstacle.cpp (move)
+[ ] Replace rendering calls in Point.h (draw methods)
+[ ] Replace rendering calls in Utils.cpp (drawAt)
+[ ] Final compilation and testing
+
+PHASE 6.6: Command-Line Argument Parsing (COMPLETED)
+-----------------------------------------------------
+[✓] Update main.cpp to parse command-line arguments:
     - Parse -save, -load, -silent flags
-    - Validate flag combinations (-silent only with -load)
-[ ] Update main.cpp to instantiate appropriate Game subclass:
+[✓] Update main.cpp to instantiate appropriate Game subclass:
     - NormalGame for normal play (with optional recording if -save)
     - LoadedGame for replay (if -load)
-    - SilentLoadedGame for fast replay (if -load -silent)
-[ ] Add necessary includes to main.cpp (LoadedGame.h, SilentLoadedGame.h)
-[ ] Test compilation
+    - LoadedGame with silent=true for fast replay (if -load -silent)
+    - NormalGame ignores -silent flag (always visual)
+[✓] Add necessary includes to main.cpp (LoadedGame.h)
+[✓] Test compilation
 
 PHASE 6.7: Final EX3 Testing
 -----------------------------

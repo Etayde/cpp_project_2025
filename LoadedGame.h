@@ -13,7 +13,7 @@ class LoadedGame : public Game {
     RecordedSteps steps;
 
 public:
-    LoadedGame(const string &filename);
+    LoadedGame(const string &filename, bool silent = false);
     void handleInput() override;
 
 private:

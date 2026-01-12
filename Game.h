@@ -6,6 +6,7 @@
 #include "Player.h"
 #include "Room.h"
 #include "Screen.h"
+#include "Renderer.h"
 #include <vector>
 
 //////////////////////////////////////////           Game       /////////////////////////////////////////////
@@ -23,11 +24,12 @@ enum class GameOverMessege
 class Game
 {
 protected:
+  bool silentMode;
   ErrorCode initErrorMessage;
   int initErrorRoomId;
   GameOverMessege gameOverMessege;
   unsigned long cycleCount;
-  
+
   Game();
 
   struct ActiveRiddle

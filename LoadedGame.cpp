@@ -3,8 +3,11 @@
 
 using namespace std;
 
-LoadedGame::LoadedGame(const string& filename) : Game(), steps()
+LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps()
 {
+    silentMode = silent;  // Set the flag inherited from Game
+    Renderer::setSilentMode(silentMode);  // Update renderer mode
+
     initErrorMessage = loadActions(filename);
     if (initErrorMessage != ErrorCode::NONE) currentState = GameState::error;
 }

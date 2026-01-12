@@ -14,9 +14,13 @@ class Constants;
 //////////////////////////////////////////     Game Constructor       /////////////////////////////////////////////
 
 Game::Game()
-    : initErrorMessage(ErrorCode::NONE), initErrorRoomId(-1), gameOverMessege(GameOverMessege::NONE),
+    : silentMode(false), initErrorMessage(ErrorCode::NONE), initErrorRoomId(-1), gameOverMessege(GameOverMessege::NONE),
       cycleCount(0), currentState(GameState::mainMenu), currentRoomId(-1),
-      gameInitialized(false) {}
+      gameInitialized(false)
+{
+  // Set renderer mode based on silentMode flag
+  Renderer::setSilentMode(silentMode);
+}
 
 //////////////////////////////////////////      Game Destructor       /////////////////////////////////////////////
 
@@ -46,7 +50,7 @@ void Game::run()
       while (currentState == GameState::mainMenu)
       {
         handleMainMenuInput();
-        sleep_ms(50);
+        Renderer::sleep_ms(50);
       }
       break;
 
@@ -55,7 +59,7 @@ void Game::run()
       while (currentState == GameState::instructions)
       {
         handleInstructionsInput();
-        sleep_ms(50);
+        Renderer::sleep_ms(50);
       }
       break;
 
@@ -73,7 +77,7 @@ void Game::run()
       while (currentState == GameState::paused)
       {
         handlePauseInput();
-        sleep_ms(50);
+        Renderer::sleep_ms(50);
       }
       break;
 
@@ -82,7 +86,7 @@ void Game::run()
       while (check_kbhit())
         get_single_char();
       while (!check_kbhit())
-        sleep_ms(50);
+        Renderer::sleep_ms(50);
       get_single_char();
       gameInitialized = false;
       currentState = GameState::mainMenu;
@@ -93,7 +97,7 @@ void Game::run()
       while (check_kbhit())
         get_single_char();
       while (!check_kbhit())
-        sleep_ms(50);
+        Renderer::sleep_ms(50);
       get_single_char();
       gameInitialized = false;
       currentState = GameState::mainMenu;
@@ -104,7 +108,7 @@ void Game::run()
       while (check_kbhit())
         get_single_char();
       while (!check_kbhit())
-        sleep_ms(50);
+        Renderer::sleep_ms(50);
       get_single_char();
       gameInitialized = false;
       currentState = GameState::mainMenu;
@@ -223,7 +227,7 @@ void Game::gameLoop()
   if (aRiddle.isActive())
   {
     // Clear screen and redraw game state before showing riddle
-    clrscr();
+    Renderer::clrscr();
     if (room)
     {
       room->draw();
@@ -243,7 +247,7 @@ void Game::gameLoop()
         room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
         aRiddle.reset(); // Clear active riddle
         // Riddle finished - redraw screen and fall through to normal game
-        clrscr();
+        Renderer::clrscr();
         if (room)
         {
           room->draw();
@@ -259,7 +263,7 @@ void Game::gameLoop()
         room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
         aRiddle.reset(); // Clear active riddle
         // Riddle finished - redraw screen and fall through to normal game
-        clrscr();
+        Renderer::clrscr();
         if (room)
         {
           room->draw();
@@ -280,7 +284,7 @@ void Game::gameLoop()
         // Failed - player answered wrong, reset aRiddle
         aRiddle.reset();
         // Riddle finished - redraw screen and fall through to normal game
-        clrscr();
+        Renderer::clrscr();
         if (room)
         {
           room->draw();
@@ -310,7 +314,7 @@ void Game::gameLoop()
   {
     handleInput();
     update();
-    sleep_ms(100); // ~10 FPS
+    Renderer::sleep_ms(100); // ~10 FPS
   }
 }
 
@@ -367,7 +371,7 @@ void Game::update()
   // Check room transitions
   checkRoomTransitions();
 
-  std::cout << std::flush;
+  Renderer::flush();
 }
 
 //////////////////////////////////////////       getCurrentRoom       /////////////////////////////////////////////
@@ -383,7 +387,7 @@ Room *Game::getCurrentRoom()
 
 void Game::redrawCurrentRoom()
 {
-  clrscr();
+  Renderer::clrscr();
   Room *room = getCurrentRoom();
   if (room)
   {
@@ -582,10 +586,12 @@ void Game::handlePauseInput()
 void Game::showVictory()
 {
   victoryScreen.draw();
-  gotoxy(40, 13);
-  cout << player1.getScore() << endl;
-  gotoxy(40, 14);
-  cout << player2.getScore() << endl;
+  Renderer::gotoxy(40, 13);
+  Renderer::print(player1.getScore());
+  Renderer::print("\n");
+  Renderer::gotoxy(40, 14);
+  Renderer::print(player2.getScore());
+  Renderer::print("\n");
 }
 
 void Game::showGameOver()
@@ -596,22 +602,22 @@ void Game::showGameOver()
   switch (gameOverMessege)
   {
   case GameOverMessege::PLAYER1_DIED:
-    gotoxy(24, 8);
-    cout << "Player 1 ($)  has died." << endl;
+    Renderer::gotoxy(24, 8);
+    Renderer::print("Player 1 ($)  has died.\n");
     break;
   case GameOverMessege::PLAYER2_DIED:
-    gotoxy(24, 8);
-    cout << "Player 2 (&)  has died." << endl;
+    Renderer::gotoxy(24, 8);
+    Renderer::print("Player 2 (&)  has died.\n");
     break;
   case GameOverMessege::VALUABLE_DESTROYED:
-    gotoxy(18, 8);
-    cout << "An essential object has been destroyed." << endl;
-    gotoxy(18, 9);
-    cout << " The game cannot continue without it." << endl;
+    Renderer::gotoxy(18, 8);
+    Renderer::print("An essential object has been destroyed.\n");
+    Renderer::gotoxy(18, 9);
+    Renderer::print(" The game cannot continue without it.\n");
     break;
   default:
-    gotoxy(24, 8);
-    cout << "Unknown game over messege." << endl;
+    Renderer::gotoxy(24, 8);
+    Renderer::print("Unknown game over messege.\n");
     break;
   }
 }
@@ -619,26 +625,36 @@ void Game::showGameOver()
 void Game::showErrorScreen()
 {
   initErrorScreen.draw();
-  gotoxy(22, 10);
+  Renderer::gotoxy(22, 10);
   switch (initErrorMessage)
   {
   case ErrorCode::L_NOT_FOUND:
-    cout << "Error: No 'L' found in room " << initErrorRoomId << endl;
+    Renderer::print("Error: No 'L' found in room ");
+    Renderer::print(initErrorRoomId);
+    Renderer::print("\n");
     break;
   case ErrorCode::MULTIPLE_L:
-    cout << "Error: Multiple 'L's found in room " << initErrorRoomId << endl;
+    Renderer::print("Error: Multiple 'L's found in room ");
+    Renderer::print(initErrorRoomId);
+    Renderer::print("\n");
     break;
   case ErrorCode::L_OUT_OF_BOUNDS:
-    cout << "Error: 'L' out of bounds in room " << initErrorRoomId << endl;
+    Renderer::print("Error: 'L' out of bounds in room ");
+    Renderer::print(initErrorRoomId);
+    Renderer::print("\n");
     break;
   case ErrorCode::LEGEND_OBSCURES_OBJECTS:
-    cout << "Error: Legend obscured objects in room " << initErrorRoomId << endl;
+    Renderer::print("Error: Legend obscured objects in room ");
+    Renderer::print(initErrorRoomId);
+    Renderer::print("\n");
     break;
   case ErrorCode::LEGEND_OBSCURES_SPAWN:
-    cout << "Error: Legend obscured a player's spawn point in room " << initErrorRoomId << endl;
+    Renderer::print("Error: Legend obscured a player's spawn point in room ");
+    Renderer::print(initErrorRoomId);
+    Renderer::print("\n");
     break;
   default:
-    cout << "Unknown error" << endl;
+    Renderer::print("Unknown error\n");
     break;
   }
 }
@@ -773,7 +789,7 @@ void Game::changeRoom(int newRoomId, bool goingForward)
   player1.atDoor = false;
   player2.atDoor = false;
 
-  clrscr();
+  Renderer::clrscr();
   if (getCurrentRoom())
   {
     getCurrentRoom()->draw();
