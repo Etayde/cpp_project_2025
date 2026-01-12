@@ -14,7 +14,7 @@ class Constants;
 //////////////////////////////////////////     Game Constructor       /////////////////////////////////////////////
 
 Game::Game()
-    : initErrorMessage(0), initErrorRoomId(-1), gameOverMessege(GameOverMessege::NONE),
+    : initErrorMessage(ErrorCode::NONE), initErrorRoomId(-1), gameOverMessege(GameOverMessege::NONE),
       cycleCount(0), currentState(GameState::mainMenu), currentRoomId(-1),
       gameInitialized(false) {}
 
@@ -119,10 +119,10 @@ void Game::run()
 
 //////////////////////////////////////////   validateLegendPlacement  /////////////////////////////////////////////
 
-int Game::validateLegendPlacement(Room &room)
+ErrorCode Game::validateLegendPlacement(Room &room)
 {
   if (room.baseLayout == nullptr)
-    return 0; // Should not happen for file-loaded levels
+    return ErrorCode::NONE; // Should not happen for file-loaded levels
 
   // 1. Find 'L' markers
   std::vector<Point> lMarkers;
@@ -140,13 +140,13 @@ int Game::validateLegendPlacement(Room &room)
   // Error 1: No 'L' indicator
   if (lMarkers.empty())
   {
-    return 1;
+    return ErrorCode::L_NOT_FOUND;
   }
 
   // Error 2: More than one 'L' indicator
   if (lMarkers.size() > 1)
   {
-    return 2;
+    return ErrorCode::MULTIPLE_L;
   }
 
   Point lPos = lMarkers[0];
@@ -161,7 +161,7 @@ int Game::validateLegendPlacement(Room &room)
   if (topLeftX < 0 || topLeftY < 0 || topLeftX + width > MAX_X ||
       topLeftY + height > MAX_Y)
   {
-    return 3;
+    return ErrorCode::L_OUT_OF_BOUNDS;
   }
 
   // Error 4: Accessible by game objects or invalid overlap
@@ -173,7 +173,7 @@ int Game::validateLegendPlacement(Room &room)
       char c = room.baseLayout->getCharAt(x, y);
       if (c != ObjectType::WALL && c != ObjectType::AIR && c != 'L')
       {
-        return 4;
+        return ErrorCode::LEGEND_OBSCURES_OBJECTS;
       }
     }
   }
@@ -183,7 +183,7 @@ int Game::validateLegendPlacement(Room &room)
   if (room.spawnPoint.x >= topLeftX && room.spawnPoint.x < topLeftX + width &&
       room.spawnPoint.y >= topLeftY && room.spawnPoint.y < topLeftY + height)
   {
-    return 5;
+    return ErrorCode::LEGEND_OBSCURES_SPAWN;
   }
   // Check secondary spawn point (from next room)
   if (room.spawnPointFromNext.x >= topLeftX &&
@@ -191,12 +191,12 @@ int Game::validateLegendPlacement(Room &room)
       room.spawnPointFromNext.y >= topLeftY &&
       room.spawnPointFromNext.y < topLeftY + height)
   {
-    return 5;
+    return ErrorCode::LEGEND_OBSCURES_SPAWN;
   }
 
   room.setLegendPoint(lPos.x, lPos.y);
 
-  return 0; // Valid
+  return ErrorCode::NONE; // Valid
 }
 
 //////////////////////////////////////////       startNewGame         /////////////////////////////////////////////
@@ -622,19 +622,19 @@ void Game::showErrorScreen()
   gotoxy(22, 10);
   switch (initErrorMessage)
   {
-  case 1:
+  case ErrorCode::L_NOT_FOUND:
     cout << "Error: No 'L' found in room " << initErrorRoomId << endl;
     break;
-  case 2:
+  case ErrorCode::MULTIPLE_L:
     cout << "Error: Multiple 'L's found in room " << initErrorRoomId << endl;
     break;
-  case 3:
+  case ErrorCode::L_OUT_OF_BOUNDS:
     cout << "Error: 'L' out of bounds in room " << initErrorRoomId << endl;
     break;
-  case 4:
+  case ErrorCode::LEGEND_OBSCURES_OBJECTS:
     cout << "Error: Legend obscured objects in room " << initErrorRoomId << endl;
     break;
-  case 5:
+  case ErrorCode::LEGEND_OBSCURES_SPAWN:
     cout << "Error: Legend obscured a player's spawn point in room " << initErrorRoomId << endl;
     break;
   default:
@@ -715,8 +715,8 @@ void Game::initializeRooms()
     }
 
     // Validate Legend Placement
-    int validationResult = validateLegendPlacement(room);
-    if (validationResult != 0)
+    ErrorCode validationResult = validateLegendPlacement(room);
+    if (validationResult != ErrorCode::NONE)
     {
       initErrorMessage = validationResult;
       initErrorRoomId = i + 1;

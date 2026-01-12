@@ -21,20 +21,20 @@ struct PlayerKeyBinding
 };
 
 static const PlayerKeyBinding keyBindings[] = {
-    {'w', 1, Action::MOVE_UP}, {'W', 1, Action::MOVE_UP}, {'x', 1, Action::MOVE_DOWN}, {'X', 1, Action::MOVE_DOWN}, {'a', 1, Action::MOVE_LEFT}, {'A', 1, Action::MOVE_LEFT}, {'d', 1, Action::MOVE_RIGHT}, {'D', 1, Action::MOVE_RIGHT}, {'s', 1, Action::STAY}, {'S', 1, Action::STAY}, {'e', 1, Action::DROP_ITEM}, {'E', 1, Action::DROP_ITEM}, {27, 1, Action::ESC},
+    {'w', 1, Action::MOVE_UP}, {'W', 1, Action::MOVE_UP}, 
+    {'x', 1, Action::MOVE_DOWN}, {'X', 1, Action::MOVE_DOWN}, 
+    {'a', 1, Action::MOVE_LEFT}, {'A', 1, Action::MOVE_LEFT}, 
+    {'d', 1, Action::MOVE_RIGHT}, {'D', 1, Action::MOVE_RIGHT}, 
+    {'s', 1, Action::STAY}, {'S', 1, Action::STAY}, 
+    {'e', 1, Action::DROP_ITEM}, {'E', 1, Action::DROP_ITEM}, 
+    {27, 1, Action::ESC},
 
-    {'i', 2, Action::MOVE_UP},
-    {'I', 2, Action::MOVE_UP},
-    {'m', 2, Action::MOVE_DOWN},
-    {'M', 2, Action::MOVE_DOWN},
-    {'j', 2, Action::MOVE_LEFT},
-    {'J', 2, Action::MOVE_LEFT},
-    {'l', 2, Action::MOVE_RIGHT},
-    {'L', 2, Action::MOVE_RIGHT},
-    {'k', 2, Action::STAY},
-    {'K', 2, Action::STAY},
-    {'o', 2, Action::DROP_ITEM},
-    {'O', 2, Action::DROP_ITEM},
+    {'i', 2, Action::MOVE_UP}, {'I', 2, Action::MOVE_UP},
+    {'m', 2, Action::MOVE_DOWN}, {'M', 2, Action::MOVE_DOWN},
+    {'j', 2, Action::MOVE_LEFT}, {'J', 2, Action::MOVE_LEFT},
+    {'l', 2, Action::MOVE_RIGHT}, {'L', 2, Action::MOVE_RIGHT},
+    {'k', 2, Action::STAY}, {'K', 2, Action::STAY},
+    {'o', 2, Action::DROP_ITEM}, {'O', 2, Action::DROP_ITEM},
     {27, 2, Action::ESC}};
 
 static const int NUM_KEY_BINDINGS =

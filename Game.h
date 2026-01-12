@@ -23,7 +23,7 @@ enum class GameOverMessege
 class Game
 {
 protected:
-  int initErrorMessage;
+  ErrorCode initErrorMessage;
   int initErrorRoomId;
   GameOverMessege gameOverMessege;
   unsigned long cycleCount;
@@ -90,6 +90,6 @@ public:
   void checkRoomTransitions();
   void redrawCurrentRoom();
   bool canPassThroughDoor(Room *room, int doorId);
-  int validateLegendPlacement(Room &room);
+  ErrorCode validateLegendPlacement(Room &room);
   bool checkGameOver(const ExplosionResult &result);
 };

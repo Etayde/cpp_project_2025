@@ -118,20 +118,20 @@ IMPORTANT: Immediate file writing strategy
 
 PHASE 6.4: Implement Action Replay in LoadedGame
 -------------------------------------------------
-[ ] Add includes to LoadedGame.h:
+[✓] Add includes to LoadedGame.h:
     - #include "ActionRecord.h", <vector>, <string>, <fstream>
-[ ] Add private members to LoadedGame.h:
+[✓] Add private members to LoadedGame.h:
     - std::vector<ActionRecord> recordedActions;
     - size_t currentActionIndex = 0;
-[ ] Add private method to LoadedGame.h:
+[✓] Add private method to LoadedGame.h:
     - bool loadActions(const std::string& filename);
-[ ] Update LoadedGame constructor to accept filename parameter:
+[✓] Update LoadedGame constructor to accept filename parameter:
     - LoadedGame(const std::string& filename);
-[ ] Add handleInput() override declaration to LoadedGame.h
-[ ] Implement new constructor in LoadedGame.cpp (loads actions from file)
-[ ] Implement loadActions() in LoadedGame.cpp (reads binary file)
-[ ] Implement handleInput() in LoadedGame.cpp (injects recorded actions at correct cycles)
-[ ] Test compilation
+[✓] Add handleInput() override declaration to LoadedGame.h
+[✓] Implement new constructor in LoadedGame.cpp (loads actions from file)
+[✓] Implement loadActions() in LoadedGame.cpp (reads text file)
+[✓] Implement handleInput() in LoadedGame.cpp (injects recorded actions at correct cycles)
+[✓] Test compilation
 
 PHASE 6.5: Create SilentLoadedGame Class
 -----------------------------------------

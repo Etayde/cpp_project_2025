@@ -78,7 +78,7 @@ void NormalGame::recordAction(const PlayerKeyBinding& binding)
 
     ActionRecord record(cycleCount, binding);
 
-    recordFile.write(reinterpret_cast<const char*>(&record), sizeof(ActionRecord));
+    record.write(recordFile);
     recordFile.flush();
 }
 

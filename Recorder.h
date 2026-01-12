@@ -36,41 +36,25 @@ inline Action stringToAction(const string& str) {
 
 struct ActionRecord
 {
-    unsigned long cycleNumber;
+    unsigned long cycle;
     int playerId;
-    string action;
+    Action action;
 
-    // Default constructor (needed for reading)
-    ActionRecord() : cycleNumber(0), playerId(0), action("") {}
+    // Default constructor
+    ActionRecord() : cycle(0), playerId(0), action(Action::STAY) {}
 
-    // Constructor from PlayerKeyBinding (eliminates redundancy)
-    ActionRecord(unsigned long cycle, const PlayerKeyBinding &binding)
-        : cycleNumber(cycle), playerId(binding.playerID),
-          action(actionToString(binding.action)) {}
+    // Constructor from PlayerKeyBinding
+    ActionRecord(unsigned long c, const PlayerKeyBinding &binding)
+        : cycle(c), playerId(binding.playerID),
+          action(binding.action) {}
 
     // Serialize to output stream
-    // Format: CYCLE: <cycle> | PLAYER: <player> | ACTION: <action>
+    // Format: CYCLE: <cycle> PLAYER: <player> ACTION: <action>
     void write(ostream &output) const;
 
     // Deserialize from input stream (reads one line)
     // Returns true on success, false on error (no exceptions)
     bool read(istream &input);
-
-private:
-    // Helper method to jump to field value position
-    size_t jumpToFieldValue(const string& line, size_t startPos, const string& fieldName) const;
-
-    // Helper method to extract field value between current position and delimiter
-    string extractFieldValue(const string& line, size_t startPos, const string& delimiter) const;
-
-    // Helper method to parse unsigned long field
-    bool parseUnsignedLongField(const string& line, size_t& currentPos, const string& fieldName, unsigned long& outValue) const;
-
-    // Helper method to parse integer field
-    bool parseIntField(const string& line, size_t& currentPos, const string& fieldName, int& outValue) const;
-
-    // Helper method to parse string field (no conversion needed)
-    bool parseStringField(const string& line, size_t& currentPos, const string& fieldName, string& outValue, const string& delimiter) const;
 };
 
 class RecordedSteps
@@ -87,7 +71,7 @@ public:
     void addAction(const ActionRecord& record) { actions.push_back(record); }
 
     // Load actions from file (calls read() for each line)
-    bool loadFromFile(const string& filename);
+    ErrorCode loadFromFile(const string& filename);
 
     // Get current action (returns nullptr if no more actions)
     const ActionRecord* getCurrentAction() const;
@@ -100,4 +84,9 @@ public:
 
     // Get all actions for a specific cycle number
     vector<ActionRecord> getActionsForCycle(unsigned long cycle) const;
+
+    ActionRecord getActionAt(size_t index) const { return actions[index]; }
+
+    size_t getCurrIndex() const { return currActionIndex; }
+    
 };

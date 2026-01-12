@@ -151,3 +151,17 @@ namespace PlayerConstants
 {
   constexpr int RESPAWN_DURATION_FRAMES = 50;
 } // namespace PlayerConstants
+
+enum class ErrorCode
+{
+  NONE,
+  FILE_NOT_FOUND,
+  INVALID_FORMAT,
+  READ_ERROR,
+  WRITE_ERROR,
+  L_NOT_FOUND,
+  MULTIPLE_L,
+  L_OUT_OF_BOUNDS,
+  LEGEND_OBSCURES_OBJECTS,
+  LEGEND_OBSCURES_SPAWN
+};
