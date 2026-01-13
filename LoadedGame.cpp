@@ -1,6 +1,7 @@
 #include "LoadedGame.h"
 #include "Recorder.h"
 #include <string>
+#include <fstream>
 
 using namespace std;
 
@@ -38,15 +39,16 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps()
     initErrorMessage = loadActions("adv-world.steps.txt");
     if (initErrorMessage != ErrorCode::NONE)
     {
+        ofstream debug("DEBUG.txt");
         switch (initErrorMessage) {
             case ErrorCode::FILE_NOT_FOUND:
-                cout << "ERROR - FILE NOT FOUND" << endl;  // Indicate file not found
+                debug << "ERROR - FILE NOT FOUND" << endl;  // Indicate file not found
                 break;
             case ErrorCode::INVALID_FORMAT:
-                cout << "ERROR - INVALID FORMAT" << endl;  // Indicate invalid format
+                debug << "ERROR - INVALID FORMAT" << endl;  // Indicate invalid format
                 break;
             default:
-                cout << "ERROR - UNKNOWN" << endl;;  // Generic error code
+                debug << "ERROR - UNKNOWN" << endl;;  // Generic error code
                 break;
         }
         
