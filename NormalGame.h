@@ -13,6 +13,7 @@ class NormalGame : public Game
 
 public:
     NormalGame();
+    NormalGame(int argc, char* argv[]);  // New: parses args and initializes
     ~NormalGame() override;
     void handleInput() override;
     void enableRecording(const string &filename);

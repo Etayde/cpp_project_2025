@@ -14,6 +14,7 @@ class LoadedGame : public Game {
 
 public:
     LoadedGame(const string &filename, bool silent = false);
+    LoadedGame(int argc, char* argv[]);  // New: parses args and initializes
     void handleInput() override;
 
 private:

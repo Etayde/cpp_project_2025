@@ -1,10 +1,40 @@
 #include "NormalGame.h"
 #include "Console.h"
 #include "Constants.h"
+#include <string>
 
 //////////////////////////////////////////     NormalGame Constructor     /////////////////////////////////////////////
 
 NormalGame::NormalGame() : Game() {}
+
+//////////////////////////////////////////     NormalGame Constructor (with args)     /////////////////////////////////////////////
+
+NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
+{
+    // Delegate to default constructor first (sets up base state)
+
+    // Parse arguments specific to NormalGame
+    bool saveMode = false;
+
+    for (int i = 1; i < argc; i++)
+    {
+        std::string arg(argv[i]);
+
+        if (arg == "-save")
+        {
+            saveMode = true;
+        }
+        // Ignore -silent flag (NormalGame is always visual)
+        // Ignore -load flag (not relevant for NormalGame)
+    }
+
+    // Enable recording if -save flag was provided
+    // Always saves to hardcoded filename: "adv-world.steps.txt"
+    if (saveMode)
+    {
+        enableRecording("adv-world.steps.txt");
+    }
+}
 
 //////////////////////////////////////////     NormalGame Destructor     /////////////////////////////////////////////
 

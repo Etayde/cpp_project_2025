@@ -25,6 +25,7 @@ class Game
 {
 protected:
   bool silentMode;
+  bool consoleInitialized;  // Track whether we initialized console
   ErrorCode initErrorMessage;
   int initErrorRoomId;
   GameOverMessege gameOverMessege;
@@ -65,6 +66,9 @@ public:
   bool gameInitialized;
 
   virtual ~Game();
+
+  // Factory method to create appropriate game type from command-line args
+  static Game* createFromArgs(int argc, char* argv[]);
 
   void run();
 

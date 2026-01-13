@@ -153,16 +153,16 @@ PHASE 6.5: Implement Silent Mode (CLEAN OOP APPROACH)
     - cout.flush() → Renderer::flush()
 [✓] Test compilation - Phases 1 & 2 complete
 
-[ ] Replace rendering calls in Room.cpp (~35 locations)
-[ ] Replace rendering calls in Player.cpp (~10 locations)
-[ ] Replace rendering calls in GameObject.h (base draw method)
-[ ] Replace rendering calls in Riddle.cpp (~27 locations)
-[ ] Replace rendering calls in Bomb.cpp (~15 locations)
-[ ] Replace rendering calls in Screen.h
-[ ] Replace rendering calls in SpringLink.cpp (collapse/reset)
-[ ] Replace rendering calls in Obstacle.cpp (move)
-[ ] Replace rendering calls in Point.h (draw methods)
-[ ] Replace rendering calls in Utils.cpp (drawAt)
+[✓] Replace rendering calls in Room.cpp (~35 locations)
+[✓] Replace rendering calls in Player.cpp (~10 locations)
+[✓] Replace rendering calls in GameObject.h (base draw method)
+[✓] Replace rendering calls in Riddle.cpp (~27 locations)
+[✓] Replace rendering calls in Bomb.cpp (~15 locations)
+[✓] Replace rendering calls in Screen.h
+[✓] Replace rendering calls in SpringLink.cpp (collapse/reset)
+[✓] Replace rendering calls in Obstacle.cpp (move)
+[✓] Replace rendering calls in Point.h (draw methods)
+[✓] Replace rendering calls in Utils.cpp (drawAt)
 [ ] Final compilation and testing
 
 PHASE 6.6: Command-Line Argument Parsing (COMPLETED)

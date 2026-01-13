@@ -1,6 +1,8 @@
 //////////////////////////////////////       INCLUDES & FORWARDS       /////////////////////////////////////////////
 
 #include "Game.h"
+#include "NormalGame.h"
+#include "LoadedGame.h"
 #include "Console.h"
 #include "Constants.h"
 #include "Layouts.h"
@@ -8,16 +10,23 @@
 #include "Obstacle.h"
 #include "Riddle.h"
 #include "Spring.h"
+#include <string>
 
 class Constants;
 
 //////////////////////////////////////////     Game Constructor       /////////////////////////////////////////////
 
 Game::Game()
-    : silentMode(false), initErrorMessage(ErrorCode::NONE), initErrorRoomId(-1), gameOverMessege(GameOverMessege::NONE),
+    : silentMode(false), consoleInitialized(false), initErrorMessage(ErrorCode::NONE), initErrorRoomId(-1), gameOverMessege(GameOverMessege::NONE),
       cycleCount(0), currentState(GameState::mainMenu), currentRoomId(-1),
       gameInitialized(false)
 {
+  // Initialize console
+  init_console();
+  hideCursor();
+  clrscr();
+  consoleInitialized = true;
+
   // Set renderer mode based on silentMode flag
   Renderer::setSilentMode(silentMode);
 }
@@ -32,6 +41,33 @@ Game::~Game()
     delete s;
   }
   loadedScreens.clear();
+
+  // Cleanup console (RAII pattern)
+  if (consoleInitialized)
+  {
+    showCursor();
+    clrscr();
+    cleanup_console();
+    std::cout << "Thanks for playing!" << std::endl;
+  }
+}
+
+//////////////////////////////////////////   createFromArgs (Factory)    /////////////////////////////////////////////
+
+Game* Game::createFromArgs(int argc, char* argv[])
+{
+  // Simple heuristic: if -load is present, create LoadedGame, otherwise NormalGame
+  for (int i = 1; i < argc; i++)
+  {
+    std::string arg(argv[i]);
+    if (arg == "-load")
+    {
+      return new LoadedGame(argc, argv);
+    }
+  }
+
+  // Default to NormalGame
+  return new NormalGame(argc, argv);
 }
 
 //////////////////////////////////////////           run               /////////////////////////////////////////////
