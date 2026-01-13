@@ -12,23 +12,20 @@ void ActionRecord::write(ostream &output) const
 
 //////////////////////////////////////////    ActionRecord::read    /////////////////////////////////////////////
 
-bool ActionRecord::read(istream &input, ofstream &debug)
+bool ActionRecord::read(istream &input)
 {
     string dummy;
     string actionStr;
 
     if (!(input >> dummy >> cycle)) {
-        debug << dummy << " " << cycle << "\n";
         return false;
     }
 
     if (!(input >> dummy >> playerId)) {
-        debug << dummy << " " << playerId << "\n";
         return false;
     }
 
     if (!(input >> dummy >> actionStr)) {
-        debug << dummy << " " << actionStr << "\n";
         return false;
     }
 
@@ -49,14 +46,9 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
     actions.clear();
     currActionIndex = 0;
 
-    ofstream debug("readDEBUG.txt");
-    debug << "Loading actions from file: " << filename << "\n";
-
     while (file >> ws && file.peek() != EOF) {
         ActionRecord record;
-        if (!record.read(file, debug)) {
-            debug << "Failed to read action record.\n";
-            debug.close();
+        if (!record.read(file)) {
             file.close();
             return ErrorCode::READ_ERROR;
         }

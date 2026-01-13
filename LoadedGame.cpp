@@ -37,27 +37,9 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps()
 
     // Load actions from hardcoded filename: "adv-world.steps.txt"
     initErrorMessage = loadActions("adv-world.steps.txt");
-    ofstream debug("DEBUG.txt");
+    
     if (initErrorMessage != ErrorCode::NONE)
-    {
-        
-        switch (initErrorMessage) {
-            case ErrorCode::FILE_NOT_FOUND:
-                debug << "ERROR - FILE NOT FOUND" << endl;  // Indicate file not found
-                break;
-            case ErrorCode::INVALID_FORMAT:
-                debug << "ERROR - INVALID FORMAT" << endl;  // Indicate invalid format
-                break;
-            case ErrorCode::READ_ERROR:
-                debug << "ERROR - READ ERROR" << endl;  // Indicate read error
-                break;
-            default:
-                debug << "ERROR - UNKNOWN" << endl;;  // Generic error code
-                break;
-        }}
-    else {debug << "Actions loaded successfully." << endl;}
-    debug.close();
-        
+        currentState = GameState::error;
     //     // File doesn't exist or couldn't be loaded
         
     //     // Error message will be displayed by Game::run()
