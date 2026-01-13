@@ -54,7 +54,7 @@ struct ActionRecord
 
     // Deserialize from input stream (reads one line)
     // Returns true on success, false on error (no exceptions)
-    bool read(istream &input);
+    bool read(istream &input, fstream &debug);
 };
 
 class RecordedSteps
