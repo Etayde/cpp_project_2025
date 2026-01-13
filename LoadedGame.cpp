@@ -47,6 +47,9 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps()
             case ErrorCode::INVALID_FORMAT:
                 debug << "ERROR - INVALID FORMAT" << endl;  // Indicate invalid format
                 break;
+            case ErrorCode::READ_ERROR:
+                debug << "ERROR - READ ERROR" << endl;  // Indicate read error
+                break;
             default:
                 debug << "ERROR - UNKNOWN" << endl;;  // Generic error code
                 break;
