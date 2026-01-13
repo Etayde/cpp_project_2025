@@ -10,7 +10,19 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps()
     Renderer::setSilentMode(silentMode);  // Update renderer mode
 
     initErrorMessage = loadActions(filename);
-    if (initErrorMessage != ErrorCode::NONE) currentState = GameState::error;
+    if (initErrorMessage != ErrorCode::NONE) {
+        switch (initErrorMessage) {
+            case ErrorCode::FILE_NOT_FOUND:
+                cout << "ERROR - FILE NOT FOUND" << endl;  // Indicate file not found
+                break;
+            case ErrorCode::INVALID_FORMAT:
+                cout << "ERROR - INVALID FORMAT" << endl;  // Indicate invalid format
+                break;
+            default:
+                cout << "ERROR - UNKNOWN" << endl;;  // Generic error code
+                break;
+        }
+        currentState = GameState::error;}
 }
 
 LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps()
