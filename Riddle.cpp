@@ -6,7 +6,7 @@
 #include "Player.h"
 #include "Room.h"
 #include "Console.h"
-using std::cout;
+#include "Renderer.h"
 
 //////////////////////////////////////////         enterRiddle         //////////////////////////////////////////
 
@@ -68,22 +68,23 @@ bool Riddle::displayRiddleQuestion()
     int endY = 16;
     for (int i = 0; i < endY; i++)
     {
-        gotoxy(startX, startY + i);
-        cout << riddlePopupScreen[i];
+        Renderer::printAt(startX, startY + i, riddlePopupScreen[i]);
     }
 
-    gotoxy(13, 6);
-    cout << data->question;
+    Renderer::gotoxy(13, 6);
+    Renderer::print(data->question);
 
     for (int i = 0; i < 4; i++)
     {
-        gotoxy(13, 8 + i);
-        cout << (i + 1) << ") " << data->options[i];
+        Renderer::gotoxy(13, 8 + i);
+        Renderer::print(i + 1);
+        Renderer::print(") ");
+        Renderer::print(data->options[i]);
     }
 
-    gotoxy(13, 13);
-    cout << "Choose answer (1-4)";
-    cout.flush();
+    Renderer::gotoxy(13, 13);
+    Renderer::print("Choose answer (1-4)");
+    Renderer::flush();
     return true;
 }
 
@@ -91,7 +92,7 @@ bool Riddle::displayRiddleQuestion()
 
 int Riddle::getPlayerAnswer() const
 {
-    showCursor();
+    Renderer::showCursor();
 
     while (check_kbhit())
         get_char_nonblocking();
@@ -102,13 +103,13 @@ int Riddle::getPlayerAnswer() const
 
         if (key == 27)
         {
-            hideCursor();
+            Renderer::hideCursor();
             return -1;
         }
 
         if (key >= '1' && key <= '4')
         {
-            hideCursor();
+            Renderer::hideCursor();
             return key - '1';
         }
     }
@@ -121,38 +122,40 @@ void Riddle::displayFeedback(bool correct) const
 
     if (correct && firstAttempt)
     {
-        gotoxy(33, 14);
-        cout << "CORRECT!";
-        gotoxy(18, 16);
-        cout << "P" << solvingPlayerId << "(" << solvingPlayerSprite << ") "
-                                                                        " solved the riddle on the first try!";
+        Renderer::printAt(33, 14, "CORRECT!");
 
-        gotoxy(31, 18);
-        cout << "+100 Points!";
+        Renderer::gotoxy(18, 16);
+        Renderer::print("P");
+        Renderer::print(solvingPlayerId);
+        Renderer::print("(");
+        Renderer::print(solvingPlayerSprite);
+        Renderer::print(") ");
+        Renderer::print(" solved the riddle on the first try!");
 
-        gotoxy(27, 19);
-        cout << "Riddle disapeared...";
+        Renderer::printAt(31, 18, "+100 Points!");
+        Renderer::printAt(27, 19, "Riddle disapeared...");
     }
     else if (correct)
     {
-        gotoxy(33, 14);
-        cout << "CORRECT!";
+        Renderer::printAt(33, 14, "CORRECT!");
 
-        gotoxy(20, 16);
-        cout << "P" << solvingPlayerId << " (" << solvingPlayerSprite << ") "
-                                                                         " solved the riddle!";
+        Renderer::gotoxy(20, 16);
+        Renderer::print("P");
+        Renderer::print(solvingPlayerId);
+        Renderer::print(" (");
+        Renderer::print(solvingPlayerSprite);
+        Renderer::print(") ");
+        Renderer::print(" solved the riddle!");
 
-        gotoxy(27, 17);
-        cout << "Riddle disapeared...";
+        Renderer::printAt(27, 17, "Riddle disapeared...");
     }
     else
     {
-        gotoxy(24, 17);
-        cout << "INCORRECT! Try again later.";
+        Renderer::printAt(24, 17, "INCORRECT! Try again later.");
     }
-    cout.flush();
+    Renderer::flush();
 
-    sleep_ms(2000);
+    Renderer::sleep_ms(2000);
 }
 
 //////////////////////////////////////////    playRiddleAnimation      //////////////////////////////////////////

@@ -1,6 +1,7 @@
 //////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 
 #include "Utils.h"
+#include "Renderer.h"
 #include <ctime>
 #include <iostream>
 
@@ -8,8 +9,8 @@
 
 void drawAt(int x, int y, char c)
 {
-    gotoxy(x, y);
-    std::cout << c << std::flush;
+    Renderer::printAt(x, y, c);
+    Renderer::flush();
 }
 
 //////////////////////////////////////////         getFps          //////////////////////////////////////////
@@ -45,13 +46,14 @@ int getFps()
 void showFps()
 {
     const int x = 0, y = 0, width = 10;
-    gotoxy(x, y);
+    Renderer::gotoxy(x, y);
 
     for (int i = 0; i < width; i++)
     {
-        std::cout << ' ';
+        Renderer::print(' ');
     }
 
-    gotoxy(x, y);
-    std::cout << getFps() << std::flush;
+    Renderer::gotoxy(x, y);
+    Renderer::print(getFps());
+    Renderer::flush();
 }

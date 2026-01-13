@@ -5,6 +5,7 @@
 #include "Console.h"
 #include "Constants.h"
 #include "Point.h"
+#include "Renderer.h"
 #include <iostream>
 
 class Player;
@@ -71,8 +72,7 @@ public:
   {
     if (active && position.x >= 0 && position.y >= 0)
     {
-      gotoxy(position.x, position.y);
-      std::cout << sprite;
+      Renderer::printAt(position.x, position.y, sprite);
     }
   }
 

@@ -4,6 +4,7 @@
 #include "Room.h"
 #include "Player.h"
 #include "Console.h"
+#include "Renderer.h"
 #include <cmath>
 #include <iostream>
 
@@ -58,8 +59,7 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
 
     // Clear the bomb's position visually (cleanup happens after iteration in updateAllObjects)
     currentRoom->setCharAt(centerX, centerY, ' ');
-    gotoxy(centerX, centerY);
-    std::cout << ' ';
+    Renderer::printAt(centerX, centerY, ' ');
 
     // Process explosion in radius
     for (int dy = -EXPLOSION_RADIUS; dy <= EXPLOSION_RADIUS; dy++)
@@ -112,8 +112,7 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
                 if (obj->onExplosion())
                 {
                     currentRoom->setCharAt(x, y, ' ');
-                    gotoxy(x, y);
-                    std::cout << ' ';
+                    Renderer::printAt(x, y, ' ');
                     obj->setActive(false);
                     result.objectsDestroyed++;
                 }
@@ -122,16 +121,14 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
             {
                 // Destroy breakable walls
                 currentRoom->setCharAt(x, y, ' ');
-                gotoxy(x, y);
-                std::cout << ' ';
+                Renderer::printAt(x, y, ' ');
                 result.objectsDestroyed++;
             }
             else if (type != ObjectType::AIR && type != ObjectType::WALL)
             {
                 // Destroy other destructible characters (spring segments, etc.)
                 currentRoom->setCharAt(x, y, ' ');
-                gotoxy(x, y);
-                std::cout << ' ';
+                Renderer::printAt(x, y, ' ');
                 result.objectsDestroyed++;
             }
         }
@@ -152,22 +149,22 @@ void Bomb::draw() const
     if (state == BombState::PLACED && currentRoom && !currentRoom->isVisible(position.x, position.y))
         return;
 
-    gotoxy(position.x, position.y);
+    Renderer::gotoxy(position.x, position.y);
 
     if (state == BombState::TICKING)
     {
         // Blinking animation
         if ((blinkCounter % BLINK_RATE) < 5)
-            std::cout << '@';
+            Renderer::print('@');
         else
-            std::cout << '*';
+            Renderer::print('*');
     }
     else
     {
-        std::cout << sprite;
+        Renderer::print(sprite);
     }
 
-    std::cout.flush();
+    Renderer::flush();
 }
 
 //////////////////////////////////////////       isPickable          //////////////////////////////////////////

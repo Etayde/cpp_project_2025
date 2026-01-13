@@ -194,4 +194,4 @@ PHASE 6.7: Final EX3 Testing
     - Record same playthrough twice
     - Verify both produce identical results
 [ ] Remove debugging shortcuts
-[ ] Optional: Fix sign-comparison warnings in Game.cpp (lines 375, 410, 446)
+[✓] Optional: Fix sign-comparison warnings in Game.cpp (lines 375, 410, 446)

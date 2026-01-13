@@ -5,6 +5,7 @@
 #include "PickableObject.h"
 #include "Room.h"
 #include "Player.h"
+#include "Renderer.h"
 
 //////////////////////////////////////////        initialize       /////////////////////////////////////////////
 
@@ -64,8 +65,7 @@ bool Obstacle::move(Direction dir, Room *room, int force)
         Point newPos(oldPos.x + dx, oldPos.y + dy);
 
         room->setCharAt(oldPos.x, oldPos.y, ' ');
-        gotoxy(oldPos.x, oldPos.y);
-        std::cout << ' ';
+        Renderer::printAt(oldPos.x, oldPos.y, ' ');
 
         block->setPosition(newPos);
 

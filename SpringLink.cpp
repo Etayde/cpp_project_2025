@@ -4,6 +4,7 @@
 #include "Spring.h"
 #include "Room.h"
 #include "Console.h"
+#include "Renderer.h"
 #include <iostream>
 
 //////////////////////////////////////////       Constructor       /////////////////////////////////////////////
@@ -49,8 +50,8 @@ void SpringLink::collapse(Room *room)
     if (room != nullptr)
     {
         room->setCharAt(position.x, position.y, sprite);
-        gotoxy(position.x, position.y);
-        std::cout << sprite << std::flush;
+        Renderer::printAt(position.x, position.y, sprite);
+        Renderer::flush();
     }
 }
 
@@ -69,7 +70,7 @@ void SpringLink::reset(Room *room)
     if (room != nullptr)
     {
         room->setCharAt(position.x, position.y, sprite);
-        gotoxy(position.x, position.y);
-        std::cout << sprite << std::flush;
+        Renderer::printAt(position.x, position.y, sprite);
+        Renderer::flush();
     }
 }

@@ -2,6 +2,7 @@
 
 #include "Player.h"
 #include "Bomb.h"
+#include "Renderer.h"
 
 #include "Door.h"
 #include "Obstacle.h"
@@ -117,8 +118,7 @@ void Player::erase(Room *room)
 {
   if (room == nullptr)
   {
-    gotoxy(pos.x, pos.y);
-    std::cout << ' ';
+    Renderer::printAt(pos.x, pos.y, ' ');
     return;
   }
 
@@ -137,8 +137,7 @@ void Player::erase(Room *room)
         (currentChar == ' ' || currentChar == sprite) ? ' ' : currentChar;
   }
 
-  gotoxy(pos.x, pos.y);
-  std::cout << restoreChar;
+  Renderer::printAt(pos.x, pos.y, restoreChar);
 }
 
 //////////////////////////////////////////  Respawn and Death Helpers       /////////////////////////////////////////////
@@ -309,7 +308,7 @@ bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
 
 void Player::draw(Room *room)
 {
-  gotoxy(pos.x, pos.y);
+  Renderer::gotoxy(pos.x, pos.y);
 
   if (waitingAtDoor)
   {
@@ -321,8 +320,8 @@ void Player::draw(Room *room)
   {
     return;
   }
-  std::cout << sprite;
-  std::cout.flush();
+  Renderer::print(sprite);
+  Renderer::flush();
 }
 
 //////////////////////////////////////////        pickupItem       /////////////////////////////////////////////
@@ -402,8 +401,7 @@ Point Player::dropItem(Room *room)
     clearInventory();
     clearInventory();
 
-    gotoxy(dropX, dropY);
-    std::cout << droppedItem->getSprite();
+    Renderer::printAt(dropX, dropY, droppedItem->getSprite());
   }
   else
   {
@@ -669,8 +667,7 @@ bool Player::handleSwitchInteraction(Switch *sw, Room *room)
 {
   sw->toggle();
   room->setCharAt(sw->getX(), sw->getY(), sw->getSprite());
-  gotoxy(sw->getX(), sw->getY());
-  std::cout << sw->getSprite();
+  Renderer::printAt(sw->getX(), sw->getY(), sw->getSprite());
   room->updatePuzzleState();
   return true;
 }

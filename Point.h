@@ -5,6 +5,7 @@
 
 #include "Console.h"
 #include "Constants.h"
+#include "Renderer.h"
 
 //////////////////////////////////////////          Point             //////////////////////////////////////////
 
@@ -28,14 +29,14 @@ public:
 
     void draw() const
     {
-        gotoxy(x, y);
-        std::cout << sprite << std::flush;
+        Renderer::printAt(x, y, sprite);
+        Renderer::flush();
     }
 
     void draw(char c) const
     {
-        gotoxy(x, y);
-        std::cout << c << std::flush;
+        Renderer::printAt(x, y, c);
+        Renderer::flush();
     }
 
     void move();

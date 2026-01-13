@@ -4,12 +4,11 @@
 
 #include "Console.h"
 #include "Constants.h"
+#include "Renderer.h"
 #include <iostream>
 #include <string>
 
 class Point;
-
-using std::cout, std::endl;
 
 //////////////////////////////////////////          Screen       /////////////////////////////////////////////
 
@@ -61,17 +60,20 @@ public:
 
   void draw() const
   {
-    clrscr();
-    gotoxy(0, 0);
+    Renderer::clrscr();
+    Renderer::gotoxy(0, 0);
 
     for (int i = 0; i < MAX_Y - 1; ++i)
     {
       if (screen[i] != nullptr)
-        cout << screen[i] << endl;
+      {
+        Renderer::print(screen[i]);
+        Renderer::print('\n');
+      }
     }
 
     if (screen[MAX_Y - 1] != nullptr)
-      cout << screen[MAX_Y - 1];
-    cout.flush();
+      Renderer::print(screen[MAX_Y - 1]);
+    Renderer::flush();
   }
 };

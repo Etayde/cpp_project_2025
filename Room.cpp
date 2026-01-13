@@ -5,6 +5,7 @@
 #include "Bomb.h"
 #include "Console.h"
 #include "Constants.h"
+#include "Renderer.h"
 
 #include "Door.h"
 #include "GameObject.h"
@@ -280,8 +281,7 @@ void Room::draw()
 
   for (const Modification &mod : mods)
   {
-    gotoxy(mod.x, mod.y);
-    std::cout << mod.newChar;
+    Renderer::printAt(mod.x, mod.y, mod.newChar);
   }
 
   drawDarkness();
@@ -301,11 +301,11 @@ void Room::drawDarkness()
       if (!isInDarkZone(x, y))
         continue;
 
-      gotoxy(x, y);
+      Renderer::gotoxy(x, y);
       if (visibilityMap[y][x])
-        std::cout << getCharAt(x, y);
+        Renderer::print(getCharAt(x, y));
       else
-        std::cout << ' ';
+        Renderer::print(' ');
     }
   }
 }
@@ -324,8 +324,7 @@ void Room::drawVisibleObjects()
 
     if (isInDarkZone(x, y) && !visibilityMap[y][x] && !obj->isAlwaysVisible())
     {
-      gotoxy(x, y);
-      std::cout << ' ';
+      Renderer::printAt(x, y, ' ');
       continue;
     }
 
@@ -587,8 +586,7 @@ void Room::updatePuzzleState()
         if (sww != nullptr && sww->isRemovedBySwitch())
         {
           setCharAt(sww->getX(), sww->getY(), ' ');
-          gotoxy(sww->getX(), sww->getY());
-          std::cout << ' ';
+          Renderer::printAt(sww->getX(), sww->getY(), ' ');
           sww->setActive(false);
         }
       }
@@ -1225,8 +1223,7 @@ void Room::drawEmptyLegend()
 
   for (int i = 0; i < 5; i++)
   {
-    gotoxy(startX, startY + i);
-    std::cout << legendData[i];
+    Renderer::printAt(startX, startY + i, legendData[i]);
   }
 }
 
@@ -1242,19 +1239,19 @@ void Room::drawPlayerStats(Player *p)
   int lineY = legendTopLeft.y + p->playerId;
   int startX = legendTopLeft.x;
 
-  gotoxy(startX + 3, lineY);
-  std::cout << p->getScore();
+  Renderer::gotoxy(startX + 3, lineY);
+  Renderer::print(p->getScore());
 
   DrawLives(p);
 
-  gotoxy(startX + 17, lineY);
+  Renderer::gotoxy(startX + 17, lineY);
   if (p->hasItem())
   {
-    std::cout << p->inventory->getSprite();
+    Renderer::print(p->inventory->getSprite());
   }
   else
   {
-    std::cout << " ";
+    Renderer::print(" ");
   }
 }
 
@@ -1267,20 +1264,16 @@ void Room::DrawLives(Player *p)
   switch (p->lives)
   {
   case 3:
-    gotoxy(offset, lineY);
-    std::cout << "<3 <3 <3";
+    Renderer::printAt(offset, lineY, "<3 <3 <3");
     break;
   case 2:
-    gotoxy(offset + 1, lineY);
-    std::cout << "<3 <3";
+    Renderer::printAt(offset + 1, lineY, "<3 <3");
     break;
   case 1:
-    gotoxy(offset + 3, lineY);
-    std::cout << "<3";
+    Renderer::printAt(offset + 3, lineY, "<3");
     break;
   default:
-    gotoxy(offset, lineY);
-    std::cout << "        ";
+    Renderer::printAt(offset, lineY, "        ");
     break;
   }
 }
