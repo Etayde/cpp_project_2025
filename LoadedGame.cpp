@@ -10,19 +10,8 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps()
     Renderer::setSilentMode(silentMode);  // Update renderer mode
 
     initErrorMessage = loadActions(filename);
-    if (initErrorMessage != ErrorCode::NONE) {
-        switch (initErrorMessage) {
-            case ErrorCode::FILE_NOT_FOUND:
-                cout << "ERROR - FILE NOT FOUND" << endl;  // Indicate file not found
-                break;
-            case ErrorCode::INVALID_FORMAT:
-                cout << "ERROR - INVALID FORMAT" << endl;  // Indicate invalid format
-                break;
-            default:
-                cout << "ERROR - UNKNOWN" << endl;;  // Generic error code
-                break;
-        }
-        }
+    if (initErrorMessage != ErrorCode::NONE) 
+        currentState = GameState::error;
 }
 
 LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps()
@@ -49,8 +38,20 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps()
     initErrorMessage = loadActions("adv-world.steps.txt");
     if (initErrorMessage != ErrorCode::NONE)
     {
+        switch (initErrorMessage) {
+            case ErrorCode::FILE_NOT_FOUND:
+                cout << "ERROR - FILE NOT FOUND" << endl;  // Indicate file not found
+                break;
+            case ErrorCode::INVALID_FORMAT:
+                cout << "ERROR - INVALID FORMAT" << endl;  // Indicate invalid format
+                break;
+            default:
+                cout << "ERROR - UNKNOWN" << endl;;  // Generic error code
+                break;
+        }
+        
         // File doesn't exist or couldn't be loaded
-        currentState = GameState::error;
+        
         // Error message will be displayed by Game::run()
     }
 }
