@@ -22,7 +22,7 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps()
                 cout << "ERROR - UNKNOWN" << endl;;  // Generic error code
                 break;
         }
-        currentState = GameState::error;}
+        }
 }
 
 LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps()
