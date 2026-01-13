@@ -12,7 +12,7 @@ void ActionRecord::write(ostream &output) const
 
 //////////////////////////////////////////    ActionRecord::read    /////////////////////////////////////////////
 
-bool ActionRecord::read(istream &input, fstream &debug)
+bool ActionRecord::read(istream &input, ofstream &debug)
 {
     string dummy;
     string actionStr;
@@ -49,7 +49,7 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
     actions.clear();
     currActionIndex = 0;
 
-    fstream debug("readDEBUG.txt");
+    ofstream debug("readDEBUG.txt");
     debug << "Loading actions from file: " << filename << "\n";
 
     while (file.peek() != EOF) {
