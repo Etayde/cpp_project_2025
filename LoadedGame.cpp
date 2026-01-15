@@ -13,6 +13,8 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps()
     initErrorMessage = loadActions(filename);
     if (initErrorMessage != ErrorCode::NONE) 
         currentState = GameState::error;
+    else
+        currentState = GameState::inGame;
 }
 
 LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps()
