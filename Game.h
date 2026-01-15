@@ -25,7 +25,7 @@ class Game
 {
 protected:
   bool silentMode;
-  bool consoleInitialized;  // Track whether we initialized console
+  bool consoleInitialized;
   ErrorCode initErrorMessage;
   int initErrorRoomId;
   GameOverMessege gameOverMessege;
@@ -54,7 +54,7 @@ protected:
 
   void setGameOverMessege(GameOverMessege messege) { gameOverMessege = messege; }
 
-  void updateCycleCount() { cycleCount++; }
+  void updateCycleCount() { if (currentState == GameState::inGame) cycleCount++; }
 
 public:
   GameState currentState;
@@ -70,7 +70,7 @@ public:
   // Factory method to create appropriate game type from command-line args
   static Game* createFromArgs(int argc, char* argv[]);
 
-  void run();
+  virtual void run();
 
   // Menu handlers
   virtual void showMainMenu();

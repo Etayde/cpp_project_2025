@@ -63,3 +63,48 @@ void LoadedGame::handleInput()
     player.performAction(curr.action, getCurrentRoom());
 }
     
+
+void LoadedGame::run()
+{
+  bool running = true;
+
+  while (running)
+  {
+    switch (currentState)
+    {
+
+    case GameState::inGame:
+      startNewGame();
+      gameLoop();
+      break;
+
+    case GameState::victory:
+      showVictory();
+      Renderer::sleep_ms(2000);
+      gameInitialized = false;
+      currentState = GameState::quit;
+      break;
+
+    case GameState::gameOver:
+      showGameOver();
+      Renderer::sleep_ms(2000);
+      gameInitialized = false;
+      currentState = GameState::quit;
+      break;
+
+    case GameState::error:
+      showErrorScreen();
+      Renderer::sleep_ms(2000);
+      gameInitialized = false;
+      currentState = GameState::quit;
+      break;
+
+    case GameState::quit:
+      running = false;
+      break;
+
+    default:
+      break;
+    }
+  }
+}

@@ -122,7 +122,7 @@ inline const char *victoryData[MAX_Y] = {
     "|                              +---------------+                              |", // 15
     "|                                                                             |", // 16
     "|                                                                             |", // 17
-    "|                          Press any key to continue                          |", // 18
+    "|                                                                             |", // 18
     "|                                                                             |", // 19
     "|                                                                             |", // 20
     "|                                                                             |", // 21
@@ -147,7 +147,7 @@ inline const char *gameOverData[MAX_Y] = {
     "|                                                                             |", // 9
     "|                                                                             |", // 10
     "|                                                                             |", // 11
-    "|                          Press any key to continue                          |", // 12
+    "|                                                                             |", // 12
     "|                                                                             |", // 13
     "|                                                                             |", // 14
     "|                                                                             |", // 15
@@ -178,7 +178,7 @@ inline const char *initErrorData[MAX_Y] = {
     "|                                                                             |", // 9
     "|                                                                             |", // 10
     "|                                                                             |", // 11
-    "|                     Press any key to return to main menu                    |", // 12
+    "|                                                                             |", // 12
     "|                                                                             |", // 13
     "|                                                                             |", // 14
     "|                                                                             |", // 15

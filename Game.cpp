@@ -119,6 +119,8 @@ void Game::run()
 
     case GameState::victory:
       showVictory();
+      Renderer::gotoxy(20,18);
+      Renderer::print("Press any key to return to main menu");
       while (check_kbhit())
         get_single_char();
       while (!check_kbhit())
@@ -130,6 +132,8 @@ void Game::run()
 
     case GameState::gameOver:
       showGameOver();
+      Renderer::gotoxy(20,12);
+      Renderer::print("Press any key to return to main menu");
       while (check_kbhit())
         get_single_char();
       while (!check_kbhit())
@@ -141,6 +145,8 @@ void Game::run()
 
     case GameState::error:
       showErrorScreen();
+      Renderer::gotoxy(20,12);
+      Renderer::print("Press any key to return to main menu");
       while (check_kbhit())
         get_single_char();
       while (!check_kbhit())
