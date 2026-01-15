@@ -8,6 +8,52 @@
 
 using namespace std;
 
+//////////////////////////////////////////     GameEventType & GameEvent     /////////////////////////////////////////////
+
+enum class GameEventType {
+    SCREEN_CHANGE,
+    LIFE_LOST,
+    RIDDLE_ANSWERED
+};
+
+struct GameEvent {
+    unsigned long cycle;
+    GameEventType type;
+    int roomId;
+
+    // For LIFE_LOST
+    int playerId;
+
+    // For RIDDLE_ANSWERED
+    std::string question;
+    int answerGiven;  // 1-4
+    bool wasCorrect;
+
+    // Default constructor
+    GameEvent() : cycle(0), type(GameEventType::SCREEN_CHANGE), roomId(0),
+                  playerId(0), answerGiven(0), wasCorrect(false) {}
+
+    // Constructor for SCREEN_CHANGE
+    GameEvent(unsigned long c, int room)
+        : cycle(c), type(GameEventType::SCREEN_CHANGE), roomId(room),
+          playerId(0), answerGiven(0), wasCorrect(false) {}
+
+    // Constructor for LIFE_LOST
+    GameEvent(unsigned long c, int room, int player)
+        : cycle(c), type(GameEventType::LIFE_LOST), roomId(room),
+          playerId(player), answerGiven(0), wasCorrect(false) {}
+
+    // Constructor for RIDDLE_ANSWERED
+    GameEvent(unsigned long c, int room, const std::string& q, int answer, bool correct)
+        : cycle(c), type(GameEventType::RIDDLE_ANSWERED), roomId(room),
+          playerId(0), question(q), answerGiven(answer), wasCorrect(correct) {}
+
+    void write(std::ostream& out) const;
+    bool read(std::istream& in);
+};
+
+//////////////////////////////////////////     Action Conversion     /////////////////////////////////////////////
+
 // Convert Action enum to string
 inline string actionToString(Action action) {
     switch (action) {
@@ -31,7 +77,7 @@ inline Action stringToAction(const string& str) {
     if (str == "STAY")       return Action::STAY;
     if (str == "DROP_ITEM")  return Action::DROP_ITEM;
     if (str == "ESC")        return Action::ESC;
-    return Action::STAY;  // Default fallback for invalid strings
+    return Action::STAY;
 }
 
 struct ActionRecord
@@ -84,6 +130,8 @@ public:
 
     // Get all actions for a specific cycle number
     vector<ActionRecord> getActionsForCycle(unsigned long cycle) const;
+
+    bool actionAt(const unsigned long cycle);
 
     ActionRecord getActionAt(size_t index) const { return actions[index]; }
 

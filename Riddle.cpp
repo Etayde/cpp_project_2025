@@ -1,6 +1,7 @@
 //////////////////////////////////////       INCLUDES & FORWARDS       //////////////////////////////////////////
 
 #include "Riddle.h"
+#include "Game.h"
 #include "Layouts.h"
 #include "RiddleDatabase.h"
 #include "Player.h"
@@ -10,7 +11,7 @@
 
 //////////////////////////////////////////         enterRiddle         //////////////////////////////////////////
 
-RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer)
+RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer, Game *game)
 {
     playRiddleAnimation();
 
@@ -25,6 +26,14 @@ RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer)
     }
 
     bool correct = checkAnswer(playerAnswer);
+
+    // Record riddle attempt
+    if (game != nullptr)
+    {
+        const RiddleData *data = RiddleDatabase::getRiddle(riddleId);
+        std::string questionText = data ? data->question : "";
+        game->recordRiddleAttempt(questionText, playerAnswer + 1, correct);  // +1 to convert 0-3 to 1-4
+    }
 
     if (correct && firstAttempt && triggeringPlayer != nullptr)
     {

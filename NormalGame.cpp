@@ -33,6 +33,7 @@ NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
     if (saveMode)
     {
         enableRecording("adv-world.steps.txt");
+        resultFile.open("adv-world.result");
     }
 }
 
@@ -41,6 +42,7 @@ NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
 NormalGame::~NormalGame()
 {
     disableRecording();
+    if (resultFile.is_open()) resultFile.close();
 }
 
 //////////////////////////////////////////        handleInput         /////////////////////////////////////////////
@@ -126,4 +128,54 @@ void NormalGame::disableRecording()
 {
     if (recordFile.is_open()) recordFile.close();
     isRecording = false;
+}
+
+///////////////////////////////////////////    recordScreenChange    /////////////////////////////////////////////
+
+void NormalGame::recordScreenChange(int roomId)
+{
+    // Record to result file
+    if (resultFile.is_open())
+    {
+        GameEvent event(cycleCount, roomId);
+        event.write(resultFile);
+        resultFile.flush();
+    }
+    // Record to steps file
+    recordScreenTransition(roomId);
+}
+
+///////////////////////////////////////////    recordLifeLost    /////////////////////////////////////////////
+
+void NormalGame::recordLifeLost(int playerId)
+{
+    if (!resultFile.is_open())
+        return;
+
+    GameEvent event(cycleCount, currentRoomId, playerId);
+    event.write(resultFile);
+    resultFile.flush();
+}
+
+///////////////////////////////////////////    recordRiddleAttempt    /////////////////////////////////////////////
+
+void NormalGame::recordRiddleAttempt(const std::string& question, int answer, bool correct)
+{
+    if (!resultFile.is_open())
+        return;
+
+    GameEvent event(cycleCount, currentRoomId, question, answer, correct);
+    event.write(resultFile);
+    resultFile.flush();
+}
+
+///////////////////////////////////////////    recordScreenTransition    /////////////////////////////////////////////
+
+void NormalGame::recordScreenTransition(int roomId)
+{
+    if (!isRecording || !recordFile.is_open())
+        return;
+
+    recordFile << "SCREEN: " << cycleCount << " ROOM: " << roomId << "\n";
+    recordFile.flush();
 }

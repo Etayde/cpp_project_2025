@@ -10,6 +10,7 @@
 
 class Room;
 class Spring;
+class Game;
 
 //////////////////////////////////////////      PlayerKeyBinding       /////////////////////////////////////////////
 
@@ -128,7 +129,7 @@ public:
   void erase(Room *room);
 
   // Life management
-  void loseLife(Room *room);
+  void loseLife(Room *room, Game *game = nullptr);
   void setLives(int l) { lives = l; }
   void decreaseLives();
   void respawn(Room *room);
@@ -137,14 +138,16 @@ public:
 
   // Movement & interaction
   bool move(Room *room, class Riddle **activeRiddle = nullptr,
-            Player **activePlayer = nullptr, Player *otherPlayer = nullptr);
+            Player **activePlayer = nullptr, Player *otherPlayer = nullptr,
+            Game *game = nullptr);
   bool pickupItem(GameObject *item);
   Point dropItem(Room *room);
   void performAction(Action action, Room *room = nullptr);
   bool checkWallCollision(int nextX, int nextY, Room *room);
   bool checkObjectInteraction(int nextX, int nextY, Room *room,
                               class Riddle **activeRiddle = nullptr,
-                              Player **activePlayer = nullptr);
+                              Player **activePlayer = nullptr,
+                              Game *game = nullptr);
   void fallBack(Room *room);
 
   // Movement helpers
@@ -160,7 +163,7 @@ private:
   void clearDoorState();
   bool handleRiddleInteraction(class Riddle *riddle, int nextX, int nextY,
                                Room *room, class Riddle **activeRiddle,
-                               Player **activePlayer);
+                               Player **activePlayer, Game *game = nullptr);
   bool handleSwitchInteraction(class Switch *sw, Room *room);
   bool handleSpringInteraction(class SpringLink *link, Room *room);
   bool handlePickableInteraction(GameObject *obj, int nextX, int nextY,
@@ -179,11 +182,11 @@ private:
 
   // Multi-step movement helper
   bool moveMultiStep(Room *room, Riddle **activeRiddle, Player **activePlayer,
-                     Player *otherPlayer);
+                     Player *otherPlayer, Game *game = nullptr);
 
   // Single-step movement helper
   bool singleStep(int nextX, int nextY, Room *room, Riddle **activeRiddle,
-                  Player **activePlayer, Player *otherPlayer);
+                  Player **activePlayer, Player *otherPlayer, Game *game = nullptr);
 
   // Collision prediction helpers
   bool isCellBlocking(int x, int y, Room *room) const;

@@ -7,6 +7,7 @@
 #include "Player.h"
 
 class Room;
+class Game;
 
 //////////////////////////////////////////          Riddle            //////////////////////////////////////////
 
@@ -39,7 +40,7 @@ public:
     bool isBlocking() const override { return false; }
     bool onExplosion() override { return true; }
 
-    RiddleResult enterRiddle(Room *room, Player *triggeringPlayer);
+    RiddleResult enterRiddle(Room *room, Player *triggeringPlayer, Game *game = nullptr);
     void playRiddleAnimation() const;
     bool displayRiddleQuestion();
     int getPlayerAnswer() const;

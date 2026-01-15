@@ -282,7 +282,7 @@ void Game::gameLoop()
     // Riddle is active - keep showing it until answered or ESC multiple times
     while (aRiddle.isActive() && currentState == GameState::inGame)
     {
-      RiddleResult result = aRiddle.riddle->enterRiddle(room, aRiddle.player);
+      RiddleResult result = aRiddle.riddle->enterRiddle(room, aRiddle.player, this);
 
       if (result == RiddleResult::NO_RIDDLE)
       {
@@ -356,7 +356,7 @@ void Game::gameLoop()
   {
     handleInput();
     update();
-    Renderer::sleep_ms(100); // ~10 FPS
+    Renderer::sleep_ms(100);
   }
 }
 
@@ -377,8 +377,8 @@ void Game::update()
   }
 
   // Handle player movement
-  player1.move(room, &aRiddle.riddle, &aRiddle.player, &player2);
-  player2.move(room, &aRiddle.riddle, &aRiddle.player, &player1);
+  player1.move(room, &aRiddle.riddle, &aRiddle.player, &player2, this);
+  player2.move(room, &aRiddle.riddle, &aRiddle.player, &player1, this);
 
   // Check if either player requested pause (from riddle ESC)
   if (player1.requestPause || player2.requestPause)
@@ -392,9 +392,9 @@ void Game::update()
   // Update all objects - also returns explosion results if bomb explodes
   ExplosionResult explosionResult = room->updateAllObjects(&player1, &player2);
   if (explosionResult.player1Hit)
-    player1.loseLife(room);
+    player1.loseLife(room, this);
   if (explosionResult.player2Hit)
-    player2.loseLife(room);
+    player2.loseLife(room, this);
 
   if (checkGameOver(explosionResult))
   {
@@ -817,6 +817,9 @@ void Game::changeRoom(int newRoomId, bool goingForward)
 
   currentRoomId = newRoomId;
   rooms[newRoomId].active = true;
+
+  // Record screen change event
+  recordScreenChange(newRoomId);
 
   Point spawn = goingForward ? rooms[newRoomId].spawnPoint
                              : rooms[newRoomId].spawnPointFromNext;

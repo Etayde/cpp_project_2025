@@ -2,6 +2,7 @@
 
 #include "Player.h"
 #include "Bomb.h"
+#include "Game.h"
 #include "Renderer.h"
 
 #include "Door.h"
@@ -171,11 +172,13 @@ void Player::respawn(Room *room)
   startRespawn();
 }
 
-void Player::loseLife(Room *room)
+void Player::loseLife(Room *room, Game *game)
 {
   decreaseLives();
   respawn(room);
-  return;
+  if (game != nullptr) {
+    game->recordLifeLost(playerId);
+  }
 }
 
 void Player::decreaseLives()
@@ -239,7 +242,7 @@ void Player::fallBack(Room *room)
 //////////////////////////////////////////           move       /////////////////////////////////////////////
 
 bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
-                  Player *otherPlayer)
+                  Player *otherPlayer, Game *game)
 {
   if (room == nullptr)
     return false;
@@ -292,11 +295,11 @@ bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
     int nextY = pos.y + pos.diff_y;
 
     success =
-        singleStep(nextX, nextY, room, activeRiddle, activePlayer, otherPlayer);
+        singleStep(nextX, nextY, room, activeRiddle, activePlayer, otherPlayer, game);
   }
   else
   {
-    success = moveMultiStep(room, activeRiddle, activePlayer, otherPlayer);
+    success = moveMultiStep(room, activeRiddle, activePlayer, otherPlayer, game);
   }
 
   draw(room);
@@ -528,7 +531,7 @@ bool Player::checkWallCollision(int nextX, int nextY, Room *room)
 
 bool Player::checkObjectInteraction(int nextX, int nextY, Room *room,
                                     Riddle **activeRiddle,
-                                    Player **activePlayer)
+                                    Player **activePlayer, Game *game)
 {
   if (room == nullptr)
     return false;
@@ -550,7 +553,7 @@ bool Player::checkObjectInteraction(int nextX, int nextY, Room *room,
     Riddle *riddle = dynamic_cast<Riddle *>(obj);
     if (riddle != nullptr)
       return handleRiddleInteraction(riddle, nextX, nextY, room, activeRiddle,
-                                     activePlayer);
+                                     activePlayer, game);
     break;
   }
 
@@ -617,7 +620,7 @@ void Player::clearDoorState()
 
 bool Player::handleRiddleInteraction(Riddle *riddle, int nextX, int nextY,
                                      Room *room, Riddle **activeRiddle,
-                                     Player **activePlayer)
+                                     Player **activePlayer, Game *game)
 {
   if (activeRiddle != nullptr && activePlayer != nullptr)
   {
@@ -626,7 +629,7 @@ bool Player::handleRiddleInteraction(Riddle *riddle, int nextX, int nextY,
     riddle->setSolvingPlayer(*this);
   }
 
-  RiddleResult result = riddle->enterRiddle(room, this);
+  RiddleResult result = riddle->enterRiddle(room, this, game);
 
   if (result == RiddleResult::NO_RIDDLE)
   {
@@ -824,7 +827,7 @@ void Player::calculateNextBresenhamPoint(int &x, int &y, int &err, int absDX,
 //////////////////////////////////////////   moveMultiStep       /////////////////////////////////////////////
 
 bool Player::moveMultiStep(Room *room, Riddle **activeRiddle,
-                           Player **activePlayer, Player *otherPlayer)
+                           Player **activePlayer, Player *otherPlayer, Game *game)
 {
   int dx = springMomentum.getDX();
   int dy = springMomentum.getDY();
@@ -855,7 +858,7 @@ bool Player::moveMultiStep(Room *room, Riddle **activeRiddle,
     calculateNextBresenhamPoint(nextX, nextY, err, absDX, absDY, sx, sy);
 
     bool moveSucceeded =
-        singleStep(nextX, nextY, room, activeRiddle, activePlayer, otherPlayer);
+        singleStep(nextX, nextY, room, activeRiddle, activePlayer, otherPlayer, game);
 
     if (!moveSucceeded)
     {
@@ -885,7 +888,7 @@ bool Player::moveMultiStep(Room *room, Riddle **activeRiddle,
 //////////////////////////////////////////   singleStep       /////////////////////////////////////////////
 
 bool Player::singleStep(int nextX, int nextY, Room *room, Riddle **activeRiddle,
-                        Player **activePlayer, Player *otherPlayer)
+                        Player **activePlayer, Player *otherPlayer, Game *game)
 {
   if (!isWithinAbsoluteBounds(nextX, nextY))
     return false;
@@ -906,7 +909,7 @@ bool Player::singleStep(int nextX, int nextY, Room *room, Riddle **activeRiddle,
     }
   }
 
-  if (checkObjectInteraction(nextX, nextY, room, activeRiddle, activePlayer))
+  if (checkObjectInteraction(nextX, nextY, room, activeRiddle, activePlayer, game))
     return false;
 
   pos.x = nextX;

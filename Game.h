@@ -98,4 +98,15 @@ public:
   bool canPassThroughDoor(Room *room, int doorId);
   ErrorCode validateLegendPlacement(Room &room);
   bool checkGameOver(const ExplosionResult &result);
+
+  // Accessors for event recording
+  unsigned long getCycleCount() const { return cycleCount; }
+  int getCurrentRoomId() const { return currentRoomId; }
+
+  // Event recording hooks - overridden by NormalGame (save) and LoadedGame (verify)
+  virtual void recordScreenChange(int roomId) { (void)roomId; }
+  virtual void recordLifeLost(int playerId) { (void)playerId; }
+  virtual void recordRiddleAttempt(const std::string& question, int answer, bool correct) {
+    (void)question; (void)answer; (void)correct;
+  }
 };
