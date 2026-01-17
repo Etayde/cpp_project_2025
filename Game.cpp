@@ -259,6 +259,9 @@ void Game::startNewGame()
   currentRoomId = 0;
   rooms[0].active = true;
   gameInitialized = true;
+
+  // Record initial room (only writes if in save mode with files open)
+  recordScreenChange(0);
 }
 
 //////////////////////////////////////////         gameLoop           /////////////////////////////////////////////
