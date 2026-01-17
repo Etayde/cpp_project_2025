@@ -18,7 +18,6 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps(),
         currentState = GameState::error;
     else
         currentState = GameState::inGame;
-        cout << "Loaded steps" << endl;
 
     // Load expected results (needed for quit detection in all modes, verification in silent mode)
     if (currentState == GameState::inGame)
@@ -62,6 +61,7 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
         currentState = GameState::error;
     else
         currentState = GameState::inGame;
+        cout << "Loaded steps" << endl;
 
     // Load expected results (needed for quit detection in all modes, verification in silent mode)
     if (currentState == GameState::inGame)
