@@ -84,6 +84,12 @@ void LoadedGame::handleInput()
 
 void LoadedGame::gameLoop()
 {
+    // Initial verification - ensure we verify the starting room
+    if (getCurrentRoomId() == 0 && cycleCount == 0)
+    {
+        reportScreenChange(0);
+    }
+
     Room *room = getCurrentRoom();
 
     if (room)
