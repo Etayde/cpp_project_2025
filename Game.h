@@ -72,6 +72,8 @@ public:
 
   virtual void run();
 
+  void setCurrentState(GameState newState) { currentState = newState; }
+
   // Menu handlers
   virtual void showMainMenu();
   void handleMainMenuInput();
