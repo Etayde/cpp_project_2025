@@ -165,6 +165,21 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
     currActionIndex = 0;
 
     while (file >> ws && file.peek() != EOF) {
+        // Peek at the first word to determine line type
+        string lineType;
+        streampos pos = file.tellg();
+        file >> lineType;
+
+        if (lineType == "SCREEN:") {
+            // Skip SCREEN lines (screen transitions) - consume rest of line
+            string dummy;
+            getline(file, dummy);
+            continue;
+        }
+
+        // Go back to start of line for ActionRecord to parse
+        file.seekg(pos);
+
         ActionRecord record;
         if (!record.read(file)) {
             file.close();
