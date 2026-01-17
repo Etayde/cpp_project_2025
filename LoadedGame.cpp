@@ -264,7 +264,7 @@ ErrorCode LoadedGame::loadExpectedResults(const string& filename)
 
 bool LoadedGame::verifyEvent(const GameEvent& actual)
 {
-    if (expectedEventIndex >= expectedEvents.size())
+    if (expectedEventIndex > expectedEvents.size())
     {
         testFailed("Unexpected event at cycle " + std::to_string(actual.cycle));
         return false;
