@@ -62,7 +62,7 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
     else
         currentState = GameState::inGame;
         cout << "Loaded steps" << endl;             ////////////////////
-
+        cout << " currentState = " << static_cast<int>(currentState) << endl;             ////////////////////
     // Load expected results (needed for quit detection in all modes, verification in silent mode)
     if (currentState == GameState::inGame)
     {
