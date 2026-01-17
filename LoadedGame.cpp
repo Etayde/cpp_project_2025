@@ -57,8 +57,11 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
     // Load actions from hardcoded filename: "adv-world.steps.txt"
     initErrorMessage = loadActions("adv-world.steps.txt");
 
-    if (initErrorMessage != ErrorCode::NONE)
-        currentState = GameState::error;
+    if (initErrorMessage != ErrorCode::NONE){
+        cout << static_cast<int>(initErrorMessage) << endl;     
+        currentState = GameState::error;        ////////////////////
+    }
+        
     else
         {setCurrentState(GameState::inGame);
         cout << "Loaded steps" << endl;             ////////////////////
