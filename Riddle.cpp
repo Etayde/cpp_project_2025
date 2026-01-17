@@ -8,6 +8,9 @@
 #include "Room.h"
 #include "Console.h"
 #include "Renderer.h"
+#include <iostream>
+
+using namespace std;
 
 //////////////////////////////////////////         enterRiddle         //////////////////////////////////////////
 
@@ -27,12 +30,11 @@ RiddleResult Riddle::enterRiddle(Room *room, Player *triggeringPlayer, Game *gam
 
     bool correct = checkAnswer(playerAnswer);
 
-    // Record riddle attempt
     if (game != nullptr)
     {
         const RiddleData *data = RiddleDatabase::getRiddle(riddleId);
         std::string questionText = data ? data->question : "";
-        game->recordRiddleAttempt(questionText, playerAnswer + 1, correct);  // +1 to convert 0-3 to 1-4
+        game->recordRiddleAttempt(questionText, playerAnswer + 1, correct);
     }
 
     if (correct && firstAttempt && triggeringPlayer != nullptr)
@@ -99,10 +101,8 @@ bool Riddle::displayRiddleQuestion()
 
 int Riddle::getPlayerAnswer(const Game* gameContext) const
 {
-    // Check for recorded playback answer first
     if (gameContext != nullptr)
     {
-        // Cycle count access needs to be available. Game::getCycleCount() is const.
         int recordedAnswer = const_cast<Game*>(gameContext)->getRecordedRiddleAnswer(gameContext->getCycleCount());
         if (recordedAnswer != -1)
         {
@@ -110,7 +110,6 @@ int Riddle::getPlayerAnswer(const Game* gameContext) const
         }
     }
 
-    // Interactive Mode
     Renderer::showCursor();
 
     while (check_kbhit())
@@ -131,7 +130,6 @@ int Riddle::getPlayerAnswer(const Game* gameContext) const
             Renderer::hideCursor();
             int answer = key - '1';
             
-            // Record the answer if we have a game context
             if (gameContext != nullptr)
             {
                  const_cast<Game*>(gameContext)->recordRiddleAnswer(answer);
@@ -147,43 +145,31 @@ int Riddle::getPlayerAnswer(const Game* gameContext) const
 
 void Riddle::displayFeedback(bool correct) const
 {
-
-    if (correct && firstAttempt)
+    if (Renderer::shouldRender())
     {
-        Renderer::printAt(33, 14, "CORRECT!");
+        if (correct && firstAttempt)
+        {
+            Renderer::printAt(33, 14, "CORRECT!");
 
-        Renderer::gotoxy(18, 16);
-        Renderer::print("P");
-        Renderer::print(solvingPlayerId);
-        Renderer::print("(");
-        Renderer::print(solvingPlayerSprite);
-        Renderer::print(") ");
-        Renderer::print(" solved the riddle on the first try!");
+            Renderer::gotoxy(18, 16);
+            cout << "P" << solvingPlayerId << "(" << solvingPlayerSprite << ") " << " solved the riddle on the first try!";
+            Renderer::printAt(31, 18, "+100 Points!");
+            Renderer::printAt(27, 19, "Riddle disapeared...");
+        }
+        else if (correct)
+        {
+            Renderer::printAt(33, 14, "CORRECT!");
 
-        Renderer::printAt(31, 18, "+100 Points!");
-        Renderer::printAt(27, 19, "Riddle disapeared...");
+            Renderer::gotoxy(20, 16);
+            cout << "P" << solvingPlayerId << " (" << solvingPlayerSprite << ") " << " solved the riddle!";
+            Renderer::printAt(27, 17, "Riddle disapeared...");
+        }
+        else Renderer::printAt(24, 17, "INCORRECT! Try again later.");
+       
+        Renderer::flush();
+
+        Renderer::sleep_ms(2000);
     }
-    else if (correct)
-    {
-        Renderer::printAt(33, 14, "CORRECT!");
-
-        Renderer::gotoxy(20, 16);
-        Renderer::print("P");
-        Renderer::print(solvingPlayerId);
-        Renderer::print(" (");
-        Renderer::print(solvingPlayerSprite);
-        Renderer::print(") ");
-        Renderer::print(" solved the riddle!");
-
-        Renderer::printAt(27, 17, "Riddle disapeared...");
-    }
-    else
-    {
-        Renderer::printAt(24, 17, "INCORRECT! Try again later.");
-    }
-    Renderer::flush();
-
-    Renderer::sleep_ms(2000);
 }
 
 //////////////////////////////////////////    playRiddleAnimation      //////////////////////////////////////////

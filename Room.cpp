@@ -202,7 +202,7 @@ void Room::loadObjects(int *riddleCounter)
   if (baseLayout == nullptr)
     return;
 
-  for (int y = 0; y < MAX_Y_INGAME; y++)
+  for (int y = 0; y < MAX_Y; y++)
   {
     for (int x = 0; x < MAX_X; x++)
     {
@@ -294,7 +294,7 @@ void Room::drawDarkness()
   if (darkZones.empty())
     return;
 
-  for (int y = 0; y < MAX_Y_INGAME; y++)
+  for (int y = 0; y < MAX_Y; y++)
   {
     for (int x = 0; x < MAX_X; x++)
     {
@@ -731,7 +731,7 @@ void Room::lightRadius(int centerX, int centerY, int radius)
       int x = centerX + dx;
       int y = centerY + dy;
 
-      if (x < 0 || x >= MAX_X || y < 0 || y >= MAX_Y_INGAME)
+      if (x < 0 || x >= MAX_X || y < 0 || y >= MAX_Y)
         continue;
 
       double distance = sqrt(dx * dx + dy * dy);
@@ -959,7 +959,7 @@ void Room::scanAndCreateSprings()
     return;
 
   std::vector<Point> allSpringCells;
-  for (int y = 0; y < MAX_Y_INGAME; y++)
+  for (int y = 0; y < MAX_Y; y++)
   {
     for (int x = 0; x < MAX_X; x++)
     {
@@ -970,7 +970,7 @@ void Room::scanAndCreateSprings()
     }
   }
 
-  bool processed[MAX_Y_INGAME][MAX_X] = {{false}};
+  bool processed[MAX_Y][MAX_X] = {{false}};
 
   for (const Point &p : allSpringCells)
   {
@@ -992,7 +992,7 @@ void Room::scanAndCreateSprings()
       for (const Point &neighbor : neighbors)
       {
         if (neighbor.x >= 0 && neighbor.x < MAX_X && neighbor.y >= 0 &&
-            neighbor.y < MAX_Y_INGAME && !processed[neighbor.y][neighbor.x] &&
+            neighbor.y < MAX_Y && !processed[neighbor.y][neighbor.x] &&
             baseLayout->getCharAt(neighbor.x, neighbor.y) == '#')
         {
           group.push_back(neighbor);
@@ -1065,7 +1065,7 @@ void Room::createMultiCellObject(const std::vector<Point> &allObjCells)
 
   char ch = baseLayout->getCharAt(allObjCells[0].x, allObjCells[0].y);
 
-  bool processed[MAX_Y_INGAME][MAX_X] = {{false}};
+  bool processed[MAX_Y][MAX_X] = {{false}};
 
   for (const Point &p : allObjCells)
   {
@@ -1089,7 +1089,7 @@ void Room::createMultiCellObject(const std::vector<Point> &allObjCells)
       for (const Point &neighbor : neighbors)
       {
         if (neighbor.x >= 0 && neighbor.x < MAX_X && neighbor.y >= 0 &&
-            neighbor.y < MAX_Y_INGAME && !processed[neighbor.y][neighbor.x])
+            neighbor.y < MAX_Y && !processed[neighbor.y][neighbor.x])
         {
           if (baseLayout->getCharAt(neighbor.x, neighbor.y) != ch)
           {
@@ -1282,7 +1282,7 @@ void Room::DrawLives(Player *p)
 
 bool Room::isVacantSpot(int x, int y)
 {
-  if (x < 0 || x >= MAX_X || y < 0 || y >= MAX_Y_INGAME)
+  if (x < 0 || x >= MAX_X || y < 0 || y >= MAX_Y)
   {
     return false;
   }

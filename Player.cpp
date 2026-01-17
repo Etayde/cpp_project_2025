@@ -100,7 +100,7 @@ bool Player::isStationary() const
 
 bool Player::isWithinAbsoluteBounds(int x, int y) const
 {
-  return (x >= 0 && x < MAX_X && y >= 1 && y < MAX_Y_INGAME - 1);
+  return (x >= 0 && x < MAX_X && y >= 1 && y < MAX_Y - 1);
 }
 
 bool Player::canMoveToBoundaryPosition(int x, int y, Room *room) const
@@ -110,7 +110,6 @@ bool Player::canMoveToBoundaryPosition(int x, int y, Room *room) const
   if (!atBoundaryColumn)
     return true;
 
-  // At boundary - only allow if there's a door
   GameObject *obj = room->getObjectAt(x, y);
   return (obj != nullptr && obj->getType() == ObjectType::DOOR);
 }
@@ -256,7 +255,6 @@ bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
 
   erase(room);
 
-  // Check for direction change while on compressed spring
   if (!springMomentum.isActive())
   {
     GameObject *currentObj = room->getObjectAt(pos.x, pos.y);
@@ -365,7 +363,7 @@ Point Player::dropItem(Room *room)
     int testY = pos.y + checkOffsets[i][1];
 
     if (testX >= 1 && testX < MAX_X - 1 && testY >= 1 &&
-        testY < MAX_Y_INGAME - 1)
+        testY < MAX_Y - 1)
     {
       ObjectType type = room->getObjectTypeAt(testX, testY);
       GameObject *existing = room->getObjectAt(testX, testY);
@@ -727,7 +725,7 @@ bool Player::isCellBlocking(int x, int y, Room *room) const
   if (room == nullptr)
     return true;
 
-  if (x < 0 || x >= MAX_X || y < 1 || y >= MAX_Y_INGAME - 1)
+  if (x < 0 || x >= MAX_X || y < 1 || y >= MAX_Y - 1)
     return true;
 
   if (room->isWallAt(x, y))

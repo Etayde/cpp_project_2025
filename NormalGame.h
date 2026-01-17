@@ -14,7 +14,7 @@ class NormalGame : public Game
 
 public:
     NormalGame();
-    NormalGame(int argc, char* argv[]);  // New: parses args and initializes
+    NormalGame(int argc, char* argv[]);
     ~NormalGame() override;
     void handleInput() override;
     void handlePauseInput() override;
@@ -22,7 +22,6 @@ public:
     void disableRecording();
 
 protected:
-    // Event recording overrides
     void recordScreenChange(int roomId) override;
     void recordLifeLost(int playerId) override;
     void recordRiddleAttempt(const std::string& question, int answer, bool correct) override;
@@ -30,6 +29,6 @@ protected:
 
 private:
     void recordAction(const PlayerKeyBinding& binding);
-    void recordScreenTransition(int roomId);  // For steps file
+    void recordScreenTransition(int roomId);
     void recordRiddleAnswer(int answer) override;
 };

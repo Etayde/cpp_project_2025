@@ -21,13 +21,11 @@ Game::Game()
       cycleCount(0), currentState(GameState::mainMenu), currentRoomId(-1),
       gameInitialized(false)
 {
-  // Initialize console
   init_console();
   hideCursor();
   clrscr();
   consoleInitialized = true;
 
-  // Set renderer mode based on silentMode flag
   Renderer::setSilentMode(silentMode);
 }
 
@@ -35,14 +33,12 @@ Game::Game()
 
 Game::~Game()
 {
-  // Clean up loaded screens
   for (Screen *s : loadedScreens)
   {
     delete s;
   }
   loadedScreens.clear();
 
-  // Cleanup console (RAII pattern)
   if (consoleInitialized)
   {
     showCursor();
@@ -58,7 +54,6 @@ Game::~Game()
 
 Game* Game::createFromArgs(int argc, char* argv[])
 {
-  // Simple heuristic: if -load is present, create LoadedGame, otherwise NormalGame
   for (int i = 1; i < argc; i++)
   {
     std::string arg(argv[i]);
@@ -68,13 +63,10 @@ Game* Game::createFromArgs(int argc, char* argv[])
     }
   }
 
-  // Default to NormalGame
   return new NormalGame(argc, argv);
 }
 
 //////////////////////////////////////////           run               /////////////////////////////////////////////
-
-// Main game entry point - runs until quit
 void Game::run()
 {
   bool running = true;
@@ -170,9 +162,8 @@ void Game::run()
 ErrorCode Game::validateLegendPlacement(Room &room)
 {
   if (room.baseLayout == nullptr)
-    return ErrorCode::NONE; // Should not happen for file-loaded levels
+    return ErrorCode::NONE;
 
-  // 1. Find 'L' markers
   std::vector<Point> lMarkers;
   for (int y = 0; y < MAX_Y; y++)
   {
@@ -185,35 +176,27 @@ ErrorCode Game::validateLegendPlacement(Room &room)
     }
   }
 
-  // Error 1: No 'L' indicator
   if (lMarkers.empty())
   {
     return ErrorCode::L_NOT_FOUND;
   }
 
-  // Error 2: More than one 'L' indicator
   if (lMarkers.size() > 1)
   {
     return ErrorCode::MULTIPLE_L;
   }
 
   Point lPos = lMarkers[0];
-  // Legend is 22x5, 'L' is at (topLeftX+1, topLeftY+1)
-  // So TopLeft is (lPos.x - 1, lPos.y - 1)
   int topLeftX = lPos.x - 1;
   int topLeftY = lPos.y - 1;
   int width = 22;
   int height = 5;
-
-  // Error 3: Legend doesn't have enough room (out of bounds)
   if (topLeftX < 0 || topLeftY < 0 || topLeftX + width > MAX_X ||
       topLeftY + height > MAX_Y)
   {
     return ErrorCode::L_OUT_OF_BOUNDS;
   }
 
-  // Error 4: Accessible by game objects or invalid overlap
-  // First, checking for invalid overlap (must be 'W' or ' ')
   for (int y = topLeftY; y < topLeftY + height; y++)
   {
     for (int x = topLeftX; x < topLeftX + width; x++)
@@ -226,14 +209,11 @@ ErrorCode Game::validateLegendPlacement(Room &room)
     }
   }
 
-  // 4b. Check for overlap with Spawn Points (Player locations)
-  // Check primary spawn point
   if (room.spawnPoint.x >= topLeftX && room.spawnPoint.x < topLeftX + width &&
       room.spawnPoint.y >= topLeftY && room.spawnPoint.y < topLeftY + height)
   {
     return ErrorCode::LEGEND_OBSCURES_SPAWN;
   }
-  // Check secondary spawn point (from next room)
   if (room.spawnPointFromNext.x >= topLeftX &&
       room.spawnPointFromNext.x < topLeftX + width &&
       room.spawnPointFromNext.y >= topLeftY &&
@@ -244,7 +224,7 @@ ErrorCode Game::validateLegendPlacement(Room &room)
 
   room.setLegendPoint(lPos.x, lPos.y);
 
-  return ErrorCode::NONE; // Valid
+  return ErrorCode::NONE;
 }
 
 //////////////////////////////////////////       startNewGame         /////////////////////////////////////////////
@@ -260,7 +240,6 @@ void Game::startNewGame()
   rooms[0].active = true;
   gameInitialized = true;
 
-  // Record initial room (only writes if in save mode with files open)
   recordScreenChange(0);
 }
 
@@ -270,10 +249,8 @@ void Game::gameLoop()
 {
   Room *room = getCurrentRoom();
 
-  // Check if we're resuming a riddle interaction
   if (aRiddle.isActive())
   {
-    // Clear screen and redraw game state before showing riddle
     Renderer::clrscr();
     if (room)
     {
@@ -284,7 +261,6 @@ void Game::gameLoop()
     if (room)
       room->drawLegend(&player1, &player2);
 
-    // Riddle is active - keep showing it until answered or ESC multiple times
     while (aRiddle.isActive() && currentState == GameState::inGame)
     {
       RiddleResult result = aRiddle.riddle->enterRiddle(room, aRiddle.player, this);
@@ -292,8 +268,7 @@ void Game::gameLoop()
       if (result == RiddleResult::NO_RIDDLE)
       {
         room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
-        aRiddle.reset(); // Clear active riddle
-        // Riddle finished - redraw screen and fall through to normal game
+        aRiddle.reset();
         Renderer::clrscr();
         if (room)
         {
@@ -303,13 +278,12 @@ void Game::gameLoop()
         player2.draw(room);
         if (room)
           room->drawLegend(&player1, &player2);
-        break; // Exit riddle loop, continue to normal game
+        break;
       };
       if (result == RiddleResult::SOLVED)
       {
         room->removeObjectAt(aRiddle.riddle->getX(), aRiddle.riddle->getY());
-        aRiddle.reset(); // Clear active riddle
-        // Riddle finished - redraw screen and fall through to normal game
+        aRiddle.reset();
         Renderer::clrscr();
         if (room)
         {
@@ -319,18 +293,16 @@ void Game::gameLoop()
         player2.draw(room);
         if (room)
           room->drawLegend(&player1, &player2);
-        break; // Exit riddle loop, continue to normal game
+        break;
       }
       else if (result == RiddleResult::ESCAPED)
       {
         currentState = GameState::paused;
-        return; // Pause - will come back here with aRiddle still set
+        return;
       }
       else
       {
-        // Failed - player answered wrong, reset aRiddle
         aRiddle.reset();
-        // Riddle finished - redraw screen and fall through to normal game
         Renderer::clrscr();
         if (room)
         {
@@ -340,13 +312,12 @@ void Game::gameLoop()
         player2.draw(room);
         if (room)
           room->drawLegend(&player1, &player2);
-        break; // Exit riddle loop, continue to normal game
+        break;
       }
     }
   }
   else
   {
-    // Normal game start - draw room and start game updates
     if (room)
     {
       room->draw();
@@ -375,17 +346,14 @@ void Game::update()
   if (room == nullptr)
     return;
 
-  // Reset obstacle push state for all obstacles each frame
   for (Obstacle *obstacle : room->obstacles)
   {
     obstacle->resetPushState();
   }
 
-  // Handle player movement
   player1.move(room, &aRiddle.riddle, &aRiddle.player, &player2, this);
   player2.move(room, &aRiddle.riddle, &aRiddle.player, &player1, this);
 
-  // Check if either player requested pause (from riddle ESC)
   if (player1.requestPause || player2.requestPause)
   {
     player1.requestPause = false;
@@ -394,7 +362,6 @@ void Game::update()
     return;
   }
 
-  // Update all objects - also returns explosion results if bomb explodes
   ExplosionResult explosionResult = room->updateAllObjects(&player1, &player2);
   if (explosionResult.player1Hit)
     player1.loseLife(room, this);
@@ -407,7 +374,6 @@ void Game::update()
     return;
   }
 
-  // Update visibility
   room->updateVisibility(&player1, &player2);
   room->drawDarkness();
   room->drawVisibleObjects();
@@ -415,7 +381,6 @@ void Game::update()
   player1.draw(room);
   player2.draw(room);
 
-  // Check room transitions
   checkRoomTransitions();
 
   Renderer::flush();
@@ -447,14 +412,12 @@ void Game::redrawCurrentRoom()
 
   if (aRiddle.isActive())
   {
-    // Redraw the active riddle on top
     aRiddle.riddle->draw();
   }
 }
 
 /////////////////////////////////////////    canPassThroughDoor       /////////////////////////////////////////////
 
-// Check if a door can be passed through (unlocked or requirements met)
 bool Game::canPassThroughDoor(Room *room, int doorId)
 {
   if (room == nullptr)
@@ -468,15 +431,13 @@ bool Game::canPassThroughDoor(Room *room, int doorId)
   }
   else if (doorId == room->prevRoomId)
   {
-    return true; // Backward doors always passable
+    return true;
   }
   return false;
 }
 
 /////////////////////////////////////////      checkRoomTransitions   /////////////////////////////////////////////
 
-// Checks if players have reached a door and can pass through, and handles room
-// transition if so
 void Game::checkRoomTransitions()
 {
 
@@ -484,18 +445,16 @@ void Game::checkRoomTransitions()
   if (room == nullptr)
     return;
 
-  // BOTH players at the same door - trigger transition
+  // Trigger transition if both players are at the same door
   if (player1.isAtDoor() && player2.isAtDoor() &&
       player1.getDoorId() == player2.getDoorId())
   {
     int doorId = player1.getDoorId();
     if (canPassThroughDoor(room, doorId))
     {
-      // Reset waiting state
       player1.waitingAtDoor = false;
       player2.waitingAtDoor = false;
 
-      // Forward door check
       if (doorId == room->nextRoomId || doorId == static_cast<int>(rooms.size()))
       {
         if (!room->isDoorUnlocked(doorId))
@@ -516,14 +475,11 @@ void Game::checkRoomTransitions()
             keysConsumed++;
           }
 
-          // Award points for unlocking the door (first time only)
-
           player1.incrementScore(100 * player1.getLives());
           player2.incrementScore(100 * player2.getLives());
         }
         room->unlockDoor(doorId);
 
-        // Check if completing this room triggers victory
         if (currentRoomId == -1)
         {
           currentState = GameState::victory;
@@ -531,14 +487,12 @@ void Game::checkRoomTransitions()
         }
         changeRoom(room->nextRoomId, true);
       }
-      // Backward door check
       else if (doorId == room->prevRoomId)
       {
         changeRoom(room->prevRoomId, false);
       }
     }
   }
-  // ONE player at door - make them wait (cosmetic)
   else if (player1.isAtDoor() && !player2.isAtDoor())
   {
     if (canPassThroughDoor(room, player1.getDoorId()))
@@ -546,7 +500,7 @@ void Game::checkRoomTransitions()
       if (!player1.waitingAtDoor)
       {
         player1.waitingAtDoor = true;
-        player1.draw(room); // Redraw to hide
+        player1.draw(room);
       }
     }
   }
@@ -557,22 +511,21 @@ void Game::checkRoomTransitions()
       if (!player2.waitingAtDoor)
       {
         player2.waitingAtDoor = true;
-        player2.draw(room); // Redraw to hide
+        player2.draw(room);
       }
     }
   }
-  // Neither or not at same door - reset waiting state
   else
   {
     if (player1.waitingAtDoor)
     {
       player1.waitingAtDoor = false;
-      player1.draw(room); // Redraw to show
+      player1.draw(room);
     }
     if (player2.waitingAtDoor)
     {
       player2.waitingAtDoor = false;
-      player2.draw(room); // Redraw to show
+      player2.draw(room);
     }
   }
 }
@@ -624,7 +577,7 @@ void Game::handlePauseInput()
       currentState = GameState::inGame;
     else if (choice == 'h' || choice == 'H')
     {
-      gameInitialized = false; // Reset when going to main menu
+      gameInitialized = false; // Reset game when going to main menu
       currentState = GameState::mainMenu;
     }
   }
@@ -714,18 +667,15 @@ void Game::showErrorScreen()
 
 //////////////////////////////////////////      initializeRooms       /////////////////////////////////////////////
 
-// Initialize all rooms with layouts and requirements
 void Game::initializeRooms()
 {
 
   rooms.clear();
   loadedScreens.clear();
 
-  // Try to load riddles from file first
   int riddlesLoaded = LevelLoader::loadRiddleFile();
-  (void)riddlesLoaded; // Suppress unused variable warning
+  (void)riddlesLoaded;
 
-  // PHASE 1: Load all screens from files
   std::vector<Screen *> screens;
   std::vector<RoomMetadata> metadatas;
   int fileNumber = 1;
@@ -737,7 +687,7 @@ void Game::initializeRooms()
 
     if (screen == nullptr)
     {
-      break; // No more files found
+      break;
     }
 
     screens.push_back(screen);
@@ -745,18 +695,15 @@ void Game::initializeRooms()
     fileNumber++;
   }
 
-  // If no files were loaded, show error
   if (screens.empty())
   {
     currentState = GameState::error;
     return;
   }
 
-  // PHASE 2: Reserve exact capacity (prevents reallocation)
   rooms.reserve(screens.size());
   loadedScreens.reserve(screens.size());
 
-  // PHASE 3: Create all rooms (no reallocation will occur)
   int riddleCounter = 0;
   for (size_t i = 0; i < screens.size(); i++)
   {
@@ -770,20 +717,16 @@ void Game::initializeRooms()
     room.nextRoomId = metadatas[i].nextRoomId;
     room.prevRoomId = metadatas[i].prevRoomId;
 
-    // Apply door requirements from metadata
     for (const auto &doorConfig : metadatas[i].doorConfigs)
     {
       room.setDoorRequirements(std::get<0>(doorConfig), std::get<1>(doorConfig),
                                std::get<2>(doorConfig));
     }
 
-    // Apply dark zones from metadata
     for (const auto &dz : metadatas[i].darkZones)
     {
       room.addDarkZone(dz.x1, dz.y1, dz.x2, dz.y2);
     }
-
-    // Validate Legend Placement
     ErrorCode validationResult = validateLegendPlacement(room);
     if (validationResult != ErrorCode::NONE)
     {
@@ -794,7 +737,6 @@ void Game::initializeRooms()
     }
   }
 
-  // Set which room triggers victory when completed
   finalRoomId = static_cast<int>(rooms.size()) - 1;
 }
 
@@ -803,8 +745,6 @@ void Game::initializeRooms()
 void Game::changeRoom(int newRoomId, bool goingForward)
 {
 
-  // Check for victory FIRST (before error validation)
-  // newRoomId == -1 or newRoomId == rooms.size() means the player has won
   if (newRoomId == -1 || newRoomId == static_cast<int>(rooms.size()))
   {
     if (currentRoomId >= 0)
@@ -815,7 +755,6 @@ void Game::changeRoom(int newRoomId, bool goingForward)
     return;
   }
 
-  // Now validate that it's a real room ID
   if (newRoomId < 0 || newRoomId >= static_cast<int>(rooms.size()))
   {
     return;
@@ -829,7 +768,6 @@ void Game::changeRoom(int newRoomId, bool goingForward)
   currentRoomId = newRoomId;
   rooms[newRoomId].active = true;
 
-  // Record screen change event
   recordScreenChange(newRoomId);
 
   Point spawn = goingForward ? rooms[newRoomId].spawnPoint

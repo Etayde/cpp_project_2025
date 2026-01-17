@@ -24,8 +24,7 @@ class Riddle;
 //////////////////////////////////////////         GameObject       /////////////////////////////////////////////
 
 // Abstract base class for all game objects
-// Uses virtual methods for polymorphism (with help of AI since we didn't learn
-// it yet and didn't have time to learn solo)
+// Uses virtual methods for polymorphism (with help of AI)
 class GameObject
 {
 protected:
@@ -35,20 +34,16 @@ protected:
   bool active;
 
 public:
-  // Default constructor - creates inactive AIR object
   GameObject()
       : position(Point(-1, -1)), sprite(' '), type(ObjectType::AIR),
         active(false) {}
 
-  // Full constructor
   GameObject(const Point &pos, char spr, ObjectType t)
       : position(pos), sprite(spr), type(t), active(true) {}
 
-  // Virtual destructor for proper cleanup
   virtual ~GameObject() = default;
 
-  //////////////////////////////////////////    Pure Virtual Methods
-  /////////////////////////////////////////////
+  //////////////////////////////////////////    Pure Virtual Methods    /////////////////////////////////////////////
 
   // Must be implemented by derived classes
   virtual bool isBlocking() const = 0;
@@ -57,16 +52,14 @@ public:
   virtual GameObject *clone() const = 0;
   virtual const char *getName() const = 0;
 
-  //////////////////////////////////////////      Virtual Methods
-  /////////////////////////////////////////////
+  //////////////////////////////////////////      Virtual Methods      /////////////////////////////////////////////
 
-  // Can be overridden by derived classes
   virtual bool onInteract(Player * /*player*/, Room * /*room*/)
   {
     return false;
   }
   virtual bool onExplosion() { return false; }
-  virtual bool isAlwaysVisible() const { return false; } // Override for objects visible in dark (e.g., ticking bombs)
+  virtual bool isAlwaysVisible() const { return false; }
 
   virtual void draw() const
   {
@@ -78,8 +71,7 @@ public:
 
   virtual void update() {}
 
-  //////////////////////////////////////////         Getters
-  /////////////////////////////////////////////
+  //////////////////////////////////////////         Getters         /////////////////////////////////////////////
 
   Point getPosition() const { return position; }
   int getX() const { return position.x; }
@@ -88,8 +80,7 @@ public:
   ObjectType getType() const { return type; }
   bool isActive() const { return active; }
 
-  //////////////////////////////////////////         Setters
-  /////////////////////////////////////////////
+  //////////////////////////////////////////         Setters           /////////////////////////////////////////////
 
   void setPosition(const Point &pos) { position = pos; }
   void setPosition(int x, int y)
@@ -104,6 +95,4 @@ public:
 
 //////////////////////////////////////////    createObjectFromChar       /////////////////////////////////////////////
 
-// Factory function - creates appropriate object type from character
-// Optional riddleId: if >= 0, use this ID for riddles; otherwise auto-increment
 GameObject *createObjectFromChar(char ch, int x, int y, int riddleId = -1);

@@ -82,47 +82,25 @@ public:
   bool isAlive() const { return alive; }
   bool isDead() const { return !alive; }
   bool hasItem() const { return inventory != nullptr && inventory->isActive(); }
-  bool hasTorch() const
-  {
-    return inventory != nullptr && inventory->getType() == ObjectType::TORCH;
-  }
-  bool hasKey() const
-  {
-    return inventory != nullptr && inventory->getType() == ObjectType::KEY;
-  }
-  bool hasBomb() const
-  {
-    return inventory != nullptr && inventory->getType() == ObjectType::BOMB;
-  }
+  bool hasTorch() const { return inventory != nullptr && inventory->getType() == ObjectType::TORCH; }
+  bool hasKey() const { return inventory != nullptr && inventory->getType() == ObjectType::KEY; }
+  bool hasBomb() const { return inventory != nullptr && inventory->getType() == ObjectType::BOMB; }
   int getKeyCount() const { return keyCount; }
   int getLives() const { return lives; }
   int getScore() const { return score; }
   GameObject *getInventory() { return inventory; }
   const GameObject *getInventory() const { return inventory; }
-  ObjectType getInventoryType() const
-  {
-    return inventory ? inventory->getType() : ObjectType::AIR;
-  }
+  ObjectType getInventoryType() const { return inventory ? inventory->getType() : ObjectType::AIR; }
   bool isLaunched() const { return springMomentum.isActive(); }
   bool isRespawning() const { return respawnTimer > 0; }
 
   // Setters
-  void setPosition(int x, int y)
-  {
-    pos.x = x;
-    pos.y = y;
-  }
-  void setDirection(Direction dir, int speed = 1)
-  {
-    pos.setDirection(dir, speed);
-  }
+  void setPosition(int x, int y) { pos.x = x; pos.y = y; }
+  void setDirection(Direction dir, int speed = 1) { pos.setDirection(dir, speed); }
   void addKey() { keyCount++; }
   bool useKey();
-  void incrementScore(int points)
-  {
-    int newScore = score + points;
-    newScore >= 0 ? score = newScore : score = 0;
-  }
+  void incrementScore(int points) { int newScore = score + points; 
+                                    newScore >= 0 ? score = newScore : score = 0; }
 
   // Drawing
   void draw(Room *room = nullptr);
@@ -176,7 +154,7 @@ private:
   Direction getLaunchDirection() const;
   void applyPerpendicularVelocity(Direction perpendicularDir);
 
-  // Bresenham algorithm helper
+  // Bresenham algorithm helper (made with AI)
   void calculateNextBresenhamPoint(int &x, int &y, int &err, int absDX,
                                    int absDY, int sx, int sy) const;
 

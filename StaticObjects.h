@@ -64,7 +64,6 @@ public:
 // A wall that can be removed by activating switches (Z)
 class SwitchWall : public StaticObject
 {
-private:
     bool removedBySwitch;
 
 public:

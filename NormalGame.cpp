@@ -11,9 +11,6 @@ NormalGame::NormalGame() : Game() {}
 
 NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
 {
-    // Delegate to default constructor first (sets up base state)
-
-    // Parse arguments specific to NormalGame
     bool saveMode = false;
 
     for (int i = 1; i < argc; i++)
@@ -24,12 +21,8 @@ NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
         {
             saveMode = true;
         }
-        // Ignore -silent flag (NormalGame is always visual)
-        // Ignore -load flag (not relevant for NormalGame)
     }
 
-    // Enable recording if -save flag was provided
-    // Always saves to hardcoded filename: "adv-world.steps.txt"
     if (saveMode)
     {
         enableRecording("adv-world.steps.txt");
@@ -75,17 +68,6 @@ void NormalGame::handleInput()
       continue;
     }
 
-    // Debugging shortcuts
-    if (pressed == 'v') {
-      currentState = GameState::victory;
-      return;
-    }
-
-    if (pressed == 'g') {
-      currentState = GameState::gameOver;
-      return;
-    }
-
     for (int i = 0; i < NUM_KEY_BINDINGS; i++)
     {
       if (keyBindings[i].key == pressed)
@@ -93,7 +75,7 @@ void NormalGame::handleInput()
         if (keyBindings[i].action == Action::ESC)
         {
           currentState = GameState::paused;
-          return;  // Don't record ESC actions
+          return;
         }
 
         recordAction(keyBindings[i]);  // Only record non-ESC actions
@@ -140,15 +122,12 @@ void NormalGame::disableRecording()
 
 void NormalGame::recordScreenChange(int roomId)
 {
-    // Record to result file
     if (resultFile.is_open())
     {
         GameEvent event(cycleCount, roomId);
         event.write(resultFile);
         resultFile.flush();
     }
-    // Record to steps file
-    recordScreenTransition(roomId);
 }
 
 ///////////////////////////////////////////    recordLifeLost    /////////////////////////////////////////////
@@ -175,17 +154,6 @@ void NormalGame::recordRiddleAttempt(const std::string& question, int answer, bo
     resultFile.flush();
 }
 
-///////////////////////////////////////////    recordScreenTransition    /////////////////////////////////////////////
-
-void NormalGame::recordScreenTransition(int roomId)
-{
-    if (!isRecording || !recordFile.is_open())
-        return;
-
-    // recordFile << "SCREEN: " << cycleCount << " ROOM: " << roomId << "\n";
-    // recordFile.flush();
-}
-
 //////////////////////////////////////////     handlePauseInput     /////////////////////////////////////////////
 
 void NormalGame::handlePauseInput()
@@ -197,8 +165,8 @@ void NormalGame::handlePauseInput()
       currentState = GameState::inGame;
     else if (choice == 'h' || choice == 'H')
     {
-      recordQuit();  // Record quit event to results file
-      gameInitialized = false; // Reset when going to main menu
+      recordQuit();
+      gameInitialized = false;
       currentState = GameState::mainMenu;
     }
   }
@@ -222,15 +190,6 @@ void NormalGame::recordRiddleAnswer(int answer)
 {
     if (!isRecording || !recordFile.is_open())
         return;
-
-    ActionRecord record(cycleCount, 1, answer); // Player ID 1 assumed for single player interaction or tracking context
-    // Ideally we should know which player answered, but for now we'll rely on the fact that riddles are blocking
-    // Better: Update recordRiddleAnswer to take player ID, but for now steps format just needs answer.
-    // Actually, Recorder.h ActionRecord constructor takes player ID. Let's use 1 as default or find a way to get it.
-    // The ActiveRiddle struct in Game has the player. But here we just need to save the answer.
-    
-    // Correction: We need to pass the correct player ID.
-    // In Game.h, we can access existing player1/player2 or use aRiddle.player->playerId if active.
     
     int playerId = 1;
     if (aRiddle.isActive() && aRiddle.player != nullptr) {

@@ -11,38 +11,23 @@
 
 SpringLink::SpringLink(const Point &pos, Spring *parent, int index)
     : StaticObject(pos, '#', ObjectType::SPRING_LINK),
-      parentSpring(parent),
-      linkIndex(index),
-      collapsed(false)
-{
-}
+      parentSpring(parent), linkIndex(index), collapsed(false) {}
 
 //////////////////////////////////////////          clone       /////////////////////////////////////////////
 
-GameObject *SpringLink::clone() const
-{
-    return new SpringLink(*this);
-}
+GameObject *SpringLink::clone() const { return new SpringLink(*this); }
 
 //////////////////////////////////////////       onExplosion       /////////////////////////////////////////////
 
-bool SpringLink::onExplosion()
-{
-    if (parentSpring)
-    {
-        parentSpring->destroyAllLinks();
-    }
+bool SpringLink::onExplosion() {
+    if (parentSpring) parentSpring->destroyAllLinks();
     return true;
 }
 
 //////////////////////////////////////////        collapse       /////////////////////////////////////////////
 
-void SpringLink::collapse(Room *room)
-{
-    if (collapsed)
-    {
-        return;
-    }
+void SpringLink::collapse(Room *room) {
+    if (collapsed) return;
 
     collapsed = true;
     sprite = ' ';
@@ -59,10 +44,7 @@ void SpringLink::collapse(Room *room)
 
 void SpringLink::reset(Room *room)
 {
-    if (!collapsed)
-    {
-        return;
-    }
+    if (!collapsed) return;
 
     collapsed = false;
     sprite = '#';

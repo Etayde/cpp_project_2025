@@ -43,6 +43,5 @@ public:
     GameObject *clone() const override { return new Torch(*this); }
     const char *getName() const override { return "Torch"; }
 
-    // Apply lighting effect at player's position in the room
     void illuminate(Room *room, int playerX, int playerY) const;
 };

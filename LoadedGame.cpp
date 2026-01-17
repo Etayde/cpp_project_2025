@@ -10,8 +10,8 @@ using namespace std;
 LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps(),
     expectedEventIndex(0), testPassed(true), quitCycle(-1)
 {
-    silentMode = silent;  // Set the flag inherited from Game
-    Renderer::setSilentMode(silentMode);  // Update renderer mode
+    silentMode = silent;
+    Renderer::setSilentMode(silentMode);
 
     initErrorMessage = loadActions(filename);
     if (initErrorMessage != ErrorCode::NONE)
@@ -19,12 +19,9 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps(),
     else
         currentState = GameState::inGame;
 
-    // Load expected results (needed for quit detection in all modes, verification in silent mode)
     if (currentState == GameState::inGame)
     {
         ErrorCode resultError = loadExpectedResults("adv-world.result.txt");
-        // In silent mode, missing results file is an error
-        // In non-silent mode, just continue without quit detection (quitCycle stays -1)
         if (silentMode && resultError != ErrorCode::NONE)
         {
             initErrorMessage = resultError;
@@ -36,7 +33,6 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps(),
 LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
     expectedEventIndex(0), testPassed(true), quitCycle(-1)
 {
-    // Parse arguments specific to LoadedGame
     bool silent = false;
 
     for (int i = 1; i < argc; i++)
@@ -47,26 +43,21 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
         {
             silent = true;
         }
-        // -load flag doesn't need to be checked (factory already determined this is LoadedGame)
     }
 
-    // Set silent mode (before loading actions)
     silentMode = silent;
     Renderer::setSilentMode(silentMode);
 
-    // Load actions from hardcoded filename: "adv-world.steps.txt"
     initErrorMessage = loadActions("adv-world.steps.txt");
 
     if (initErrorMessage != ErrorCode::NONE)
         currentState = GameState::error;
     else
         setCurrentState(GameState::inGame);
-    // Load expected results (needed for quit detection in all modes, verification in silent mode)
+
     if (currentState == GameState::inGame)
     {
         ErrorCode resultError = loadExpectedResults("adv-world.result.txt");
-        // In silent mode, missing results file is an error
-        // In non-silent mode, just continue without quit detection (quitCycle stays -1)
         if (silentMode && resultError != ErrorCode::NONE)
         {
             initErrorMessage = resultError;
@@ -79,7 +70,6 @@ void LoadedGame::handleInput()
 {
     const ActionRecord* curr = steps.getCurrentAction();
 
-    // Process all actions that match the current cycle
     while (curr != nullptr && curr->cycle == cycleCount)
     {
         if (curr->action != Action::ANSWER_RIDDLE) {
@@ -96,7 +86,6 @@ void LoadedGame::gameLoop()
 {
     Room *room = getCurrentRoom();
 
-    // Normal game start - draw room and start game updates
     if (room)
     {
         room->draw();
@@ -108,7 +97,6 @@ void LoadedGame::gameLoop()
 
     while (currentState == GameState::inGame)
     {
-        // Check for quit condition
         if (shouldQuit())
         {
             currentState = GameState::quit;
@@ -139,14 +127,12 @@ void LoadedGame::run()
     case GameState::gameOver:
       if (silentMode)
       {
-        // Check if all expected events were consumed
         if (testPassed && expectedEventIndex < expectedEvents.size())
         {
           testFailed("Expected more events (got " + std::to_string(expectedEventIndex) +
                      ", expected " + std::to_string(expectedEvents.size()) + ")");
         }
 
-        // Output test result
         if (testPassed)
         {
           std::cout << "Test passed" << std::endl;
@@ -190,16 +176,14 @@ void LoadedGame::run()
     case GameState::quit:
       if (silentMode)
       {
-        recordQuit();  // Verify QUIT event against expected
+        recordQuit();  // Verify quit event against expected
 
-        // Check if all expected events were consumed
         if (testPassed && expectedEventIndex < expectedEvents.size())
         {
           testFailed("Expected more events (got " + std::to_string(expectedEventIndex) +
                      ", expected " + std::to_string(expectedEvents.size()) + ")");
         }
 
-        // Output test result
         if (testPassed)
         {
           std::cout << "Test passed" << std::endl;
@@ -238,7 +222,7 @@ ErrorCode LoadedGame::loadExpectedResults(const string& filename)
 
     expectedEvents.clear();
     expectedEventIndex = 0;
-    quitCycle = -1;  // Reset quit cycle
+    quitCycle = -1;
     while (file >> std::ws && file.peek() != EOF)
     {
         GameEvent event;
@@ -248,7 +232,6 @@ ErrorCode LoadedGame::loadExpectedResults(const string& filename)
             return ErrorCode::READ_ERROR;
         }
 
-        // Check for QUIT event and store the quit cycle
         if (event.type == GameEventType::QUIT)
         {
             quitCycle = static_cast<long>(event.cycle);
@@ -273,7 +256,6 @@ bool LoadedGame::verifyEvent(const GameEvent& actual)
 
     const GameEvent& expected = expectedEvents[expectedEventIndex];
 
-    // Check cycle matches
     if (expected.cycle != actual.cycle)
     {
         testFailed("Event at wrong cycle: expected " + std::to_string(expected.cycle) +
@@ -281,14 +263,12 @@ bool LoadedGame::verifyEvent(const GameEvent& actual)
         return false;
     }
 
-    // Check type matches
     if (expected.type != actual.type)
     {
         testFailed("Event type mismatch at cycle " + std::to_string(actual.cycle));
         return false;
     }
 
-    // Check room matches
     if (expected.roomId != actual.roomId)
     {
         testFailed("Event room mismatch at cycle " + std::to_string(actual.cycle) +
@@ -297,7 +277,6 @@ bool LoadedGame::verifyEvent(const GameEvent& actual)
         return false;
     }
 
-    // Check type-specific data
     switch (actual.type)
     {
     case GameEventType::LIFE_LOST:
@@ -330,7 +309,7 @@ bool LoadedGame::verifyEvent(const GameEvent& actual)
 
 void LoadedGame::testFailed(const std::string& details)
 {
-    if (testPassed)  // Only record first failure
+    if (testPassed)
     {
         testPassed = false;
         testFailureDetails = details;
@@ -341,12 +320,11 @@ void LoadedGame::testFailed(const std::string& details)
 
 void LoadedGame::checkMissedEvents()
 {
-    // Check if any expected events at current cycle were missed
     while (expectedEventIndex < expectedEvents.size() &&
            expectedEvents[expectedEventIndex].cycle == cycleCount)
     {
         testFailed("Expected event at cycle " + std::to_string(cycleCount) + " did not occur");
-        return;  // Stop checking after first missed event
+        return;
     }
 }
 

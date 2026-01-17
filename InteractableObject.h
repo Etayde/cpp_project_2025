@@ -7,7 +7,6 @@
 ////////////////////////////////////////       InteractableObject      //////////////////////////////////////////
 
 // Base class for objects that can be interacted with (doors, switches, riddles)
-
 class InteractableObject : public GameObject
 {
 protected:

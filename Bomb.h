@@ -4,11 +4,9 @@
 
 #include "PickableObject.h"
 
-// Forward declarations
 class Room;
 class Player;
 
-// Forward declare ExplosionResult (defined in Room.h)
 struct ExplosionResult;
 
 //////////////////////////////////////////         BombState          //////////////////////////////////////////
@@ -16,35 +14,30 @@ struct ExplosionResult;
 // Tracks the lifecycle state of a bomb
 enum class BombState
 {
-    PLACED,       // In world, can be picked up
-    IN_INVENTORY, // Held by player (not rendered)
-    TICKING,      // Dropped, counting down
-    EXPLODED      // Detonated, ready for cleanup
+    PLACED,
+    IN_INVENTORY,
+    TICKING,
+    EXPLODED
 };
 
 //////////////////////////////////////////           Bomb            //////////////////////////////////////////
 
 // An explosive that can be picked up by players (@)
-// Now fully self-contained with its own state management and explosion logic
 class Bomb : public PickableObject
 {
 private:
-    // State management
     BombState state;
     int fuseTimer;
     int blinkCounter;
-    Room *currentRoom; // Reference to room for explosion processing
+    Room *currentRoom;
 
-    // Constants
     static const int FUSE_TIME = 50;
     static const int EXPLOSION_RADIUS = 5;
     static const int BLINK_RATE = 10;
 
-    // Private methods
     ExplosionResult explode(Player *p1, Player *p2);
 
 public:
-    // Constructors
     Bomb() : PickableObject(), state(BombState::PLACED), fuseTimer(0),
              blinkCounter(0), currentRoom(nullptr)
     {
@@ -56,16 +49,14 @@ public:
                              state(BombState::PLACED), fuseTimer(0),
                              blinkCounter(0), currentRoom(nullptr) {}
 
-    // GameObject overrides
     GameObject *clone() const override { return new Bomb(*this); }
     const char *getName() const override { return "Bomb"; }
     void draw() const override;
     bool isPickable() const override;
     bool isAlwaysVisible() const override { return state == BombState::TICKING; }
 
-    // Bomb-specific interface
-    void activate(Room *room);                      // Start countdown when dropped
-    using GameObject::update;                       // Bring base class update into scope
-    ExplosionResult update(Player *p1, Player *p2); // Overload to accept players and return result
+    void activate(Room *room);
+    using GameObject::update;
+    ExplosionResult update(Player *p1, Player *p2);
     BombState getState() const { return state; }
 };

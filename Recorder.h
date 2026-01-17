@@ -68,26 +68,17 @@ struct ActionRecord
     int playerId;
     Action action;
 
-    int answer; // -1 if not a riddle answer
+    int answer;
 
-    // Default constructor
     ActionRecord() : cycle(0), playerId(0), action(Action::STAY), answer(-1) {}
 
-    // Constructor from PlayerKeyBinding
     ActionRecord(unsigned long c, const PlayerKeyBinding &binding)
         : cycle(c), playerId(binding.playerID),
           action(binding.action), answer(-1) {}
     
-    // Constructor for riddle answer
     ActionRecord(unsigned long c, int player, int ans)
         : cycle(c), playerId(player), action(Action::ANSWER_RIDDLE), answer(ans) {}
-
-    // Serialize to output stream
-    // Format: CYCLE: <cycle> PLAYER: <player> ACTION: <action>
     void write(ostream &output) const;
-
-    // Deserialize from input stream (reads one line)
-    // Returns true on success, false on error (no exceptions)
     bool read(istream &input);
 };
 
@@ -98,25 +89,18 @@ private:
     size_t currActionIndex;
 
 public:
-    // Constructor
     RecordedSteps() : currActionIndex(0) {}
 
-    // Add action to the vector
     void addAction(const ActionRecord& record) { actions.push_back(record); }
 
-    // Load actions from file (calls read() for each line)
     ErrorCode loadFromFile(const string& filename);
 
-    // Get current action (returns nullptr if no more actions)
     const ActionRecord* getCurrentAction() const;
 
-    // Move to next action
     void advanceToNextAction() { if (currActionIndex < actions.size()) currActionIndex++; }
 
-    // Check if there are more actions
     bool hasMoreActions() const { return currActionIndex < actions.size(); }
 
-    // Get all actions for a specific cycle number
     vector<ActionRecord> getActionsForCycle(unsigned long cycle) const;
 
     ActionRecord getActionAt(size_t index) const { return actions[index]; }

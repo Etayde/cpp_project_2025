@@ -49,7 +49,7 @@ protected:
     bool isActive() const { return riddle != nullptr; }
   };
 
-  ActiveRiddle aRiddle;                // Track currently active riddle
+  ActiveRiddle aRiddle;                
   std::vector<Screen *> loadedScreens; 
 
   void setGameOverMessege(GameOverMessege messege) { gameOverMessege = messege; }
@@ -67,7 +67,6 @@ public:
 
   virtual ~Game();
 
-  // Factory method to create appropriate game type from command-line args
   static Game* createFromArgs(int argc, char* argv[]);
 
   virtual void run();

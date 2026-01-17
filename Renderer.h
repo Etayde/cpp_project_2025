@@ -9,17 +9,14 @@ private:
     inline static bool silentMode = false;  // Static inline flag - set once at Game construction
 
 public:
-    // Set rendering mode (called once by Game constructor)
     static void setSilentMode(bool silent) {
         silentMode = silent;
     }
 
-    // Check if we should render
     static inline bool shouldRender() {
         return !silentMode;
     }
 
-    // Rendering methods - wrap Console.h functions
     static inline void gotoxy(int x, int y) {
         if (shouldRender()) ::gotoxy(x, y);
     }
@@ -40,7 +37,6 @@ public:
         if (shouldRender()) ::sleep_ms(milliseconds);
     }
 
-    // Convenience methods for common patterns
     static inline void print(char c) {
         if (shouldRender()) std::cout << c;
     }
@@ -57,7 +53,6 @@ public:
         if (shouldRender()) std::cout << std::flush;
     }
 
-    // Combined operations for common patterns
     static inline void printAt(int x, int y, char c) {
         if (shouldRender()) {
             ::gotoxy(x, y);

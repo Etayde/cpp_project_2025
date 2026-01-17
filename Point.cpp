@@ -11,7 +11,7 @@ void Point::move()
 
     if (newX >= 1 && newX < MAX_X - 1)
         x = newX;
-    if (newY >= 1 && newY < MAX_Y_INGAME - 1)
+    if (newY >= 1 && newY < MAX_Y - 1)
         y = newY;
 }
 

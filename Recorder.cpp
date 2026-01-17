@@ -60,46 +60,34 @@ bool GameEvent::read(std::istream& in)
     std::string eventType;
     std::string dummy;
 
-    if (!(in >> eventType)) 
-        return false;
+    if (!(in >> eventType)) return false;
 
-    // Parse CYCLE: <cycle>
-    if (!(in >> dummy >> cycle)) 
-        return false;
+    if (!(in >> dummy >> cycle)) return false;
 
-    // Parse ROOM: <roomId>
-    if (!(in >> dummy >> roomId)) 
-        return false;
+    if (!(in >> dummy >> roomId)) return false;
 
-    if (eventType == "SCREEN_CHANGE") 
-        type = GameEventType::SCREEN_CHANGE;
+    if (eventType == "SCREEN_CHANGE") type = GameEventType::SCREEN_CHANGE;
     
     else if (eventType == "LIFE_LOST") 
     {
         type = GameEventType::LIFE_LOST;
-        // Parse PLAYER: <playerId>
         if (!(in >> dummy >> playerId)) 
             return false;
     }
     else if (eventType == "RIDDLE") 
     {
         type = GameEventType::RIDDLE_ANSWERED;
-        // Parse QUESTION: "..."
         if (!(in >> dummy)) 
             return false;
-        // Read quoted question - find opening quote
         char c;
         while (in.get(c) && c != '"') {}
-        // Read until closing quote
         question.clear();
         while (in.get(c) && c != '"') {
             question += c;
         }
-        // Parse ANSWER: <answerGiven>
         if (!(in >> dummy >> answerGiven)) 
             return false;
         
-        // Parse CORRECT: YES/NO
         std::string correctStr;
         if (!(in >> dummy >> correctStr)) 
             return false;
@@ -123,9 +111,7 @@ void ActionRecord::write(ostream &output) const
            << " PLAYER: " << playerId
            << " ACTION: " << actionToString(action);
     
-    if (action == Action::ANSWER_RIDDLE) {
-        output << " ANSWER: " << answer;
-    }
+    if (action == Action::ANSWER_RIDDLE) output << " ANSWER: " << answer;
     
     output << "\n";
 }
@@ -137,25 +123,17 @@ bool ActionRecord::read(istream &input)
     string dummy;
     string actionStr;
 
-    if (!(input >> dummy >> cycle)) {
-        return false;
-    }
+    if (!(input >> dummy >> cycle)) return false;
 
-    if (!(input >> dummy >> playerId)) {
-        return false;
-    }
+    if (!(input >> dummy >> playerId)) return false;
 
-    if (!(input >> dummy >> actionStr)) {
-        return false;
-    }
+    if (!(input >> dummy >> actionStr)) return false;
 
     action = stringToAction(actionStr);
 
     if (action == Action::ANSWER_RIDDLE) {
         string answerLabel;
-        if (!(input >> answerLabel >> answer)) { // Expecting "ANSWER: <int>"
-            return false;
-        }
+        if (!(input >> answerLabel >> answer)) return false;
     }
 
     return true; 
@@ -167,9 +145,7 @@ bool ActionRecord::read(istream &input)
 ErrorCode RecordedSteps::loadFromFile(const string& filename)
 {
     ifstream file(filename);
-    if (!file.is_open()) {
-        return ErrorCode::FILE_NOT_FOUND;
-    }
+    if (!file.is_open()) return ErrorCode::FILE_NOT_FOUND;
 
     actions.clear();
     currActionIndex = 0;
@@ -192,9 +168,7 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
 
 const ActionRecord* RecordedSteps::getCurrentAction() const
 {
-    if (currActionIndex >= actions.size()) {
-        return nullptr;
-    }
+    if (currActionIndex >= actions.size()) return nullptr;
     return &actions[currActionIndex];
 }
 
@@ -204,9 +178,7 @@ vector<ActionRecord> RecordedSteps::getActionsForCycle(unsigned long curr) const
 {
     vector<ActionRecord> result;
     for (const ActionRecord& record : actions) {
-        if (record.cycle == curr) {
-            result.push_back(record);
-        }
+        if (record.cycle == curr) result.push_back(record);
     }
     return result;
 }

@@ -13,7 +13,6 @@ class Game;
 
 class Riddle : public InteractableObject
 {
-private:
     bool firstAttempt;
     char solvingPlayerSprite;
     int solvingPlayerId;
@@ -21,6 +20,7 @@ private:
     int correctAnswer;
 
 public:
+
     Riddle() : InteractableObject(), firstAttempt(true), solvingPlayerSprite(' '),
                solvingPlayerId(-1), riddleId(-1), correctAnswer(-1)
     {

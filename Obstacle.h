@@ -49,7 +49,6 @@ private:
     std::unordered_map<Direction, std::vector<ObstacleBlock *>> edges;
     int weight = blocks.size();
 
-    // Push state tracking (per frame)
     int accumulatedForce;
     Direction pushDirection;
     std::vector<Player *> pushers;

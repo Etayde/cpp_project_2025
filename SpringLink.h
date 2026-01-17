@@ -13,7 +13,6 @@ class Room;
 
 class SpringLink : public StaticObject
 {
-private:
     Spring *parentSpring;
     int linkIndex;
     bool collapsed;
