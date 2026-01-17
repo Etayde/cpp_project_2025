@@ -60,7 +60,7 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
     if (initErrorMessage != ErrorCode::NONE)
         currentState = GameState::error;
     else
-        {currentState = GameState::inGame;
+        {setCurrentState(GameState::inGame);
         cout << "Loaded steps" << endl;             ////////////////////
         cout << " currentState = " << static_cast<int>(currentState) << endl; 
         }            ////////////////////
