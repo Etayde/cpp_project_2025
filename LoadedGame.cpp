@@ -231,6 +231,7 @@ ErrorCode LoadedGame::loadExpectedResults(const string& filename)
     std::ifstream file(filename);
     if (!file.is_open())
     {
+        cout << "Could not open expected results file: " << filename << endl;
         return ErrorCode::FILE_NOT_FOUND;
     }
 
@@ -254,6 +255,8 @@ ErrorCode LoadedGame::loadExpectedResults(const string& filename)
         }
 
         expectedEvents.push_back(event);
+        cout << "Loaded expected event: cycle " << event.cycle << ", type "
+             << static_cast<int>(event.type) << ", room " << event.roomId << endl;
     }
 
     file.close();
@@ -264,7 +267,7 @@ ErrorCode LoadedGame::loadExpectedResults(const string& filename)
 
 bool LoadedGame::verifyEvent(const GameEvent& actual)
 {
-    if (expectedEventIndex > expectedEvents.size())
+    if (expectedEventIndex >= expectedEvents.size())
     {
         testFailed("Unexpected event at cycle " + std::to_string(actual.cycle));
         return false;
