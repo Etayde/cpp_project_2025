@@ -32,6 +32,15 @@ protected:
   GameOverMessege gameOverMessege;
   unsigned long cycleCount;
 
+  // Game state (protected for derived classes)
+  GameState currentState;
+  std::vector<Room> rooms;
+  int currentRoomId;
+  int finalRoomId;
+  Player player1;
+  Player player2;
+  bool gameInitialized;
+
   Game();
 
   struct ActiveRiddle
@@ -58,22 +67,25 @@ protected:
   void updateCycleCount() { if (currentState == GameState::inGame) cycleCount++; }
 
 public:
-  GameState currentState;
-  std::vector<Room> rooms;
-  int currentRoomId;
-  int finalRoomId;
-  Player player1;
-  Player player2;
-  bool gameInitialized;
-
   virtual ~Game();
 
   static Game* createFromArgs(int argc, char* argv[]);
 
-
   virtual void run() = 0;
 
+  // State getters 
+  GameState getCurrentState() const { return currentState; }
+  bool isGameInitialized() const { return gameInitialized; }
+  int getFinalRoomId() const { return finalRoomId; }
+  const Player& getPlayer1() const { return player1; }
+  const Player& getPlayer2() const { return player2; }
+  Player& getPlayer1() { return player1; }
+  Player& getPlayer2() { return player2; }
+  const std::vector<Room>& getRooms() const { return rooms; }
+  size_t getRoomsCount() const { return rooms.size(); }
+
   void setCurrentState(GameState newState) { currentState = newState; }
+  void setGameInitialized(bool value) { gameInitialized = value; }
 
   // Menu handlers
   virtual void showMainMenu();
