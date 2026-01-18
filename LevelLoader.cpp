@@ -1,23 +1,48 @@
 //////////////////////////////////////       INCLUDES & FORWARDS       /////////////////////////////////////////////
 
 #include "LevelLoader.h"
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
 
-//////////////////////////////////////////     getScreenFilename       /////////////////////////////////////////////
+namespace fs = std::filesystem;
 
-std::string LevelLoader::getScreenFilename(int number)
+//////////////////////////////////////////     discoverLevelFiles     /////////////////////////////////////////////
+
+std::vector<std::string> LevelLoader::discoverLevelFiles()
 {
-  std::string filename = "adv-world";
-  filename += static_cast<char>('0' + (number / 10));
-  filename += static_cast<char>('0' + (number % 10));
-  filename += ".screen.txt";
-  return filename;
+  std::vector<std::string> files;
+  
+  // Use std::filesystem to iterate over the current directory
+  // We use error_code to prevent crashing if the directory doesn't exist (though "." always should)
+  std::error_code ec;
+  for (const auto& entry : fs::directory_iterator(".", ec))
+  {
+      if (entry.is_regular_file())
+      {
+          std::string filename = entry.path().filename().string();
+          // Check for .screen extension logic
+          if (filename.length() >= 7 && 
+              filename.substr(filename.length() - 7) == ".screen")
+          {
+             files.push_back(filename);
+          }
+          else if (filename.length() >= 11 &&
+                   filename.substr(filename.length() - 11) == ".screen.txt")
+          {
+            files.push_back(filename);
+          }
+      }
+  }
+
+  std::sort(files.begin(), files.end());
+  return files;
 }
 
 //////////////////////////////////////////      loadScreenFile       /////////////////////////////////////////////
 
-Screen *LevelLoader::loadScreenFile(int fileNumber, RoomMetadata &metadata)
+Screen *LevelLoader::loadScreenFile(const std::string& filename, RoomMetadata &metadata)
 {
-  std::string filename = getScreenFilename(fileNumber);
   std::ifstream file(filename);
 
   if (!file.is_open())
@@ -72,8 +97,22 @@ Screen *LevelLoader::loadScreenFile(int fileNumber, RoomMetadata &metadata)
     else if (key == "DOOR")
     {
       int id, keys, switches;
+      int targetRoom = -1;
       file >> id >> keys >> switches;
-      metadata.doorConfigs.push_back(std::make_tuple(id, keys, switches));
+      
+      // Check if there is another integer on the same line for targetRoom
+      // Logic: Peek next char. If it's a digit or '-', read it.
+      while (file.peek() == ' ') file.ignore();
+      if (file.peek() != '\n' && file.peek() != EOF)
+      {
+         char c = file.peek();
+         if (isdigit(c) || c == '-')
+         {
+             file >> targetRoom;
+         }
+      }
+
+      metadata.doorConfigs.push_back(std::make_tuple(id, keys, switches, targetRoom));
     }
     else if (key == "DARK_ZONE")
     {

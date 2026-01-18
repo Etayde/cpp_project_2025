@@ -10,7 +10,11 @@
 #include "Obstacle.h"
 #include "Riddle.h"
 #include "Spring.h"
+#include "Spring.h"
 #include <string>
+#include <numeric>
+#include <algorithm>
+#include <random>
 
 class Constants;
 
@@ -333,6 +337,20 @@ bool Game::canPassThroughDoor(Room *room, int doorId)
   if (room == nullptr)
     return false;
 
+  int targetRoom = -1;
+  if (doorId >= 0 && doorId < static_cast<int>(room->doorReqs.size()))
+  {
+      targetRoom = room->doorReqs[doorId].targetRoomId;
+  }
+
+  // If explicit target is set, check requirements
+  if (targetRoom != -1)
+  {
+      return room->isDoorUnlocked(doorId) ||
+             room->canOpenDoor(doorId, player1.getKeyCount(),
+                               player2.getKeyCount());
+  }
+
   if (doorId == room->nextRoomId || doorId == static_cast<int>(rooms.size()))
   {
     return room->isDoorUnlocked(doorId) ||
@@ -350,12 +368,28 @@ bool Game::canPassThroughDoor(Room *room, int doorId)
 
 void Game::checkRoomTransitions()
 {
-
   Room *room = getCurrentRoom();
   if (room == nullptr)
     return;
 
-  // Trigger transition if both players are at the same door
+  // 1. Update Wait State for Forward Doors
+  if (player1.isAtDoor() && canPassThroughDoor(room, player1.getDoorId()))
+  {
+      if (player1.getDoorId() != room->prevRoomId && !player1.isWaitingInNextRoom)
+      {
+           player1.isWaitingInNextRoom = true;
+      }
+  }
+  
+  if (player2.isAtDoor() && canPassThroughDoor(room, player2.getDoorId()))
+  {
+      if (player2.getDoorId() != room->prevRoomId && !player2.isWaitingInNextRoom)
+      {
+           player2.isWaitingInNextRoom = true;
+      }
+  }
+
+  // 2. Check for Shared Transition
   if (player1.isAtDoor() && player2.isAtDoor() &&
       player1.getDoorId() == player2.getDoorId())
   {
@@ -365,7 +399,14 @@ void Game::checkRoomTransitions()
       player1.waitingAtDoor = false;
       player2.waitingAtDoor = false;
 
-      if (doorId == room->nextRoomId || doorId == static_cast<int>(rooms.size()))
+      // Handle Forward Transition
+      int targetRoom = -1;
+      if (doorId >= 0 && doorId < static_cast<int>(room->doorReqs.size()))
+      {
+          targetRoom = room->doorReqs[doorId].targetRoomId;
+      }
+
+      if (targetRoom != -1 || doorId == room->nextRoomId || doorId == static_cast<int>(rooms.size()))
       {
         if (!room->isDoorUnlocked(doorId))
         {
@@ -390,53 +431,48 @@ void Game::checkRoomTransitions()
         }
         room->unlockDoor(doorId);
 
-        if (currentRoomId == -1)
+        if (currentRoomId == -1) // If somehow invalid?
         {
           currentState = GameState::victory;
           return;
         }
-        changeRoom(room->nextRoomId, true);
+        
+        int destinationId = (targetRoom != -1) ? targetRoom : room->nextRoomId;
+        
+        if (destinationId == -1) {
+             currentState = GameState::victory;
+             return;
+        }
+
+        changeRoom(destinationId, true);
       }
+      // Handle Backward Transition
       else if (doorId == room->prevRoomId)
       {
         changeRoom(room->prevRoomId, false);
       }
     }
   }
-  else if (player1.isAtDoor() && !player2.isAtDoor())
+  else 
   {
-    if (canPassThroughDoor(room, player1.getDoorId()))
-    {
-      if (!player1.waitingAtDoor)
+     // UI Feedback for waiting (if explicitly waiting at door but not "In Next Room" hidden?)
+     // Actually, if they are waitingAtDoor (visual), we keep it.
+     // But if isWaitingInNextRoom, they are hidden.
+     
+     // Original logic for "waitingAtDoor" visual:
+      if (player1.isAtDoor() && !player1.isWaitingInNextRoom && canPassThroughDoor(room, player1.getDoorId()) && player1.getDoorId() == room->prevRoomId)
       {
-        player1.waitingAtDoor = true;
-        player1.draw(room);
+         player1.waitingAtDoor = true;
+         player1.draw(room);
       }
-    }
-  }
-  else if (player2.isAtDoor() && !player1.isAtDoor())
-  {
-    if (canPassThroughDoor(room, player2.getDoorId()))
-    {
-      if (!player2.waitingAtDoor)
+      else if (!player1.isAtDoor()) player1.waitingAtDoor = false;
+      
+      if (player2.isAtDoor() && !player2.isWaitingInNextRoom && canPassThroughDoor(room, player2.getDoorId()) && player2.getDoorId() == room->prevRoomId)
       {
-        player2.waitingAtDoor = true;
-        player2.draw(room);
+         player2.waitingAtDoor = true;
+         player2.draw(room);
       }
-    }
-  }
-  else
-  {
-    if (player1.waitingAtDoor)
-    {
-      player1.waitingAtDoor = false;
-      player1.draw(room);
-    }
-    if (player2.waitingAtDoor)
-    {
-      player2.waitingAtDoor = false;
-      player2.draw(room);
-    }
+      else if (!player2.isAtDoor()) player2.waitingAtDoor = false;
   }
 }
 
@@ -569,6 +605,9 @@ void Game::showErrorScreen()
   case ErrorCode::READ_ERROR:
     Renderer::print("Error: Failed to read file\n");
     break;
+  case ErrorCode::NO_SCREENS_FOUND:
+    Renderer::print("Error: No .screen files found in working directory.\n");
+    break;
   default:
     Renderer::print("Unknown error\n");
     break;
@@ -588,21 +627,27 @@ void Game::initializeRooms()
 
   std::vector<Screen *> screens;
   std::vector<RoomMetadata> metadatas;
-  int fileNumber = 1;
+  std::vector<std::string> levelFiles = LevelLoader::discoverLevelFiles();
 
-  while (true)
+  if (levelFiles.empty())
+  {
+    initErrorMessage = ErrorCode::NO_SCREENS_FOUND;
+    currentState = GameState::error;
+    return;
+  }
+
+  for (const std::string &filename : levelFiles)
   {
     RoomMetadata metadata;
-    Screen *screen = LevelLoader::loadScreenFile(fileNumber, metadata);
+    Screen *screen = LevelLoader::loadScreenFile(filename, metadata);
 
     if (screen == nullptr)
     {
-      break;
+      continue;
     }
 
     screens.push_back(screen);
     metadatas.push_back(metadata);
-    fileNumber++;
   }
 
   if (screens.empty())
@@ -614,14 +659,21 @@ void Game::initializeRooms()
   rooms.reserve(screens.size());
   loadedScreens.reserve(screens.size());
 
-  int riddleCounter = 0;
+  std::vector<int> riddleIds(riddlesLoaded);
+  std::iota(riddleIds.begin(), riddleIds.end(), 0);
+  
+  std::random_device rd;
+  std::mt19937 g(rd());
+  std::shuffle(riddleIds.begin(), riddleIds.end(), g);
+
+  int riddleIndex = 0;
   for (size_t i = 0; i < screens.size(); i++)
   {
     loadedScreens.push_back(screens[i]);
     rooms.push_back(Room(static_cast<int>(i)));
 
     Room &room = rooms.back();
-    room.initFromLayout(screens[i], &riddleCounter);
+    room.initFromLayout(screens[i], &riddleIds, &riddleIndex);
     room.spawnPoint = metadatas[i].spawnPoint;
     room.spawnPointFromNext = metadatas[i].spawnPointFromNext;
     room.nextRoomId = metadatas[i].nextRoomId;
@@ -630,7 +682,7 @@ void Game::initializeRooms()
     for (const auto &doorConfig : metadatas[i].doorConfigs)
     {
       room.setDoorRequirements(std::get<0>(doorConfig), std::get<1>(doorConfig),
-                               std::get<2>(doorConfig));
+                               std::get<2>(doorConfig), std::get<3>(doorConfig));
     }
 
     for (const auto &dz : metadatas[i].darkZones)
@@ -692,6 +744,10 @@ void Game::changeRoom(int newRoomId, bool goingForward)
   player2.pos.diff_y = 0;
   player1.atDoor = false;
   player2.atDoor = false;
+  player1.waitingAtDoor = false;
+  player2.waitingAtDoor = false;
+  player1.isWaitingInNextRoom = false;
+  player2.isWaitingInNextRoom = false;
 
   Renderer::clrscr();
   if (getCurrentRoom())

@@ -13,13 +13,14 @@
 
 //////////////////////////////////////////        RoomMetadata       /////////////////////////////////////////////
 
+// Refactored to support better room connections using AI
 struct RoomMetadata
 {
   Point spawnPoint;
   Point spawnPointFromNext;
   int nextRoomId;
   int prevRoomId;
-  std::vector<std::tuple<int, int, int>> doorConfigs; // doorId, keys, switches
+  std::vector<std::tuple<int, int, int, int>> doorConfigs; // doorId, keys, switches, targetRoom
   std::vector<DarkZone> darkZones;
 
   RoomMetadata()
@@ -32,9 +33,9 @@ struct RoomMetadata
 class LevelLoader
 {
 public:
-  static Screen *loadScreenFile(int fileNumber, RoomMetadata &metadata);
+  static Screen *loadScreenFile(const std::string& filename, RoomMetadata &metadata);
 
   static int loadRiddleFile();
 
-  static std::string getScreenFilename(int number);
+  static std::vector<std::string> discoverLevelFiles();
 };

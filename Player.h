@@ -61,6 +61,7 @@ public:
   bool requestPause;
   Momentum springMomentum;
   int respawnTimer;
+  bool isWaitingInNextRoom;
 
 public:
   Player();

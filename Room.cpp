@@ -3,7 +3,6 @@
 
 #include "Room.h"
 #include "Bomb.h"
-#include "Console.h"
 #include "Constants.h"
 #include "Renderer.h"
 
@@ -162,17 +161,17 @@ void Room::initVisibility()
 
 //////////////////////////////////////////       initFromLayout       /////////////////////////////////////////////
 
-void Room::initFromLayout(const Screen *layout, int *riddleCounter)
+void Room::initFromLayout(const Screen *layout, const std::vector<int> *riddleIds, int *riddleIndex)
 {
   baseLayout = layout;
   mods.clear();
   deleteAllObjects();
-  loadObjects(riddleCounter);
+  loadObjects(riddleIds, riddleIndex);
 }
 
 //////////////////////////////////////////        loadObjects       /////////////////////////////////////////////
 
-void Room::loadObjects(int *riddleCounter)
+void Room::loadObjects(const std::vector<int> *riddleIds, int *riddleIndex)
 {
   totalKeysInRoom = 0;
   keysCollected = 0;
@@ -203,7 +202,11 @@ void Room::loadObjects(int *riddleCounter)
       int riddleId = -1;
       if (ch == '?')
       {
-        if (riddleCounter != nullptr) riddleId = (*riddleCounter)++;
+        if (riddleIds != nullptr && riddleIndex != nullptr &&
+            *riddleIndex < static_cast<int>(riddleIds->size()))
+        {
+             riddleId = (*riddleIds)[(*riddleIndex)++];
+        }
         else continue;
       }
 
@@ -230,7 +233,7 @@ void Room::loadObjects(int *riddleCounter)
 
 //////////////////////////////////////////    setDoorRequirements       /////////////////////////////////////////////
 
-void Room::setDoorRequirements(int doorId, int keys, int switches)
+void Room::setDoorRequirements(int doorId, int keys, int switches, int targetRoomId)
 {
   if (doorId < 0) return;
 
@@ -239,6 +242,7 @@ void Room::setDoorRequirements(int doorId, int keys, int switches)
   doorReqs[doorId].doorId = doorId;
   doorReqs[doorId].requiredKeys = keys;
   doorReqs[doorId].requiredSwitches = switches;
+  doorReqs[doorId].targetRoomId = targetRoomId;
   doorReqs[doorId].isUnlocked = false;
 }
 

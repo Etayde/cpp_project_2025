@@ -64,12 +64,13 @@ struct DoorRequirements
   int doorId;
   int requiredKeys;
   int requiredSwitches;
+  int targetRoomId;
   bool isUnlocked;
 
   DoorRequirements()
-      : doorId(-1), requiredKeys(1), requiredSwitches(0), isUnlocked(false) {}
-  DoorRequirements(int id, int keys, int switches = 0)
-      : doorId(id), requiredKeys(keys), requiredSwitches(switches),
+      : doorId(-1), requiredKeys(1), requiredSwitches(0), targetRoomId(-1), isUnlocked(false) {}
+  DoorRequirements(int id, int keys, int switches = 0, int target = -1)
+      : doorId(id), requiredKeys(keys), requiredSwitches(switches), targetRoomId(target),
         isUnlocked(false) {}
 };
 
@@ -114,9 +115,9 @@ public:
   Room &operator=(const Room &other);
 
   // Initialization
-  void initFromLayout(const Screen *layout, int *riddleCounter = nullptr);
-  void loadObjects(int *riddleCounter = nullptr);
-  void setDoorRequirements(int doorId, int keys, int switches = 0);
+  void initFromLayout(const Screen *layout, const std::vector<int> *riddleIds = nullptr, int *riddleIndex = nullptr);
+  void loadObjects(const std::vector<int> *riddleIds = nullptr, int *riddleIndex = nullptr);
+  void setDoorRequirements(int doorId, int keys, int switches = 0, int targetRoomId = -1);
   void setLegendPoint(int x, int y) { legendTopLeft = Point(x, y); };
 
   // Drawing
