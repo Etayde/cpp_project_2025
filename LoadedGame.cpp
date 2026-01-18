@@ -14,13 +14,20 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps(),
     Renderer::setSilentMode(silentMode);
 
     initErrorMessage = loadActions(filename);
+    if (initErrorMessage != ErrorCode::NONE) {
+        currentState = GameState::error;
+        return;
+    }
     
     unsigned int seed = steps.getRandomSeed();
-    initializeRooms(seed);
-    if (initErrorMessage != ErrorCode::NONE)
+    if (seed == 0) {
+        initErrorMessage = ErrorCode::MISSING_RANDOM_SEED;
         currentState = GameState::error;
-    else
-        currentState = GameState::inGame;
+        return;
+    }
+    
+    initializeRooms(seed);
+    currentState = GameState::inGame;
 
     if (currentState == GameState::inGame)
     {
@@ -52,18 +59,20 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
     Renderer::setSilentMode(silentMode);
 
     initErrorMessage = loadActions("adv-world.steps.txt");
-    
-    // Initialize with loaded seed (or 0 if none)
-    unsigned int seed = steps.getRandomSeed();
-    // If no seed found (old files), we can't do much but use default (random) or fix it to 0?
-    // User wants synchronization. If old file has no seed, replay will likely fail for randomized logic.
-    // However, for new files (which this fix targets), it will work.
-    initializeRooms(seed);
-
-    if (initErrorMessage != ErrorCode::NONE)
+    if (initErrorMessage != ErrorCode::NONE) {
         currentState = GameState::error;
-    else
-        setCurrentState(GameState::inGame);
+        return;
+    }
+    
+    unsigned int seed = steps.getRandomSeed();
+    if (seed == 0) {
+        initErrorMessage = ErrorCode::MISSING_RANDOM_SEED;
+        currentState = GameState::error;
+        return;
+    }
+    
+    initializeRooms(seed);
+    setCurrentState(GameState::inGame);
 
     if (currentState == GameState::inGame)
     {

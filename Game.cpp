@@ -619,6 +619,9 @@ void Game::showErrorScreen()
   case ErrorCode::NO_SCREENS_FOUND:
     Renderer::print("Error: No .screen files found in working directory.\n");
     break;
+  case ErrorCode::MISSING_RANDOM_SEED:
+    Renderer::print("Error: No random seed found in steps file.\n");
+    break;
   default:
     Renderer::print("Unknown error\n");
     break;
