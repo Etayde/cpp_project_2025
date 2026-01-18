@@ -164,7 +164,10 @@ ErrorCode Game::validateLegendPlacement(Room &room)
 
 void Game::startNewGame()
 {
-  initializeRooms();
+  if (rooms.empty())
+  {
+    initializeRooms();
+  }
   
   if (rooms.empty())
   {
