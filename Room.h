@@ -101,8 +101,8 @@ public:
 
   int nextRoomId;
   int prevRoomId;
-  Point spawnPoint;
-  Point spawnPointFromNext;
+  std::vector<Point> spawnPoints;
+  std::vector<Point> spawnPointsFromNext;
 
   std::vector<DarkZone> darkZones;
   bool visibilityMap[MAX_Y][MAX_X];
@@ -160,7 +160,15 @@ public:
       return 0;
     return doorReqs[doorId].requiredSwitches;
   }
-  Point getSpawnPoint() const { return spawnPoint; }
+  
+  Point getSpawnPoint(int playerId);
+  Point getSpawnPointFromNext(int playerId);
+
+private:
+  Point findSmartSpawn(Point base);
+
+public:
+  // Collision & movement
 
   // Collision & movement
   bool isBlocked(int x, int y);

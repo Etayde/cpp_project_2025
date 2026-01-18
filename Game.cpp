@@ -125,17 +125,19 @@ ErrorCode Game::validateLegendPlacement(Room &room)
     }
   }
 
-  if (room.spawnPoint.x >= topLeftX && room.spawnPoint.x < topLeftX + width &&
-      room.spawnPoint.y >= topLeftY && room.spawnPoint.y < topLeftY + height)
-  {
-    return ErrorCode::LEGEND_OBSCURES_SPAWN;
+  for (const auto& sp : room.spawnPoints) {
+      if (sp.x >= topLeftX && sp.x < topLeftX + width &&
+          sp.y >= topLeftY && sp.y < topLeftY + height)
+      {
+        return ErrorCode::LEGEND_OBSCURES_SPAWN;
+      }
   }
-  if (room.spawnPointFromNext.x >= topLeftX &&
-      room.spawnPointFromNext.x < topLeftX + width &&
-      room.spawnPointFromNext.y >= topLeftY &&
-      room.spawnPointFromNext.y < topLeftY + height)
-  {
-    return ErrorCode::LEGEND_OBSCURES_SPAWN;
+  for (const auto& sp : room.spawnPointsFromNext) {
+      if (sp.x >= topLeftX && sp.x < topLeftX + width &&
+          sp.y >= topLeftY && sp.y < topLeftY + height)
+      {
+        return ErrorCode::LEGEND_OBSCURES_SPAWN;
+      }
   }
 
   room.setLegendPoint(lPos.x, lPos.y);
@@ -155,10 +157,11 @@ void Game::startNewGame()
   }
 
   rooms[0].active = true;
-  Point startPos = rooms[0].spawnPoint;
+  Point startPos1 = rooms[0].getSpawnPoint(1);
+  Point startPos2 = rooms[0].getSpawnPoint(2);
   
-  player1 = Player(1, startPos.x, startPos.y, PlayerSprites::PLAYER1);
-  player2 = Player(2, startPos.x, startPos.y, PlayerSprites::PLAYER2);
+  player1 = Player(1, startPos1.x, startPos1.y, PlayerSprites::PLAYER1);
+  player2 = Player(2, startPos2.x, startPos2.y, PlayerSprites::PLAYER2);
 
   currentRoomId = 0;
   rooms[0].active = true;
@@ -672,8 +675,8 @@ void Game::initializeRooms(unsigned int seed)
 
     Room &room = rooms.back();
     room.initFromLayout(screens[i], &riddleIds, &riddleIndex);
-    room.spawnPoint = metadatas[i].spawnPoint;
-    room.spawnPointFromNext = metadatas[i].spawnPointFromNext;
+    room.spawnPoints = metadatas[i].spawnPoints;
+    room.spawnPointsFromNext = metadatas[i].spawnPointsFromNext;
     room.nextRoomId = metadatas[i].nextRoomId;
     room.prevRoomId = metadatas[i].prevRoomId;
 
@@ -730,11 +733,20 @@ void Game::changeRoom(int newRoomId, bool goingForward)
 
   rooms[newRoomId].active = true;
 
-  Point spawn = goingForward ? rooms[newRoomId].spawnPoint
-                             : rooms[newRoomId].spawnPointFromNext;
+  Point nextPos1, nextPos2;
+  if (goingForward)
+  {
+      nextPos1 = rooms[newRoomId].getSpawnPoint(1);
+      nextPos2 = rooms[newRoomId].getSpawnPoint(2);
+  }
+  else
+  {
+      nextPos1 = rooms[newRoomId].getSpawnPointFromNext(1);
+      nextPos2 = rooms[newRoomId].getSpawnPointFromNext(2);
+  }
 
-  player1.setPosition(spawn.x, spawn.y);
-  player2.setPosition(spawn.x, spawn.y + 1);
+  player1.setPosition(nextPos1.x, nextPos1.y);
+  player2.setPosition(nextPos2.x, nextPos2.y);
 
   player1.pos.diff_x = 0;
   player1.pos.diff_y = 0;

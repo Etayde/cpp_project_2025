@@ -160,7 +160,7 @@ void Player::respawn(Room *room)
     {
       dropItem(room);
     }
-    Point spawn = room->getSpawnPoint();
+    Point spawn = room->getSpawnPoint(playerId);
     if (playerId == 2)
       spawn.y += 1;
     pos = spawn;

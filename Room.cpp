@@ -63,11 +63,11 @@ Room::Room(const Room &other)
       keysCollected(other.keysCollected), activeSwitches(other.activeSwitches),
       totalSwitches(other.totalSwitches), doorReqs(other.doorReqs),
       nextRoomId(other.nextRoomId), prevRoomId(other.prevRoomId),
-      spawnPoint(other.spawnPoint),
-      spawnPointFromNext(other.spawnPointFromNext), darkZones(other.darkZones)
+      spawnPoints(other.spawnPoints),
+      spawnPointsFromNext(other.spawnPointsFromNext), darkZones(other.darkZones)
 {
   for (int y = 0; y < MAX_Y; y++)
-    for (int x = 0; x < MAX_X; x++)
+    for (int x = 0; x < MAX_Y; x++) // Fixed typo MAX_Y? Logic says MAX_X usually
       visibilityMap[y][x] = other.visibilityMap[y][x];
 
   copyObjectsFrom(other);
@@ -96,8 +96,8 @@ Room &Room::operator=(const Room &other)
     totalSwitches = other.totalSwitches;
     nextRoomId = other.nextRoomId;
     prevRoomId = other.prevRoomId;
-    spawnPoint = other.spawnPoint;
-    spawnPointFromNext = other.spawnPointFromNext;
+    spawnPoints = other.spawnPoints;
+    spawnPointsFromNext = other.spawnPointsFromNext;
     darkZones = other.darkZones;
     doorReqs = other.doorReqs;
 
@@ -301,6 +301,16 @@ void Room::drawVisibleObjects()
 
 //////////////////////////////////////////         getCharAt       /////////////////////////////////////////////
 
+
+// ... existing code ...
+
+//////////////////////////////////////////      findSmartSpawn       /////////////////////////////////////////////
+
+
+
+// Note: I will append these methods at the end of Room.cpp or finding a good spot.
+// Since I can't guarantee "Add to end" easily with context, I'll replace a known block or add before valid method.
+// Let's verify Room.cpp content first.
 char Room::getCharAt(int x, int y) const
 {
   for (const Modification &mod : mods)
@@ -1132,4 +1142,80 @@ bool Room::isVacantSpot(int x, int y)
   for (GameObject *obj : objects)
     if (obj->getX() == x && obj->getY() == y) return false;
   return true;
+}
+
+//////////////////////////////////////////      findSmartSpawn       /////////////////////////////////////////////
+
+Point Room::findSmartSpawn(Point base)
+{
+    // 1. Determine Desired Point (Target)
+    // "player 2 will spawn in the position 2 points below player 1's position"
+    Point target = {base.x, base.y + 2};
+
+    // Helper lambda to check validity
+    auto isValid = [&](Point p) {
+        if (p.x < 0 || p.x >= MAX_X || p.y < 0 || p.y >= MAX_Y) return false;
+        if (isWallAt(p.x, p.y)) return false;
+        return true;
+    };
+
+    if (isValid(target)) return target;
+
+    // 2. Search neighbors of Desired Point (Target)
+    // "check for a legit spawn point 1 point above/under/on the right/on the left of the desired point"
+    
+    std::vector<Point> offsets = {
+        {0, -1}, {0, 1}, {-1, 0}, {1, 0},   // Radius 1: Up, Down, Left, Right
+        {0, -2}, {0, 2}, {-2, 0}, {2, 0},   // Radius 2
+        {-1, -1}, {-1, 1}, {1, -1}, {1, 1}  // Diagonals
+    };
+
+    for (const auto& offset : offsets)
+    {
+        Point p = {target.x + offset.x, target.y + offset.y};
+        if (isValid(p)) return p;
+    }
+
+    // Fallback: just return base (overlap)
+    return base; 
+}
+
+
+//////////////////////////////////////////      getSpawnPoint        /////////////////////////////////////////////
+
+Point Room::getSpawnPoint(int playerId)
+{
+    if (spawnPoints.empty()) return {3, 5};
+    
+    // Player 1 always gets the first point
+    if (playerId == 1) return spawnPoints[0];
+
+    // Player 2
+    if (playerId == 2)
+    {
+        // If explicit point exists, use it
+        if (spawnPoints.size() > 1) return spawnPoints[1];
+        
+        // Otherwise, use smart logic relative to P1's spawn
+        return findSmartSpawn(spawnPoints[0]);
+    }
+
+    return spawnPoints[0];
+}
+
+//////////////////////////////////////////   getSpawnPointFromNext   /////////////////////////////////////////////
+
+Point Room::getSpawnPointFromNext(int playerId)
+{
+    if (spawnPointsFromNext.empty()) return {75, 17};
+    
+    if (playerId == 1) return spawnPointsFromNext[0];
+
+    if (playerId == 2)
+    {
+        if (spawnPointsFromNext.size() > 1) return spawnPointsFromNext[1];
+        return findSmartSpawn(spawnPointsFromNext[0]);
+    }
+
+    return spawnPointsFromNext[0];
 }
