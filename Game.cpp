@@ -609,7 +609,7 @@ void Game::showErrorScreen()
 
 //////////////////////////////////////////      initializeRooms       /////////////////////////////////////////////
 
-void Game::initializeRooms()
+void Game::initializeRooms(unsigned int seed)
 {
 
   rooms.clear();
@@ -655,8 +655,13 @@ void Game::initializeRooms()
   std::vector<int> riddleIds(riddlesLoaded);
   std::iota(riddleIds.begin(), riddleIds.end(), 0);
   
-  std::random_device rd;
-  std::mt19937 g(rd());
+  std::mt19937 g;
+  if (seed != 0) {
+      g.seed(seed);
+  } else {
+      std::random_device rd;
+      g.seed(rd());
+  }
   std::shuffle(riddleIds.begin(), riddleIds.end(), g);
 
   int riddleIndex = 0;

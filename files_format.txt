@@ -8,9 +8,11 @@ This document describes the formats for the "Steps" file (used for recording and
 The steps file records player inputs and actions. Each line represents a single action taken by a player at a specific game cycle.
 
 General Format:
+[RANDOM_SEED: <seed_value>]
 CYCLE: <cycle_number> PLAYER: <player_id> ACTION: <action_name> [ANSWER: <value>]
 
 Fields:
+- [RANDOM_SEED: <seed_value>]: Optional first line. <seed_value> is an unsigned integer used to seed the random number generator for replay synchronization.
 - <cycle_number>: Unsigned integer representing the game loop cycle.
 - <player_id>: Integer (1 or 2) identifying the player.
 - <action_name>: One of the following strings:

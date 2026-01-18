@@ -106,5 +106,10 @@ public:
     ActionRecord getActionAt(size_t index) const { return actions[index]; }
 
     size_t getCurrIndex() const { return currActionIndex; }
-    
+
+    void setRandomSeed(unsigned int seed) { randomSeed = seed; }
+    unsigned int getRandomSeed() const { return randomSeed; }
+
+private:
+    unsigned int randomSeed = 0;
 };

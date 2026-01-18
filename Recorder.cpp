@@ -149,10 +149,27 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
 
     actions.clear();
     currActionIndex = 0;
+    randomSeed = 0; // Default
+
+    // Check for RANDOM_SEED line
+    if (file.peek() != EOF) {
+        string line;
+        streampos oldPos = file.tellg();
+        file >> line;
+        if (line == "RANDOM_SEED:") {
+             file >> randomSeed;
+        } else {
+             // Not a seed line, rewind
+             file.seekg(oldPos);
+        }
+    }
 
     while (file >> ws && file.peek() != EOF) {
         ActionRecord record;
         if (!record.read(file)) {
+            // Check if it's just garbage or end
+             // Actually, read handles structure.
+             // If read fails mid-stream, it's an error.
             file.close();
             return ErrorCode::READ_ERROR;
         }

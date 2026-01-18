@@ -5,7 +5,9 @@
 #include "Room.h"
 #include "Player.h"
 #include "Constants.h"
+#include "Constants.h"
 #include <string>
+#include <random>
 
 //////////////////////////////////////////     NormalGame Constructor     /////////////////////////////////////////////
 
@@ -31,6 +33,15 @@ NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
     {
         enableRecording("adv-world.steps.txt");
         resultFile.open("adv-world.result.txt");
+        
+        // Generate and save seed
+        unsigned int seed = std::random_device{}();
+        recordFile << "RANDOM_SEED: " << seed << "\n";
+        initializeRooms(seed);
+    }
+    else
+    {
+        initializeRooms();
     }
 }
 

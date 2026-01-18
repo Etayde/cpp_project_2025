@@ -87,7 +87,7 @@ public:
   void showErrorScreen();
 
   // Game logic
-  void initializeRooms();
+  void initializeRooms(unsigned int seed = 0);
   virtual void startNewGame();
   virtual void gameLoop() = 0;
   virtual void handleInput() = 0;
