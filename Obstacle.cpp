@@ -2,7 +2,6 @@
 
 #include "Obstacle.h"
 #include "GameObject.h"
-#include "PickableObject.h"
 #include "Room.h"
 #include "Player.h"
 #include "Renderer.h"

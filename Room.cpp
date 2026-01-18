@@ -918,6 +918,7 @@ void Room::scanAndCreateSprings()
               if (!addObject(link))
               {
                 delete link;
+                springLinks.pop_back();
                 addFailed = true;
                 break;
               }
@@ -929,7 +930,15 @@ void Room::scanAndCreateSprings()
                                  wallCheck.projectionDirection);
               springs.push_back(spring);
             }
-            else delete spring;
+            else
+            {
+              // Clean up successfully added links on failure
+              for (SpringLink *sl : springLinks)
+              {
+                removeObjectAt(sl->getX(), sl->getY());
+              }
+              delete spring;
+            }
           }
         }
       }
@@ -1031,6 +1040,7 @@ void Room::createSpringFromGroup(const std::vector<Point> &group)
             if (!addObject(link))
             {
               delete link;
+              springLinks.pop_back();
               addFailed = true;
               break;
             }
@@ -1042,7 +1052,15 @@ void Room::createSpringFromGroup(const std::vector<Point> &group)
                                wallCheck.projectionDirection);
             springs.push_back(spring);
           }
-          else delete spring;
+          else
+          {
+            // Clean up successfully added links on failure
+            for (SpringLink *sl : springLinks)
+            {
+              removeObjectAt(sl->getX(), sl->getY());
+            }
+            delete spring;
+          }
         }
       }
     }

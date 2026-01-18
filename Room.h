@@ -200,7 +200,6 @@ public:
   Point getSpawnPointFromNext(int playerId);
 
 private:
-  Point findSmartSpawn(Point base);
 
 public:
   // Collision & movement
@@ -242,6 +241,8 @@ private:
         : valid(false), projectionDirection(Direction::STAY),
           anchorPosition(-1, -1) {}
   };
+
+  Point findSmartSpawn(Point base);
 
   Direction detectOrientation(const std::vector<Point> &positions);
   std::vector<Point> sortPositions(const std::vector<Point> &positions,
