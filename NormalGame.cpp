@@ -432,17 +432,6 @@ void NormalGame::writeStepsHeader()
     recordFile.flush();
 }
 
-//////////////////////////////////////////     showMainMenu     /////////////////////////////////////////////
-
-void NormalGame::showMainMenu()
-{
-    Game::showMainMenu();
-    
-    // Display Color Mode status
-    Renderer::gotoxy(45, 10);
-    std::cout << (colorMode ? "ON " : "OFF"); // Space padding for overwrite
-}
-
 //////////////////////////////////////////     handleMainMenuInput     /////////////////////////////////////////////
 
 void NormalGame::handleMainMenuInput()
@@ -460,8 +449,7 @@ void NormalGame::handleMainMenuInput()
     case '2':
       colorMode = !colorMode;
       setColorEnabled(colorMode);
-      std::cout << (colorMode ? "ON " : "OFF");
-      std::cout.flush();
+      toggleColorModeBanner();
       writeStepsHeader();
       break;
     case '8':
@@ -472,4 +460,13 @@ void NormalGame::handleMainMenuInput()
       break;
     }
   }
+}
+
+void NormalGame::toggleColorModeBanner()
+{
+  Renderer::gotoxy(47, 10);
+  std::cout << "     ";
+  Renderer::gotoxy(47, 10);
+  std::cout << (colorMode ? "(ON)" : "(OFF)");
+  std::cout.flush();
 }

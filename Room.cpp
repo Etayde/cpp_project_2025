@@ -1181,6 +1181,8 @@ void Room::DrawLives(Player *p)
   int startX = legendTopLeft.getX() - 1;
   int offset = startX + 8;
 
+  set_color(Color::Red);
+  
   switch (p->getLives())
   {
   case 3:
@@ -1196,6 +1198,8 @@ void Room::DrawLives(Player *p)
     Renderer::printAt(offset, lineY, "        ");
     break;
   }
+  
+  reset_color();
 }
 
 //////////////////////////////////////////       isVacantSpot       /////////////////////////////////////////////

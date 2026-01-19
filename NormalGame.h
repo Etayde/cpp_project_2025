@@ -11,9 +11,13 @@ class NormalGame : public Game
     bool isRecording;
     ofstream recordFile;
     ofstream resultFile;
+    unsigned int randomSeed = 0;
+    bool colorMode = true;
 
 private:
     void recordAction(const PlayerKeyBinding& binding);
+    void writeStepsHeader();
+    void toggleColorModeBanner();
 
 protected:
     void reportScreenChange(int roomId) override;
@@ -40,9 +44,4 @@ public:
     // Menu overrides
     void showMainMenu() override;
     void handleMainMenuInput() override;
-
-private:
-    void writeStepsHeader();
-    unsigned int randomSeed = 0;
-    bool colorMode = true;
 };
