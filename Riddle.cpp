@@ -166,14 +166,14 @@ void Riddle::playRiddleAnimation() const
     const int frameHeight = 16;
     const int frameWidth = 56;  // Length of riddlePopupScreen rows
     
-    // Pulse animation: draw and clear the empty popup frame twice
+    // Pulse animation: draw and clear the popup frame twice
     for (int pulse = 0; pulse < 2; pulse++)
     {
-        // Draw the popup frame (without content)
+        // Draw the popup frame
         for (int i = 0; i < frameHeight; i++)
             Renderer::printAt(startX, startY + i, riddlePopupScreen[i]);
         Renderer::flush();
-        Renderer::sleep_ms(120);
+        Renderer::sleep_ms(250);
         
         // Clear the popup area (restore with spaces)
         for (int i = 0; i < frameHeight; i++)
@@ -183,11 +183,11 @@ void Riddle::playRiddleAnimation() const
                 Renderer::print(' ');
         }
         Renderer::flush();
-        Renderer::sleep_ms(80);
+        Renderer::sleep_ms(150);
     }
     
     // Small pause before showing the actual riddle content
-    Renderer::sleep_ms(50);
+    Renderer::sleep_ms(100);
 }
 
 //////////////////////////////////////////     playExitAnimation       //////////////////////////////////////////
