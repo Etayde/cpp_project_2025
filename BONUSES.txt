@@ -3,3 +3,7 @@ Added 2 additional block types:
 - SwitchWall (Z), a wall that gets removed once all the switches in the room are activated.
 
 Added a fun riddle pop-up animation.
+
+Color mode is now supported.
+
+Added a fun bomb explosion animation.

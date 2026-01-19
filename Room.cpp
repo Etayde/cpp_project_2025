@@ -340,6 +340,13 @@ void Room::drawVisibleObjects()
     int x = obj->getX();
     int y = obj->getY();
 
+    // Bombs always use their own draw() method (for explosion animation)
+    if (obj->getType() == ObjectType::BOMB)
+    {
+      obj->draw();
+      continue;
+    }
+
     if (isInDarkZone(x, y) && visibilityMap[y][x] == VisibilityState::DARK && !obj->isAlwaysVisible())
     {
       Renderer::printAt(x, y, ' ');
