@@ -459,12 +459,16 @@ void LoadedGame::showSilentPrompt()
 
 ErrorCode LoadedGame::validateScreenNames()
 {
-    const std::vector<std::string>& recordedScreens = steps.getScreenNames();
+    std::vector<std::string> recordedScreens = steps.getScreenNames();
     
     // If no screens were recorded (e.g. legacy file), we skip validation
     if (recordedScreens.empty()) return ErrorCode::NONE;
     
     std::vector<std::string> currentScreens = LevelLoader::discoverLevelFiles();
+    
+    // Sort recorded screens to ensure order independence
+    // NOTE: currentScreens is already sorted by LevelLoader::discoverLevelFiles()
+    std::sort(recordedScreens.begin(), recordedScreens.end());
     
     if (recordedScreens.size() != currentScreens.size()) return ErrorCode::SCREEN_MISMATCH;
     
