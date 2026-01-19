@@ -66,7 +66,7 @@ void Screen::draw() const
     Renderer::clrscr();
     Renderer::gotoxy(0, 0);
 
-    for (int i = 0; i < MAX_Y; ++i)
+    for (int i = 0; i < MAX_Y - 1; ++i)
     {
       if (screen[i] != nullptr)
       {
@@ -83,13 +83,33 @@ void Screen::draw() const
             else if (c >= '0' && c <= '9') set_color(Color::Purple);
             else if (c == '#' || c == '*') set_color(Color::Gray);
             else if (c == '?') set_color(Color::LightBlue);
-            // Don't color spaces or unknown chars
             
             Renderer::print(c);
             reset_color();
         }
         Renderer::print('\n');
       }
+    }
+
+    // Print last line without trailing newline
+    if (screen[MAX_Y - 1] != nullptr)
+    {
+        for (int j = 0; screen[MAX_Y - 1][j] != '\0'; ++j)
+        {
+            char c = screen[MAX_Y - 1][j];
+            
+            if (c == 'W' || c == 'w' || c == 'Z' || c == '|' || c == '-' || c == '=')
+                set_color(Color::White);
+            else if (c == '!') set_color(Color::LightYellow);
+            else if (c == 'K' || c == '/' || c == '\\') set_color(Color::LightPurple);
+            else if (c == '@') set_color(Color::Green);
+            else if (c >= '0' && c <= '9') set_color(Color::Purple);
+            else if (c == '#' || c == '*') set_color(Color::Gray);
+            else if (c == '?') set_color(Color::LightBlue);
+            
+            Renderer::print(c);
+            reset_color();
+        }
     }
     Renderer::flush();
 }
