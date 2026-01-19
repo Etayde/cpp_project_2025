@@ -8,6 +8,7 @@
 #include "Constants.h"
 #include <string>
 #include <random>
+#include "LevelLoader.h"
 
 //////////////////////////////////////////     NormalGame Constructor     /////////////////////////////////////////////
 
@@ -38,7 +39,15 @@ NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
         
         // Generate and save seed
         unsigned int seed = std::random_device{}();
-        recordFile << "RANDOM_SEED: " << seed << "\n";
+        recordFile << "RANDOM_SEED: " << seed << " SCREENS: ";
+        
+        std::vector<std::string> levelFiles = LevelLoader::discoverLevelFiles();
+        for (size_t i = 0; i < levelFiles.size(); i++) {
+            recordFile << levelFiles[i];
+            if (i < levelFiles.size() - 1) recordFile << ",";
+        }
+        recordFile << "\n";
+        
         initializeRooms(seed);
     }
     else initializeRooms();

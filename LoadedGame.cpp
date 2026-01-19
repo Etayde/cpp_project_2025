@@ -3,6 +3,8 @@
 #include "LoadedGame.h"
 #include "Recorder.h"
 #include "Layouts.h"
+#include "LevelLoader.h"
+#include "Constants.h"
 #include <string>
 #include <fstream>
 #include <iostream>
@@ -26,6 +28,13 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps(),
     unsigned int seed = steps.getRandomSeed();
     if (seed == 0) {
         initErrorMessage = ErrorCode::MISSING_RANDOM_SEED;
+        currentState = GameState::error;
+        return;
+    }
+    
+    // Validate screen files
+    if (validateScreenNames() != ErrorCode::NONE) {
+        initErrorMessage = ErrorCode::SCREEN_MISMATCH;
         currentState = GameState::error;
         return;
     }
@@ -77,6 +86,13 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
     unsigned int seed = steps.getRandomSeed();
     if (seed == 0) {
         initErrorMessage = ErrorCode::MISSING_RANDOM_SEED;
+        currentState = GameState::error;
+        return;
+    }
+    
+    // Validate screen files
+    if (validateScreenNames() != ErrorCode::NONE) {
+        initErrorMessage = ErrorCode::SCREEN_MISMATCH;
         currentState = GameState::error;
         return;
     }
@@ -412,7 +428,10 @@ void LoadedGame::showSilentPrompt()
 
     case GameState::error:
         std::cout << "Test not passed" << std::endl;
-        std::cout << "Error during initialization" << std::endl;
+        if (initErrorMessage == ErrorCode::SCREEN_MISMATCH)
+             std::cout << "Screen files mismatch between steps file and current directory" << std::endl;
+        else
+             std::cout << "Error during initialization" << std::endl;
         break;
     
     case GameState::quit:
@@ -434,4 +453,25 @@ void LoadedGame::showSilentPrompt()
         break;
     }
     
+}
+
+///////////////////////////////////////////    validateScreenNames    /////////////////////////////////////////////
+
+ErrorCode LoadedGame::validateScreenNames()
+{
+    const std::vector<std::string>& recordedScreens = steps.getScreenNames();
+    
+    // If no screens were recorded (e.g. legacy file), we skip validation
+    if (recordedScreens.empty()) return ErrorCode::NONE;
+    
+    std::vector<std::string> currentScreens = LevelLoader::discoverLevelFiles();
+    
+    if (recordedScreens.size() != currentScreens.size()) return ErrorCode::SCREEN_MISMATCH;
+    
+    for (size_t i = 0; i < recordedScreens.size(); i++)
+    {
+        if (recordedScreens[i] != currentScreens[i]) return ErrorCode::SCREEN_MISMATCH;
+    }
+    
+    return ErrorCode::NONE;
 }

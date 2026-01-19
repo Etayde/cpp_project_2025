@@ -255,7 +255,7 @@ void Room::draw()
 
 //////////////////////////////////////////        drawDarkness       /////////////////////////////////////////////
 
-void Room::drawDarkness()
+void Room::drawDarkness(Player *p1, Player *p2)
 {
   if (darkZones.empty()) return;
 
@@ -264,6 +264,9 @@ void Room::drawDarkness()
     for (int x = 0; x < MAX_X; x++)
     {
       if (!isInDarkZone(x, y)) continue;
+
+      if (p1 != nullptr && p1->getX() == x && p1->getY() == y) continue;
+      if (p2 != nullptr && p2->getX() == x && p2->getY() == y) continue;
 
       Renderer::gotoxy(x, y);
 

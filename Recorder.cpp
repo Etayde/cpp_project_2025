@@ -1,5 +1,6 @@
 #include "Recorder.h"
 #include <fstream>
+#include <sstream>
 
 //////////////////////////////////////////    Action Conversion    /////////////////////////////////////////////
 
@@ -148,6 +149,7 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
     if (!file.is_open()) return ErrorCode::FILE_NOT_FOUND;
 
     actions.clear();
+    screenNames.clear();
     currActionIndex = 0;
     randomSeed = 0; // Default
 
@@ -155,9 +157,28 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
     if (file.peek() != EOF) {
         string line;
         streampos oldPos = file.tellg();
-        file >> line;
-        if (line == "RANDOM_SEED:") {
-             file >> randomSeed;
+        getline(file, line);
+        
+        stringstream ss(line);
+        string key;
+        ss >> key;
+        
+        if (key == "RANDOM_SEED:") {
+             ss >> randomSeed;
+             
+             // Check for SCREENS:
+             string screensKey;
+             if (ss >> screensKey && screensKey == "SCREENS:") {
+                 string screensList;
+                 ss >> screensList;
+                 
+                 stringstream ss2(screensList);
+                 string segment;
+                 while(std::getline(ss2, segment, ',')) {
+                    screenNames.push_back(segment);
+                 }
+             }
+             
         } else {
              // Not a seed line, rewind
              file.seekg(oldPos);

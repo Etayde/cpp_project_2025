@@ -182,7 +182,7 @@ public:
 
   // Drawing
   void draw();
-  void drawDarkness();
+  void drawDarkness(Player *p1 = nullptr, Player *p2 = nullptr);
   void drawVisibleObjects();
 
   // Legend

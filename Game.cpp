@@ -268,7 +268,7 @@ void Game::update()
   }
 
   room->updateVisibility(&player1, &player2);
-  room->drawDarkness();
+  room->drawDarkness(&player1, &player2);
   room->drawVisibleObjects();
   room->drawLegend(&player1, &player2);
   player1.draw(room);
@@ -539,6 +539,9 @@ void Game::showErrorScreen()
     break;
   case ErrorCode::MISSING_RANDOM_SEED:
     Renderer::print("Error: No random seed found in steps file.\n");
+    break;
+  case ErrorCode::SCREEN_MISMATCH:
+    Renderer::print("Error: Screen files mismatch between steps file and current directory.\n");
     break;
   default:
     Renderer::print("Unknown error\n");

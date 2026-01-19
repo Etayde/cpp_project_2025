@@ -94,4 +94,10 @@ public:
     size_t getCurrIndex() const { return currActionIndex; }
     void setRandomSeed(unsigned int seed) { randomSeed = seed; }
     unsigned int getRandomSeed() const { return randomSeed; }
+    
+    // New members
+    const std::vector<std::string>& getScreenNames() const { return screenNames; }
+    
+private:
+     std::vector<std::string> screenNames;
 };

@@ -833,6 +833,7 @@ void Player::transferMomentumTo(Player *otherPlayer)
 }
 
 ////////////////////////////////////////////   calculateForce       /////////////////////////////////////////////
+
 int Player::calculateForce() const
 {
   int dx, dy;
@@ -850,6 +851,7 @@ int Player::calculateForce() const
 }
 
 ////////////////////////////////////////////   handleObstacleInteraction       /////////////////////////////////////////////
+
 bool Player::handleObstacleInteraction(class ObstacleBlock *block, Room *room)
 {
   Obstacle *obstacle = block->getParent();

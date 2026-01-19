@@ -19,6 +19,7 @@ class LoadedGame : public Game {
     long quitCycle;
 
 private:
+    ErrorCode validateScreenNames();
     ErrorCode loadActions(const string& filename) { return steps.loadFromFile(filename); }
     ErrorCode loadExpectedResults(const string& filename);
     bool verifyEvent(const GameEvent& actual);
