@@ -158,7 +158,8 @@ void Player::loseLife(Room *room, Game *game)
 void Player::decreaseLives()
 {
   if (lives > 0) lives--;
-  else if (lives == 0) kill();
+  
+  if (lives == 0) kill();
 
   return;
 }
@@ -266,7 +267,7 @@ bool Player::move(Room *room, Riddle **activeRiddle, Player **activePlayer,
   return success;
 }
 
-//////////////////////////////////////////           draw       /////////////////////////////////////////////
+//////////////////////////////////////////           draw            /////////////////////////////////////////////
 
 void Player::draw(Room *room)
 {
@@ -277,8 +278,9 @@ void Player::draw(Room *room)
     if (doorId != room->getPrevRoomId()) { erase(room); return; }
   }
 
-  if (isRespawning() && respawnTimer % 2 != 0) return;
-  Renderer::print(sprite);
+  if (isRespawning() && respawnTimer % BLINK_RATE != 0) Renderer::print(' ');
+  
+  else Renderer::print(sprite);
 }
 
 //////////////////////////////////////////        pickupItem       /////////////////////////////////////////////

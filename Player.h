@@ -61,6 +61,8 @@ class Player
   Momentum springMomentum;
   int respawnTimer;
 
+  static const int BLINK_RATE = 5;
+
 public:
   Player();
   Player(int id, int startX, int startY, char playerSprite);

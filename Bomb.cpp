@@ -134,15 +134,11 @@ void Bomb::draw() const
 
     if (state == BombState::TICKING)
     {
-        if ((blinkCounter % BLINK_RATE) < 5)
-            Renderer::print('@');
-        else
-            Renderer::print('*');
+        if ((blinkCounter % BLINK_RATE) < 5) Renderer::print('@');
+        
+        else Renderer::print('*');
     }
-    else
-    {
-        Renderer::print(sprite);
-    }
+    else Renderer::print(sprite);
 
     Renderer::flush();
 }

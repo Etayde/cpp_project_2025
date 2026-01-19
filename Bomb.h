@@ -25,7 +25,6 @@ enum class BombState
 // An explosive that can be picked up by players (@)
 class Bomb : public PickableObject
 {
-private:
     BombState state;
     int fuseTimer;
     int blinkCounter;

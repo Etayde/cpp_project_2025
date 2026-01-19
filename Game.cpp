@@ -500,50 +500,60 @@ void Game::showGameOver()
 void Game::showErrorScreen()
 {
   initErrorScreen.draw();
-  Renderer::gotoxy(22, 10);
   switch (initErrorMessage)
   {
   case ErrorCode::L_NOT_FOUND:
-    Renderer::print("Error: No 'L' found in room ");
+    Renderer::gotoxy(26, 10);
+    Renderer::print("Error: No 'L' found in room.");
     Renderer::print(initErrorRoomId);
     Renderer::print("\n");
     break;
   case ErrorCode::MULTIPLE_L:
-    Renderer::print("Error: Multiple 'L's found in room ");
+    Renderer::gotoxy(23, 10);
+    Renderer::print("Error: Multiple 'L's found in room.");
     Renderer::print(initErrorRoomId);
     Renderer::print("\n");
     break;
   case ErrorCode::L_OUT_OF_BOUNDS:
-    Renderer::print("Error: 'L' out of bounds in room ");
+    Renderer::gotoxy(24, 10);
+    Renderer::print("Error: 'L' out of bounds in room.");
     Renderer::print(initErrorRoomId);
     Renderer::print("\n");
     break;
   case ErrorCode::LEGEND_OBSCURES_OBJECTS:
-    Renderer::print("Error: Legend obscured objects in room ");
+    Renderer::gotoxy(21, 10);
+    Renderer::print("Error: Legend obscured objects in room.");
     Renderer::print(initErrorRoomId);
     Renderer::print("\n");
     break;
   case ErrorCode::LEGEND_OBSCURES_SPAWN:
-    Renderer::print("Error: Legend obscured a player's spawn point in room ");
+    Renderer::gotoxy(13, 10);
+    Renderer::print("Error: Legend obscured a player's spawn point in room.");
     Renderer::print(initErrorRoomId);
     Renderer::print("\n");
     break;
   case ErrorCode::FILE_NOT_FOUND:
-    Renderer::print("Error: Required file not found\n");
+    Renderer::gotoxy(25, 10);
+    Renderer::print("Error: Required file not found.\n");
     break;
   case ErrorCode::READ_ERROR:
-    Renderer::print("Error: Failed to read file\n");
+    Renderer::gotoxy(27, 10);
+    Renderer::print("Error: Failed to read file.\n");
     break;
   case ErrorCode::NO_SCREENS_FOUND:
+    Renderer::gotoxy(15, 10);
     Renderer::print("Error: No .screen files found in working directory.\n");
     break;
   case ErrorCode::MISSING_RANDOM_SEED:
+    Renderer::gotoxy(19, 10);
     Renderer::print("Error: No random seed found in steps file.\n");
     break;
   case ErrorCode::SCREEN_MISMATCH:
+    Renderer::gotoxy(5, 10);
     Renderer::print("Error: Screen files mismatch between steps file and current directory.\n");
     break;
   default:
+    Renderer::gotoxy(34, 10);
     Renderer::print("Unknown error\n");
     break;
   }

@@ -139,7 +139,7 @@ namespace BlockingChars
 
 namespace PlayerConstants
 {
-  constexpr int RESPAWN_DURATION_FRAMES = 50;
+  constexpr int RESPAWN_DURATION_FRAMES = 30;
 }
 
 //////////////////////////////////////////      ERROR CODES       /////////////////////////////////////////////
