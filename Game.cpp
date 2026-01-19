@@ -20,12 +20,21 @@ class Constants;
 
 //////////////////////////////////////////     Game Constructor       /////////////////////////////////////////////
 
+Game* Game::currentInstance = nullptr;
+
 Game::Game()
     : silentMode(false), consoleInitialized(false), initErrorMessage(ErrorCode::NONE), initErrorRoomId(-1), 
       gameOverMessege(GameOverMessege::NONE), cycleCount(0), currentState(GameState::mainMenu), 
-      currentRoomId(-1), gameInitialized(false)
+      currentRoomId(-1), gameInitialized(false), colorMode(true)
 {
+  currentInstance = this;
   Renderer::setSilentMode(silentMode);
+}
+
+// Free function used by Console.h to check color mode in OOP way
+bool isGameColorEnabled()
+{
+  return Game::isColorEnabled();
 }
 
 //////////////////////////////////////////      Game Destructor       /////////////////////////////////////////////

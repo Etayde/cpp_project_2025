@@ -30,7 +30,7 @@ public:
 class Torch : public PickableObject
 {
 public:
-    static constexpr int LIGHT_RADIUS = 2;
+    static constexpr int LIGHT_RADIUS = 3;
 
     Torch() : PickableObject()
     {

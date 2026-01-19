@@ -38,6 +38,9 @@ protected:
   Player player1;
   Player player2;
   bool gameInitialized;
+  bool colorMode;
+
+  static Game* currentInstance;
 
   Game();
 
@@ -81,6 +84,8 @@ public:
   Player& getPlayer2() { return player2; }
   const std::vector<Room>& getRooms() const { return rooms; }
   size_t getRoomsCount() const { return rooms.size(); }
+
+  static bool isColorEnabled() { return currentInstance && currentInstance->colorMode; }
 
   void setCurrentState(GameState newState) { currentState = newState; }
   void setGameInitialized(bool value) { gameInitialized = value; }

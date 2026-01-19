@@ -346,7 +346,18 @@ void Room::drawVisibleObjects()
       continue;
     }
 
-    obj->draw();
+    // In illuminated dark zones, override object colors with torch-based colors
+    if (isInDarkZone(x, y) && visibilityMap[y][x] != VisibilityState::DARK)
+    {
+      if (visibilityMap[y][x] == VisibilityState::EDGE) set_color(Color::LightYellow);
+      else set_color(Color::Yellow);
+      Renderer::printAt(x, y, obj->getSprite());
+      reset_color();
+    }
+    else
+    {
+      obj->draw();
+    }
   }
 }
 

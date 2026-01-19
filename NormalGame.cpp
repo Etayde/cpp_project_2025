@@ -22,9 +22,6 @@ NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
     hideCursor();
     clrscr();
     consoleInitialized = true;
-    
-    // Set default color mode enabled
-    setColorEnabled(colorMode);
 
     bool saveMode = false;
 
@@ -77,6 +74,7 @@ void NormalGame::run()
     {
     case GameState::mainMenu:
       showMainMenu();
+      toggleColorModeBanner();
       while (currentState == GameState::mainMenu)
       {
         handleMainMenuInput();
@@ -448,7 +446,6 @@ void NormalGame::handleMainMenuInput()
       break;
     case '2':
       colorMode = !colorMode;
-      setColorEnabled(colorMode);
       toggleColorModeBanner();
       writeStepsHeader();
       break;

@@ -12,7 +12,6 @@ class NormalGame : public Game
     ofstream recordFile;
     ofstream resultFile;
     unsigned int randomSeed = 0;
-    bool colorMode = true;
 
 private:
     void recordAction(const PlayerKeyBinding& binding);

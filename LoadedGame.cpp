@@ -27,7 +27,7 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps(),
     }
     
     // Apply recorded color mode
-    setColorEnabled(steps.getColorMode());
+    colorMode = steps.getColorMode();
     
     unsigned int seed = steps.getRandomSeed();
     if (seed == 0) {
@@ -88,7 +88,7 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
     }
     
     // Apply recorded color mode
-    setColorEnabled(steps.getColorMode());
+    colorMode = steps.getColorMode();
     
     unsigned int seed = steps.getRandomSeed();
     if (seed == 0) {

@@ -238,19 +238,15 @@ enum class Color
     BrightWhite
 };
 
-namespace ConsoleInternal
-{
-    static bool colorEnabled = true;
-}
+// Forward declaration for OOP color mode access
+class Game;
 
-inline void setColorEnabled(bool enabled)
-{
-    ConsoleInternal::colorEnabled = enabled;
-}
+// Declared in Game.cpp, allows Console functions to query color state
+bool isGameColorEnabled();
 
 inline void set_color(Color color)
 {
-    if (!ConsoleInternal::colorEnabled) return;
+    if (!isGameColorEnabled()) return;
 #ifdef PLATFORM_WINDOWS
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, static_cast<int>(color));
@@ -266,6 +262,7 @@ inline void set_color(Color color)
 
 inline void reset_color()
 {
-    if (!ConsoleInternal::colorEnabled) return;
+    if (!isGameColorEnabled()) return;
     set_color(Color::White);
 }
+
