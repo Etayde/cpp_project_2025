@@ -64,8 +64,7 @@ ObjectType Screen::objectIs(const Point &p) const
 static void colorMenuChar(char c)
 {
     if (c == ' ') return;
-    if (c >= '0' && c <= '9') set_color(Color::Purple);
-    else set_color(Color::White);
+    set_color(Color::White);
 }
 
 void Screen::draw() const

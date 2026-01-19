@@ -25,7 +25,7 @@ Game* Game::currentInstance = nullptr;
 Game::Game()
     : silentMode(false), consoleInitialized(false), initErrorMessage(ErrorCode::NONE), initErrorRoomId(-1), 
       gameOverMessege(GameOverMessege::NONE), cycleCount(0), currentState(GameState::mainMenu), 
-      currentRoomId(-1), gameInitialized(false), colorMode(true)
+      currentRoomId(-1), gameInitialized(false), colorMode(false)
 {
   currentInstance = this;
   Renderer::setSilentMode(silentMode);

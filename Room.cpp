@@ -313,10 +313,10 @@ void Room::drawDarkness(Player *p1, Player *p2)
       {
           char c = getCharAt(x, y);
           
-          // Skip coloring for empty space
           if (c != ' ') {
-              // Apply torch-based coloring in dark zones
-              if (visibilityMap[y][x] == VisibilityState::EDGE) set_color(Color::LightYellow);
+              // CLOSE uses original color, INNER=Yellow, EDGE=LightYellow
+              if (visibilityMap[y][x] == VisibilityState::CLOSE) setColorForChar(c);
+              else if (visibilityMap[y][x] == VisibilityState::EDGE) set_color(Color::LightYellow);
               else if (visibilityMap[y][x] == VisibilityState::INNER) set_color(Color::Yellow);
           }
           
@@ -346,13 +346,20 @@ void Room::drawVisibleObjects()
       continue;
     }
 
-    // In illuminated dark zones, override object colors with torch-based colors
+    // In dark zones: CLOSE=original color, INNER=Yellow, EDGE=LightYellow
     if (isInDarkZone(x, y) && visibilityMap[y][x] != VisibilityState::DARK)
     {
-      if (visibilityMap[y][x] == VisibilityState::EDGE) set_color(Color::LightYellow);
-      else set_color(Color::Yellow);
-      Renderer::printAt(x, y, obj->getSprite());
-      reset_color();
+      if (visibilityMap[y][x] == VisibilityState::CLOSE)
+      {
+        obj->draw(); // original color
+      }
+      else
+      {
+        if (visibilityMap[y][x] == VisibilityState::EDGE) set_color(Color::LightYellow);
+        else set_color(Color::Yellow);
+        Renderer::printAt(x, y, obj->getSprite());
+        reset_color();
+      }
     }
     else
     {
@@ -725,8 +732,10 @@ void Room::lightRadius(int centerX, int centerY, int radius)
       double distance = sqrt(dx * dx + dy * dy);
       if (distance > radius) continue;
 
-      // EDGE if at the outer boundary, INNER otherwise
-      if (distance > radius - 1)
+      // Distance-based visibility: CLOSE (≤2), INNER (>2 but <radius), EDGE (at radius)
+      if (distance <= 2)
+        visibilityMap[y][x] = VisibilityState::CLOSE;
+      else if (distance > radius - 1)
         visibilityMap[y][x] = VisibilityState::EDGE;
       else
         visibilityMap[y][x] = VisibilityState::INNER;

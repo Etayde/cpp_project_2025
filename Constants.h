@@ -27,9 +27,10 @@ enum class GameState
 
 enum class VisibilityState
 {
-  DARK,   // Not visible
-  INNER,  // Inside torch radius (Yellow)
-  EDGE    // At edge of radius (Light Yellow)
+  DARK,   // Not visible (> radius)
+  EDGE,   // At edge of radius (Light Yellow)
+  INNER,  // Inside torch radius but >2 cells (Yellow)
+  CLOSE   // Within 2 cells of player (original color)
 };
 
 //////////////////////////////////////////          DIRECTIONS       /////////////////////////////////////////////
