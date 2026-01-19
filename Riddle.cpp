@@ -165,25 +165,32 @@ void Riddle::playRiddleAnimation() const
     const int startY = 4;
     const int frameHeight = 16;
     const int frameWidth = 56;  // Length of riddlePopupScreen rows
+    const int waveDelay = 30;   // Delay between each row appearing
     
-    // Pulse animation: draw and clear the popup frame twice
+    // Wave animation: draw rows one by one, then clear, twice
     for (int pulse = 0; pulse < 2; pulse++)
     {
-        // Draw the popup frame
+        // Wave in: draw each row from top to bottom with delay
         for (int i = 0; i < frameHeight; i++)
+        {
             Renderer::printAt(startX, startY + i, riddlePopupScreen[i]);
-        Renderer::flush();
-        Renderer::sleep_ms(250);
+            Renderer::flush();
+            Renderer::sleep_ms(waveDelay);
+        }
         
-        // Clear the popup area (restore with spaces)
+        Renderer::sleep_ms(100);  // Brief pause at full display
+        
+        // Wave out: clear each row from top to bottom with delay
         for (int i = 0; i < frameHeight; i++)
         {
             Renderer::gotoxy(startX, startY + i);
             for (int j = 0; j < frameWidth; j++)
                 Renderer::print(' ');
+            Renderer::flush();
+            Renderer::sleep_ms(waveDelay);
         }
-        Renderer::flush();
-        Renderer::sleep_ms(150);
+        
+        Renderer::sleep_ms(80);  // Brief pause before next wave
     }
     
     // Small pause before showing the actual riddle content
@@ -194,6 +201,40 @@ void Riddle::playRiddleAnimation() const
 
 void Riddle::playExitAnimation() const
 {
+    if (!Renderer::shouldRender()) return;
+    
+    // Animation parameters matching displayRiddleQuestion positioning
+    const int startX = 11;
+    const int startY = 4;
+    const int frameHeight = 16;
+    const int frameWidth = 56;  // Length of riddlePopupScreen rows
+    const int waveDelay = 30;   // Delay between each row appearing
+    
+    // Wave animation: draw rows one by one, then clear, twice
+    for (int pulse = 0; pulse < 2; pulse++)
+    {
+        // Wave in: draw each row from top to bottom with delay
+        for (int i = 0; i < frameHeight; i++)
+        {
+            Renderer::printAt(startX, startY + i, riddlePopupScreen[i]);
+            Renderer::flush();
+            Renderer::sleep_ms(waveDelay);
+        }
+        
+        Renderer::sleep_ms(100);  // Brief pause at full display
+        
+        // Wave out: clear each row from top to bottom with delay
+        for (int i = 0; i < frameHeight; i++)
+        {
+            Renderer::gotoxy(startX, startY + i);
+            for (int j = 0; j < frameWidth; j++)
+                Renderer::print(' ');
+            Renderer::flush();
+            Renderer::sleep_ms(waveDelay);
+        }
+        
+        Renderer::sleep_ms(80);  // Brief pause before next wave
+    }
 }
 
 //////////////////////////////////////////        checkAnswer           //////////////////////////////////////////
