@@ -98,6 +98,10 @@ public:
     // New members
     const std::vector<std::string>& getScreenNames() const { return screenNames; }
     
+    void setColorMode(bool enabled) { colorMode = enabled; }
+    bool getColorMode() const { return colorMode; }
+
 private:
      std::vector<std::string> screenNames;
+     bool colorMode = false;
 };

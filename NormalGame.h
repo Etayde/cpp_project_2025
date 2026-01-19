@@ -36,4 +36,13 @@ public:
 
     void enableRecording(const string &filename);
     void disableRecording();
+
+    // Menu overrides
+    void showMainMenu() override;
+    void handleMainMenuInput() override;
+
+private:
+    void writeStepsHeader();
+    unsigned int randomSeed = 0;
+    bool colorMode = true;
 };

@@ -248,7 +248,26 @@ void Room::draw()
 {
   if (baseLayout != nullptr) baseLayout->draw();
 
-  for (const Modification &mod : mods) Renderer::printAt(mod.x, mod.y, mod.newChar);
+  for (const Modification &mod : mods) 
+  {
+      // Color logic for mods
+      // Ideally we should know the type of the mod character, but we only have char.
+      // Guess based on char?
+      if (mod.newChar == '!') set_color(Color::LightYellow);
+      else if (mod.newChar == 'K') set_color(Color::Yellow);
+      else if (mod.newChar == '@') set_color(Color::LightRed);
+      else if (mod.newChar == '/') set_color(Color::LightGreen);
+      else if (mod.newChar == '\\') set_color(Color::Gray);
+      else if (mod.newChar == 'Z') set_color(Color::LightAqua);
+      else if (mod.newChar >= '0' && mod.newChar <= '9') set_color(Color::LightBlue);
+      else if (mod.newChar == '#' ) set_color(Color::Green);
+      else if (mod.newChar == '?' ) set_color(Color::LightGreen);
+      else if (mod.newChar == '*' ) set_color(Color::Gray);
+      else set_color(Color::White); // Default
+      
+      Renderer::printAt(mod.x, mod.y, mod.newChar);
+      reset_color();
+  }
 
   drawDarkness();
 }
@@ -270,7 +289,31 @@ void Room::drawDarkness(Player *p1, Player *p2)
 
       Renderer::gotoxy(x, y);
 
-      if (visibilityMap[y][x]) Renderer::print(getCharAt(x, y));
+      if (visibilityMap[y][x]) 
+      {
+          // Check char to color it
+          char c = getCharAt(x, y);
+          // Duplicate simple coloring logic (Room should arguably have a helper for this or use GameObject if pos occupied)
+          // But getCharAt returns ' ' if object is picked up?
+          // It returns mods or base layout.
+          // Let's reuse simple heuristic
+          if (c == 'W' || c == '|' || c == '-' || c == 'I') set_color(Color::BrightWhite);
+          else if (c == '=') set_color(Color::Gray);
+          else if (c == '!') set_color(Color::LightYellow);
+          else if (c == 'K') set_color(Color::Yellow);
+          else if (c == '@') set_color(Color::LightRed);
+          else if (c == '/') set_color(Color::LightGreen);
+          else if (c == '\\') set_color(Color::Gray);
+          else if (c == 'Z') set_color(Color::LightAqua);
+          else if (c >= '0' && c <= '9') set_color(Color::LightBlue);
+          else if (c == '#' ) set_color(Color::Green);
+          else if (c == '?' ) set_color(Color::LightGreen);
+          else if (c == '*' ) set_color(Color::Gray);
+          else set_color(Color::White);
+          
+          Renderer::print(c);
+          reset_color();
+      }
 
       else Renderer::print(' ');
     }

@@ -70,3 +70,58 @@ GameObject *createObjectFromChar(char ch, int x, int y, int riddleId)
     return nullptr;
   }
 }
+// ... (existing code)
+
+//////////////////////////////////////////          draw             //////////////////////////////////////////
+
+void GameObject::draw() const
+{
+    if (!active || position.getX() < 0 || position.getY() < 0) return;
+
+    switch (type)
+    {
+    case ObjectType::WALL:
+        set_color(Color::BrightWhite);
+        break;
+    case ObjectType::BREAKABLE_WALL:
+        set_color(Color::Gray);
+        break;
+    case ObjectType::SWITCH_WALL:
+        set_color(Color::LightAqua);
+        break;
+    case ObjectType::TORCH:
+        set_color(Color::LightYellow);
+        break;
+    case ObjectType::BOMB:
+        set_color(Color::LightRed);
+        break;
+    case ObjectType::KEY:
+        set_color(Color::Yellow);
+        break;
+    case ObjectType::DOOR:
+        set_color(Color::LightBlue);
+        break;
+    case ObjectType::RIDDLE:
+        set_color(Color::LightGreen);
+        break;
+    case ObjectType::SPRING:
+    // case ObjectType::SPRING_LINK: // Identical value to SPRING
+        set_color(Color::Green);
+        break;
+    case ObjectType::SWITCH_ON:
+        set_color(Color::LightGreen);
+        break;
+    case ObjectType::SWITCH_OFF:
+        set_color(Color::Gray); // Or Red?
+        break;
+    case ObjectType::OBSTACLE_BLOCK:
+        set_color(Color::Gray);
+        break;
+    default:
+        set_color(Color::White);
+        break;
+    }
+
+    Renderer::printAt(position.getX(), position.getY(), sprite);
+    reset_color();
+}

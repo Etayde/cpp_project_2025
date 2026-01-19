@@ -129,6 +129,7 @@ ErrorCode Game::validateLegendPlacement(Room &room)
 
 void Game::startNewGame()
 {
+  cycleCount = 0;
   if (rooms.empty()) initializeRooms();
   
   if (rooms.empty()) return;

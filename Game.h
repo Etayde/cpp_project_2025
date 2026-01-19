@@ -87,7 +87,7 @@ public:
 
   // Menu handlers
   virtual void showMainMenu();
-  void handleMainMenuInput();
+  virtual void handleMainMenuInput();
   virtual void showInstructions();
   void handleInstructionsInput();
   virtual void showPauseMenu();

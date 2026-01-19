@@ -26,6 +26,9 @@ LoadedGame::LoadedGame(const string& filename, bool silent) : Game(), steps(),
         return;
     }
     
+    // Apply recorded color mode
+    setColorEnabled(steps.getColorMode());
+    
     unsigned int seed = steps.getRandomSeed();
     if (seed == 0) {
         initErrorMessage = ErrorCode::MISSING_RANDOM_SEED;
@@ -83,6 +86,9 @@ LoadedGame::LoadedGame(int argc, char* argv[]) : Game(), steps(),
         currentState = GameState::error;
         return;
     }
+    
+    // Apply recorded color mode
+    setColorEnabled(steps.getColorMode());
     
     unsigned int seed = steps.getRandomSeed();
     if (seed == 0) {

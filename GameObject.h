@@ -61,13 +61,7 @@ public:
   virtual bool onExplosion() { return false; }
   virtual bool isAlwaysVisible() const { return false; }
 
-  virtual void draw() const
-  {
-    if (active && position.getX() >= 0 && position.getY() >= 0)
-    {
-      Renderer::printAt(position.getX(), position.getY(), sprite);
-    }
-  }
+  virtual void draw() const;
 
   virtual void update() {}
 

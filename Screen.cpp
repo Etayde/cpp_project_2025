@@ -66,16 +66,27 @@ void Screen::draw() const
     Renderer::clrscr();
     Renderer::gotoxy(0, 0);
 
-    for (int i = 0; i < MAX_Y - 1; ++i)
+    for (int i = 0; i < MAX_Y; ++i)
     {
       if (screen[i] != nullptr)
       {
-        Renderer::print(screen[i]);
+        for (int j = 0; screen[i][j] != '\0'; ++j)
+        {
+            char c = screen[i][j];
+            
+            // Basic static map coloring
+            if (c == 'W' || c == '|' || c == '-' || c == '=')
+            {
+                if (c == '=') set_color(Color::Gray);
+                else set_color(Color::BrightWhite);
+            }
+            // For other static chars like floors or HUD text, keep default (White) or set specific
+            
+            Renderer::print(c);
+            reset_color();
+        }
         Renderer::print('\n');
       }
     }
-
-    if (screen[MAX_Y - 1] != nullptr)
-      Renderer::print(screen[MAX_Y - 1]);
     Renderer::flush();
 }

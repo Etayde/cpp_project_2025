@@ -152,8 +152,9 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
     screenNames.clear();
     currActionIndex = 0;
     randomSeed = 0; // Default
+    colorMode = false; // Default per user request (legacy compatible)
 
-    // Check for RANDOM_SEED line
+    // Check for header line
     if (file.peek() != EOF) {
         string line;
         streampos oldPos = file.tellg();
@@ -161,24 +162,31 @@ ErrorCode RecordedSteps::loadFromFile(const string& filename)
         
         stringstream ss(line);
         string key;
-        ss >> key;
         
+        // We'll read the line and parse for keywords
+        // Structure: RANDOM_SEED: <seed> [SCREENS: <list>] [COLOR_MODE: <ON/OFF>]
+        
+        ss >> key;
         if (key == "RANDOM_SEED:") {
              ss >> randomSeed;
              
-             // Check for SCREENS:
-             string screensKey;
-             if (ss >> screensKey && screensKey == "SCREENS:") {
-                 string screensList;
-                 ss >> screensList;
-                 
-                 stringstream ss2(screensList);
-                 string segment;
-                 while(std::getline(ss2, segment, ',')) {
-                    screenNames.push_back(segment);
+             string temp;
+             while (ss >> temp) {
+                 if (temp == "SCREENS:") {
+                     string screensList;
+                     ss >> screensList; // Assuming comma separated list follows immediately
+                     
+                     stringstream ss2(screensList);
+                     string segment;
+                     while(std::getline(ss2, segment, ',')) {
+                        screenNames.push_back(segment);
+                     }
+                 } else if (temp == "COLOR_MODE:") {
+                     string modeStr;
+                     ss >> modeStr;
+                     colorMode = (modeStr == "ON");
                  }
              }
-             
         } else {
              // Not a seed line, rewind
              file.seekg(oldPos);

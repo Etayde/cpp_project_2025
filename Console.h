@@ -238,8 +238,19 @@ enum class Color
     BrightWhite
 };
 
+namespace ConsoleInternal
+{
+    static bool colorEnabled = true;
+}
+
+inline void setColorEnabled(bool enabled)
+{
+    ConsoleInternal::colorEnabled = enabled;
+}
+
 inline void set_color(Color color)
 {
+    if (!ConsoleInternal::colorEnabled) return;
 #ifdef PLATFORM_WINDOWS
     HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleTextAttribute(hConsole, static_cast<int>(color));
@@ -255,5 +266,6 @@ inline void set_color(Color color)
 
 inline void reset_color()
 {
+    if (!ConsoleInternal::colorEnabled) return;
     set_color(Color::White);
 }

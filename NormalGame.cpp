@@ -22,6 +22,9 @@ NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
     hideCursor();
     clrscr();
     consoleInitialized = true;
+    
+    // Set default color mode enabled
+    setColorEnabled(colorMode);
 
     bool saveMode = false;
 
@@ -37,18 +40,13 @@ NormalGame::NormalGame(int argc, char* argv[]) : NormalGame()
         enableRecording("adv-world.steps.txt");
         resultFile.open("adv-world.result.txt");
         
-        // Generate and save seed
-        unsigned int seed = std::random_device{}();
-        recordFile << "RANDOM_SEED: " << seed << " SCREENS: ";
+        // Generate seed
+        randomSeed = std::random_device{}();
         
-        std::vector<std::string> levelFiles = LevelLoader::discoverLevelFiles();
-        for (size_t i = 0; i < levelFiles.size(); i++) {
-            recordFile << levelFiles[i];
-            if (i < levelFiles.size() - 1) recordFile << ",";
-        }
-        recordFile << "\n";
+        // Write header
+        writeStepsHeader();
         
-        initializeRooms(seed);
+        initializeRooms(randomSeed);
     }
     else initializeRooms();
 }
@@ -96,7 +94,11 @@ void NormalGame::run()
       break;
 
     case GameState::inGame:
-      if (!gameInitialized) startNewGame();
+      if (!gameInitialized)
+      {
+          rooms.clear();
+          startNewGame();
+      }
       gameLoop();
       break;
 
@@ -406,4 +408,69 @@ int NormalGame::getRiddleInput(unsigned long cycle)
 {
     (void)cycle;
     return -1;
+}
+
+//////////////////////////////////////////     writeStepsHeader     /////////////////////////////////////////////
+
+void NormalGame::writeStepsHeader()
+{
+    if (!isRecording || !recordFile.is_open()) return;
+    
+    // Rewind to start
+    recordFile.seekp(0);
+    
+    recordFile << "RANDOM_SEED: " << randomSeed << " SCREENS: ";
+    
+    std::vector<std::string> levelFiles = LevelLoader::discoverLevelFiles();
+    for (size_t i = 0; i < levelFiles.size(); i++) {
+        recordFile << levelFiles[i];
+        if (i < levelFiles.size() - 1) recordFile << ",";
+    }
+    
+    recordFile << " COLOR_MODE: " << (colorMode ? "ON" : "OFF");
+    recordFile << "           \n"; // Padding
+    recordFile.flush();
+}
+
+//////////////////////////////////////////     showMainMenu     /////////////////////////////////////////////
+
+void NormalGame::showMainMenu()
+{
+    Game::showMainMenu();
+    
+    // Display Color Mode status
+    Renderer::gotoxy(45, 10);
+    std::cout << (colorMode ? "ON " : "OFF"); // Space padding for overwrite
+}
+
+//////////////////////////////////////////     handleMainMenuInput     /////////////////////////////////////////////
+
+void NormalGame::handleMainMenuInput()
+{
+  if (check_kbhit())
+  {
+    char choice = get_single_char();
+    switch (choice)
+    {
+    case '1':
+      // Before starting game, ensure header saves correct color mode
+      writeStepsHeader();
+      currentState = GameState::inGame;
+      break;
+    case '2':
+      colorMode = !colorMode;
+      setColorEnabled(colorMode);
+      // Redraw immediately to show change
+      showMainMenu();
+      // Update header immediately too? Why not.
+      writeStepsHeader();
+      break;
+    case '8':
+      currentState = GameState::instructions;
+      break;
+    case '9':
+      currentState = GameState::quit;
+      break;
+    }
+  }
 }

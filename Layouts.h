@@ -19,9 +19,9 @@ inline const char *mainMenuData[MAX_Y] = {
     "|                      TWO PLAYERS COOPERATIVE ADVENTURE                      |", // 7
     "|                                                                             |", // 8
     "|                            [1] Start New Game                               |", // 9
-    "|                           [8] View Instructions                             |", // 10
-    "|                                 [9] Exit                                    |", // 11
-    "|                                                                             |", // 12
+    "|                        [2] Toggle Color Mode                                |", // 10
+    "|                           [8] View Instructions                             |", // 11
+    "|                                 [9] Exit                                    |", // 12
     "|                                                                             |", // 13
     "|                                                                             |", // 14
     "|                                                                             |", // 15

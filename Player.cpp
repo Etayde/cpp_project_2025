@@ -280,7 +280,14 @@ void Player::draw(Room *room)
 
   if (isRespawning() && respawnTimer % BLINK_RATE != 0) Renderer::print(' ');
   
-  else Renderer::print(sprite);
+  else 
+  {
+      if (playerId == 1) set_color(Color::LightAqua);
+      else if (playerId == 2) set_color(Color::LightRed);
+      
+      Renderer::print(sprite);
+      reset_color();
+  }
 }
 
 //////////////////////////////////////////        pickupItem       /////////////////////////////////////////////
