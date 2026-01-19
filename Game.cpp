@@ -269,12 +269,6 @@ void Game::update()
 
   ExplosionResult explosionResult = room->updateAllObjects(&player1, &player2);
 
-  // Play explosion animation if any bomb exploded
-  if (!explosionResult.explodedCells.empty())
-  {
-    playExplosionAnimation(explosionResult.explodedCells);
-  }
-
   if (explosionResult.player1Hit) player1.loseLife(room, this);
   if (explosionResult.player2Hit) player2.loseLife(room, this);
 
@@ -757,54 +751,4 @@ bool Game::checkGameOver(const ExplosionResult &result)
   }
 
   return false;
-}
-
-//////////////////////////////////////////   playExplosionAnimation   /////////////////////////////////////////////
-
-void Game::playExplosionAnimation(const std::vector<Point>& cells)
-{
-  if (!Renderer::shouldRender()) return;
-  if (cells.empty()) return;
-
-  Room *room = getCurrentRoom();
-  const int blinkCount = 3;
-  const int blinkDelay = 80; // ms per blink phase
-
-  for (int blink = 0; blink < blinkCount; blink++)
-  {
-    // Draw '~' in yellow
-    set_color(Color::Yellow);
-    for (const Point& cell : cells)
-    {
-      Renderer::printAt(cell.getX(), cell.getY(), '~');
-    }
-    reset_color();
-    Renderer::flush();
-    
-    // Check player collision during animation
-    for (const Point& cell : cells)
-    {
-      if (player1.getX() == cell.getX() && player1.getY() == cell.getY())
-        player1.loseLife(room, this);
-      if (player2.getX() == cell.getX() && player2.getY() == cell.getY())
-        player2.loseLife(room, this);
-    }
-    
-    Renderer::sleep_ms(blinkDelay);
-
-    // Hide (draw space)
-    for (const Point& cell : cells)
-    {
-      Renderer::printAt(cell.getX(), cell.getY(), ' ');
-    }
-    Renderer::flush();
-    Renderer::sleep_ms(blinkDelay);
-  }
-
-  // Final clear - ensure all cells are empty
-  for (const Point& cell : cells)
-  {
-    Renderer::printAt(cell.getX(), cell.getY(), ' ');
-  }
-  Renderer::flush();
 }

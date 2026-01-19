@@ -52,7 +52,6 @@ struct ExplosionResult
   bool player2Hit;
   int switchesDestroyed;
   int objectsDestroyed;
-  std::vector<Point> explodedCells;
 
   ExplosionResult()
       : keyDestroyed(false), player1Hit(false), player2Hit(false),

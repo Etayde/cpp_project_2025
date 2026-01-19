@@ -22,6 +22,37 @@ ExplosionResult Bomb::update(Player *p1, Player *p2)
 {
     ExplosionResult result;
 
+    // Handle animation state per-tick
+    if (state == BombState::ANIMATING)
+    {
+        animationTimer--;
+
+        // Check player collision during animation each tick
+        for (const Point& cell : explodedCells)
+        {
+            if (p1 && p1->getX() == cell.getX() && p1->getY() == cell.getY())
+                result.player1Hit = true;
+            if (p2 && p2->getX() == cell.getX() && p2->getY() == cell.getY())
+                result.player2Hit = true;
+        }
+
+        // Animation finished
+        if (animationTimer <= 0)
+        {
+            // Clear all cells in room
+            for (const Point& cell : explodedCells)
+            {
+                if (currentRoom)
+                    currentRoom->setCharAt(cell.getX(), cell.getY(), ' ');
+            }
+            explodedCells.clear();
+            state = BombState::EXPLODED;
+            active = false;
+        }
+
+        return result;
+    }
+
     if (state != BombState::TICKING)
         return result;
 
@@ -31,8 +62,6 @@ ExplosionResult Bomb::update(Player *p1, Player *p2)
     if (fuseTimer <= 0)
     {
         result = explode(p1, p2);
-        state = BombState::EXPLODED;
-        active = false;
         return result;
     }
 
@@ -48,6 +77,7 @@ ExplosionResult Bomb::update(Player *p1, Player *p2)
 ExplosionResult Bomb::explode(Player *p1, Player *p2)
 {
     ExplosionResult result;
+    explodedCells.clear();
 
     if (!currentRoom)
         return result;
@@ -55,9 +85,9 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
     int centerX = getX();
     int centerY = getY();
 
-    // Add center cell to exploded cells
+    // Add center cell
     currentRoom->setCharAt(centerX, centerY, ' ');
-    result.explodedCells.push_back(Point(centerX, centerY));
+    explodedCells.push_back(Point(centerX, centerY));
 
     for (int dy = -EXPLOSION_RADIUS; dy <= EXPLOSION_RADIUS; dy++)
     {
@@ -103,7 +133,7 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
                 if (obj->onExplosion())
                 {
                     currentRoom->setCharAt(x, y, ' ');
-                    result.explodedCells.push_back(Point(x, y));
+                    explodedCells.push_back(Point(x, y));
                     obj->setActive(false);
                     result.objectsDestroyed++;
                 }
@@ -111,23 +141,27 @@ ExplosionResult Bomb::explode(Player *p1, Player *p2)
             else if (type == ObjectType::BREAKABLE_WALL)
             {
                 currentRoom->setCharAt(x, y, ' ');
-                result.explodedCells.push_back(Point(x, y));
+                explodedCells.push_back(Point(x, y));
                 result.objectsDestroyed++;
             }
             else if (type == ObjectType::AIR)
             {
                 // Add air cells that are within line of sight (not sheltered)
-                result.explodedCells.push_back(Point(x, y));
+                explodedCells.push_back(Point(x, y));
             }
             else if (type != ObjectType::WALL)
             {
-                // Other destroyable non-wall, non-air cells
+                // Other destroyable non-wall cells
                 currentRoom->setCharAt(x, y, ' ');
-                result.explodedCells.push_back(Point(x, y));
+                explodedCells.push_back(Point(x, y));
                 result.objectsDestroyed++;
             }
         }
     }
+
+    // Start animation
+    state = BombState::ANIMATING;
+    animationTimer = ANIMATION_TICKS;
 
     return result;
 }
@@ -142,6 +176,32 @@ void Bomb::draw() const
     if (state == BombState::PLACED && currentRoom && !currentRoom->isVisible(getX(), getY()))
         return;
 
+    // Draw explosion animation
+    if (state == BombState::ANIMATING)
+    {
+        // Blink: show '~' for 5 ticks, hide for 5 ticks
+        bool showWave = (animationTimer / 5) % 2 == 0;
+        
+        if (showWave)
+        {
+            set_color(Color::Yellow);
+            for (const Point& cell : explodedCells)
+            {
+                Renderer::printAt(cell.getX(), cell.getY(), '~');
+            }
+            reset_color();
+        }
+        else
+        {
+            for (const Point& cell : explodedCells)
+            {
+                Renderer::printAt(cell.getX(), cell.getY(), ' ');
+            }
+        }
+        Renderer::flush();
+        return;
+    }
+
     Renderer::gotoxy(getX(), getY());
 
     if (state == BombState::TICKING)
@@ -153,7 +213,7 @@ void Bomb::draw() const
         }
         else 
         {
-            set_color(Color::LightGreen); // Flash light green
+            set_color(Color::LightGreen);
             Renderer::print('*');
         }
     }

@@ -60,8 +60,8 @@ protected:
     bool isActive() const { return riddle != nullptr; }
   };
 
-  ActiveRiddle aRiddle;                
-  std::vector<Screen *> loadedScreens; 
+  ActiveRiddle aRiddle;
+  std::vector<Screen *> loadedScreens;
 
   void setGameOverMessege(GameOverMessege messege) { gameOverMessege = messege; }
 
@@ -116,7 +116,6 @@ public:
   bool canPassThroughDoor(Room *room, int doorId);
   ErrorCode validateLegendPlacement(Room &room);
   bool checkGameOver(const ExplosionResult &result);
-  void playExplosionAnimation(const std::vector<Point>& cells);
 
   // Accessors for event recording
   unsigned long getCycleCount() const { return cycleCount; }
