@@ -188,8 +188,8 @@ void Riddle::playRiddleAnimation() const
         Renderer::sleep_ms(80);
     
     Renderer::sleep_ms(100);
+    }
 }
-
 //////////////////////////////////////////        checkAnswer           //////////////////////////////////////////
 
 bool Riddle::checkAnswer(int playerAnswer) const
