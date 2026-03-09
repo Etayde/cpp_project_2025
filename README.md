@@ -68,10 +68,10 @@ The game has a built-in **record → replay → verify** pipeline — a miniatur
 ./game -save
 
 # Replay it visually
-./game adv-world.steps.txt
+./game -load
 
 # Run headless verification (CI-friendly)
-./game adv-world.steps.txt -silent
+./game -load -silent
 # → "Test passed" or "Test not passed"
 ```
 
@@ -256,7 +256,7 @@ DARK_ZONE 20 5 46 14           # Dark rectangle (top-left → bottom-right)
 
 **Etay De Beer**
 
-Built as a C++ university course project — evolved into a full game engine with QA automation, physics, fog-of-war, and extensible level design.
+Built as a C++ collage course project — evolved into a full game engine with QA automation, physics, fog-of-war, and extensible level design.
 
 ---
 
