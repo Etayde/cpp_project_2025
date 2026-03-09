@@ -168,7 +168,7 @@ Both players share one keyboard. Input is **case-insensitive**. Characters auto-
 
 ```bash
 # Clone
-git clone https://github.com/YOUR_USERNAME/cpp_project_2025.git
+git clone https://github.com/Etayde/Cpp_Adv_World_Game_Engine.git
 cd cpp_project_2025
 
 # Build (requires g++ with C++17 support)
@@ -255,6 +255,7 @@ DARK_ZONE 20 5 46 14           # Dark rectangle (top-left → bottom-right)
 ## 👤 Author
 
 **Etay De Beer**
+**, LinkedIn: www.linkedin.com/in/etaydebeer**
 
 Built as a C++ collage course project — evolved into a full game engine with QA automation, physics, fog-of-war, and extensible level design.
 
