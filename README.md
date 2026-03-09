@@ -12,6 +12,19 @@
 
 *Main menu — running in an 80×25 terminal window with color mode*
 
+<br/>
+
+<table>
+<tr>
+<td><img src="assets/dark_room.gif" alt="Dark Zone & Torch" width="280"/><br/><sub>Fog-of-war with torch illumination</sub></td>
+<td><img src="assets/bomb_explosion.gif" alt="Bomb Explosion" width="280"/><br/><sub>Bomb explosion with LOS blast radius</sub></td>
+</tr>
+<tr>
+<td><img src="assets/obstacle_push.gif" alt="Pushable Obstacles" width="280"/><br/><sub>Physics-based pushable obstacles</sub></td>
+<td><img src="assets/riddle.gif" alt="Riddle Popup" width="280"/><br/><sub>Animated riddle popup system</sub></td>
+</tr>
+</table>
+
 </div>
 
 ---
@@ -104,8 +117,12 @@ Both players must work together — collecting keys, activating switches, naviga
 ### 🌑 Darkness & Torches
 Rooms can define rectangular dark zones. Without a torch, these areas are completely hidden. Picking up a torch creates a real-time illumination radius with graduated visibility.
 
+<p align="center"><img src="assets/dark_room.gif" alt="Dark Zone Demo" width="550"/></p>
+
 ### 💣 Bombs & Explosions
 Placeable bombs with a 50-tick fuse and a 5-cell blast radius. Explosions check **line-of-sight** to avoid blasting through walls, can destroy breakable obstacles, trigger switches, and eliminate keys (causing game-over if critical items are lost). Includes a blinking fuse animation and post-explosion visual effect.
+
+<p align="center"><img src="assets/bomb_explosion.gif" alt="Bomb Explosion Demo" width="550"/></p>
 
 ### 🧲 Springs & Physics
 Multi-cell spring objects compressed by player movement. When fully compressed, they launch the player using a **momentum system** with Bresenham-based multi-step traversal — the player slides across the room until hitting a wall or obstacle.
@@ -113,8 +130,12 @@ Multi-cell spring objects compressed by player movement. When fully compressed, 
 ### 🧱 Pushable Obstacles
 Multi-block obstacles with computed edge detection and weight-based force requirements. Players push them by walking into them — heavier obstacles need more force (or springs).
 
+<p align="center"><img src="assets/obstacle_push.gif" alt="Obstacle Push Demo" width="550"/></p>
+
 ### ❓ Riddle Popups
 Walking into a `?` triggers an animated popup overlay with a multiple-choice question. Correct answers clear the path; wrong answers deduct a life.
+
+<p align="center"><img src="assets/riddle.gif" alt="Riddle Popup Demo" width="550"/></p>
 
 ---
 
@@ -137,7 +158,7 @@ Both players share one keyboard. Input is **case-insensitive**. Characters auto-
 <summary><strong>📋 Instructions Screen</strong></summary>
 <br/>
 
-> The in-game instructions screen covers controls, map legend, and game rules — all rendered as ASCII art inside the 80×25 terminal grid.
+<p align="center"><img src="assets/instructions_screen.png" alt="Instructions Screen" width="600"/></p>
 
 </details>
 
